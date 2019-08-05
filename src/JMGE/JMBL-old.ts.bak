@@ -1,0 +1,468 @@
+export enum Quad{
+	None,
+	One,
+	Two,
+	Both
+}
+
+export enum Trit{
+	False,
+	Enabled,
+	Active
+}
+
+export let initialized:boolean=false;
+export let interactionMode:string='desktop';
+
+export function setInteractionMode(s:string){
+	this.interactionMode=s;
+}
+export function init(app:PIXI.Application){
+	app.ticker.add(events.onTick);
+	textures.renderer=app.renderer;
+	inputManager.init(app);
+	initialized=true;
+}
+
+export const textures = new class {
+	cache:any={};
+	renderer:any;
+
+	addTextureFromGraphic(graphic:PIXI.Graphics,id?:string):PIXI.Texture{
+		let m:PIXI.Texture=this.renderer.generateTexture(graphic);
+		if (id){
+			this.cache[id]=m;
+		}
+		return m;
+	}
+
+	getTexture(id:string):PIXI.Texture{
+		if (this.cache[id]){
+			return this.cache[id];
+		}else{
+			return PIXI.Texture.WHITE;
+		}
+	}
+}
+
+export const utils = new class {
+	clone(obj:any):any{
+		let m:any={};
+		for (var v in obj){
+			m[v]=obj[v];
+		}
+		return m;
+	}
+
+	deep(obj:any):any{
+		if (Array.isArray(obj)){
+			let m:Array<any>=[]; 	
+			for (var i:number=0;i<obj.length;i+=1){
+				m.push(this.deep(obj[i]));
+			}
+			return m;
+		}else if (obj === Object(obj)){
+			let m={};
+			for (var v in obj){
+				(m as any)[v]=this.deep(obj[v]);
+			}
+			return m;
+		}
+		return obj;
+	}
+
+	default(options:any,defaults:any):any{
+		options = options || {};
+		for (var v in defaults){
+			options[v]=options[v] || defaults[v];
+		}
+	
+		return options;
+	}
+
+	pull(element:any,array:Array<any>):Array<any>{
+		for (var i:number=0;i<array.length;i+=1){
+			if (array[i]===element){
+				array.splice(i,1);
+				return array;
+			}
+		}
+	
+		return array;
+	}
+
+	diminish(n:number,p:number,i:number):number{
+		return n*Math.pow(1-p,i-1);
+	}
+
+	compound(n:number,p:number,i:number):number{
+		return n*Math.pow(1+p,i-1);
+	}
+
+	find (array:Array<any>,condition:Function):any{
+		for (let i:number=0;i<array.length;i++){
+			if (condition.bind(array[i])){
+				return array[i];
+			}
+		}
+		return null;
+	}
+}
+
+export const tween = new class Tween{
+	wait = (object:any,ticks:number,callback?:Function) => {
+		let cTicks:number=0;
+		function _tickThis(){
+			cTicks+=1;
+			if (cTicks>ticks){
+				events.ticker.remove(_tickThis);
+				if (callback) callback();
+			}
+		}
+		events.ticker.add(_tickThis);
+	}
+	to = (object:any,ticks:number,props:any,callback?:Function) => {
+		if (props==null) return;
+		let properties:any={};
+		let cTicks:number=0;
+	
+		for (var v in props){
+			if (v=="delay"){
+				cTicks=-props[v];
+			}else{
+				properties[v]={start:object[v],end:props[v]};
+			}
+		}
+		function _tickThis(){
+			cTicks+=1;
+			if (cTicks>ticks){
+				events.ticker.remove(_tickThis);
+				if (callback) callback();
+			}else if (cTicks>=0){
+				for (var v in properties){
+					object[v]=properties[v].start+(properties[v].end-properties[v].start)/ticks*cTicks;
+				}
+			}
+		}
+		events.ticker.add(_tickThis);
+	}
+	from = (object:any,ticks:number,props:any,callback?:Function) => {
+		if (props==null) return;
+
+		let newProps:any={};
+
+		for (var v in props){
+			if (v=="delay"){
+				newProps[v]=props[v];
+			}else{
+				newProps[v]=object[v];
+				object[v]=props[v];
+			}
+		}
+	
+		this.to(object,ticks,props,callback);
+	}
+
+	colorTo = (object:any,ticks:number,props:any,callback?:Function) => {
+		if (!props) return;
+		let properties:any={};
+		let cTicks:number=0;
+	
+		for (var v in props){
+			if (v=="delay"){
+				cTicks=-props[v];
+			}else{
+				properties[v]={start:object[v],end:props[v],
+					incR:Math.floor(props[v]/0x010000)-Math.floor(object[v]/0x010000),
+					incG:Math.floor((props[v]%0x010000)/0x000100)-Math.floor((object[v]%0x010000)/0x000100),
+					incB:Math.floor(props[v]%0x000100)-Math.floor(object[v]%0x000100),
+				};
+			}
+		}
+		
+		function _tickThis(){
+			cTicks+=1;
+			if (cTicks>ticks){
+				events.ticker.remove(_tickThis);
+				if (callback) callback();
+			}else if (cTicks>=0){
+				for (var v in properties){
+					object[v]=properties[v].start+Math.floor(properties[v].incR/ticks*cTicks)*0x010000+Math.floor(properties[v].incG/ticks*cTicks)*0x000100+Math.floor(properties[v].incB/ticks*cTicks);
+				}
+			}
+		}
+		events.ticker.add(_tickThis);
+	}
+}
+
+export enum EventType{
+	MOUSE_MOVE='mouseMove',
+	MOUSE_DOWN='mouseDown',
+	MOUSE_UP='mouseUp',
+	MOUSE_CLICK='mouseClick',
+	MOUSE_WHEEL='mouseWheel',
+
+	KEY_DOWN='keyDown',
+	KEY_UP='keyUp',
+
+	UI_OVER='uiOver',
+	UI_OFF='uiOff'
+}
+
+export const events = new class {
+	//private const registers:Array<JMERegister>=[];
+	private const registry:any={};
+	private const activeRegistry:Array<JMERegister>=[];
+	private const tickEvents:Array<Function>=[];
+
+	public clearAllEvents(){
+		this.registry={};
+		this.activeRegistry=[];
+		this.tickEvents=[];
+	}
+	public const ticker = {
+		add:(output:Function) => {
+			events.tickEvents.push(output);
+		},
+
+		remove:(output:Function) => {
+			utils.pull(output,events.tickEvents);
+		}
+	}
+
+	private createRegister(type:any){
+		this.registry[type]=new JMERegister(type);
+	}
+
+	add (type:any,output:Function){
+		if (!this.registry[type]) this.createRegister(type);
+
+		this.registry[type].listeners.push(output);
+
+	}
+
+	addOnce (type:any,output:Function){
+		if (!this.registry[type]) return;
+
+		this.registry[type].once.push(output);
+	}
+
+	remove (type:any,output:Function){
+		utils.pull(output,this.registry);
+	}
+
+	publish (type:any,options?:any){
+		if (!this.registry[type]) this.createRegister(type);
+		this.registry[type].events.push(options);
+
+		if (!this.registry[type].active){
+			this.registry[type].active=true;
+			this.activeRegistry.push(this.registry[type]);
+		}
+	}
+
+	selfPublish (register:JMERegister,options?:any){
+		register.events.push(options);
+		if (!register.active){
+			register.active=true;
+			this.activeRegistry.push(register);
+		}
+	}
+
+	onTick=()=>{
+		while (this.activeRegistry.length>0){
+			let register:JMERegister=this.activeRegistry.shift();
+			register.active=false;
+
+			while (register.events.length>0){
+				let event:any=register.events.shift();
+				register.listeners.forEach((output:Function)=>{output(event);});
+
+				while (register.once.length>0){
+					register.once.shift()(event);
+				}
+			}
+		}
+		this.tickEvents.forEach((output:Function)=>{output();});
+	}
+}
+
+class JMERegister{
+	listeners:Array<Function>=[];
+	once:Array<Function>=[];
+
+	events:Array<any>=[];
+	active:Boolean=false;
+	
+	constructor(public type:any){
+	}
+}
+
+export class SelfRegister extends JMERegister{
+	constructor(type?:any){
+		super(type);
+	}
+
+	add(output:Function){
+		this.listeners.push(output);
+	}
+
+	remove(output:Function){
+		utils.pull(output,this.listeners);
+	}
+
+	addOnce(output:Function){
+		this.once.push(output);
+	}
+
+	publish(event?:any){
+		events.selfPublish(this,event);
+	}
+}
+
+export class Rect extends PIXI.Rectangle{
+	setLeft(n:number){
+		this.width+=this.x-n;
+		this.x=n;
+	}
+
+	setRight(n:number){
+		this.width+=n-this.right;
+	}
+
+	setTop(n:number){
+		this.height-=n-this.y;
+		this.y=n;
+	}
+
+	setBot(n:number){
+		this.height+=n-this.top;
+	}
+}
+
+export const inputManager = new class {
+	MOUSE_HOLD:number=200;
+	mouse:MouseObject;
+	mouseEnabled:Boolean=true;
+
+	onUI:boolean=false;
+	offUI:boolean=false;
+	app:PIXI.Application;
+
+	public init (app:PIXI.Application) {
+		this.app=app;
+		this.mouse=new MouseObject();
+
+		window.addEventListener("keydown",this.onKeyDown);
+		window.addEventListener("keyup",this.onKeyUp);
+		
+		app.stage.on("pointerdown",this.onMouseDown);
+		app.stage.on("pointermove",this.onMouseMove);
+		//app.stage.on("wheel",onWheel);
+		window.addEventListener("wheel",this.onWheel);
+		if (interactionMode=="desktop"){
+			window.addEventListener("pointerup",this.onMouseUp);
+		}else{
+			window.addEventListener("touchend",this.onMouseUp);
+		}
+	}
+
+	onWheel=(e:WheelEvent)=>{
+		events.publish(EventType.MOUSE_WHEEL,{mouse:this.mouse.clone(),deltaY:e.deltaY});
+	}
+
+	onMouseDown=(e:any)=>{
+		if (e.target && e.target.isUI){
+			this.mouse.onUI = true;
+		}else{
+			this.mouse.onUI = false;
+		}
+		let _mouse:MouseObject=this.mouse;
+		_mouse.set(e.data.global.x/this.app.stage.scale.x,e.data.global.y/this.app.stage.scale.y);
+		_mouse.down=true;
+		if (!this.mouseEnabled) return;
+		if (_mouse.timerRunning) return;
+		_mouse.timerRunning=true;
+		setTimeout(function(){
+			_mouse.timerRunning=false;
+			if (_mouse.down){
+				console.log("A");
+				events.publish(EventType.MOUSE_DOWN,{mouse:_mouse.clone()});
+			}
+		},this.MOUSE_HOLD);
+	}
+
+	onMouseUp=(e:any)=>{
+		if (e.target && e.target.isUI){
+			this.mouse.onUI = true;
+		}else{
+			this.mouse.onUI = false;
+		}
+		let _mouse=this.mouse;
+		_mouse.down=false;
+		if (_mouse.timerRunning){
+			events.publish(EventType.MOUSE_CLICK,{mouse:_mouse.clone()});
+		}
+		events.publish(EventType.MOUSE_UP,{mouse:_mouse.clone()});
+	}
+
+	onMouseMove=(e:any)=>{
+		if (e.target && e.target.isUI){
+			this.mouse.onUI = true;
+		}else{
+			this.mouse.onUI = false;
+		}
+		this.mouse.set(e.data.global.x/this.app.stage.scale.x,e.data.global.y/this.app.stage.scale.y);
+		events.publish(EventType.MOUSE_MOVE,{mouse:this.mouse.clone()});
+	}
+
+	onKeyDown=(e:any)=>{
+		//if (external keyboard override) dothat;
+		switch(e.key){
+			case "a": case "A": break;
+			case "Control": this.mouse.ctrlKey=true; break;
+		}
+
+		events.publish(EventType.KEY_DOWN,{key:e.key});
+	}
+
+	onKeyUp=(e:any)=>{
+		switch(e.key){
+			case "Control": this.mouse.ctrlKey=false; break;
+		}
+
+		events.publish(EventType.KEY_UP,{key:e.key});
+	}
+}
+
+export class MouseObject extends PIXI.Point{
+	//x,y;
+	down:boolean=false;
+	ctrlKey:boolean=false;
+	drag:any;
+	dragTarget:any;
+	timerRunning:boolean=false;
+	onUI:boolean=false;
+
+	clone():MouseObject{
+		let m:MouseObject=new MouseObject();
+		m.down=this.down;
+		m.drag=this.drag;
+		m.dragTarget=this.dragTarget;
+		m.timerRunning=this.timerRunning;
+		m.x=this.x;
+		m.y=this.y;
+		m.ctrlKey=this.ctrlKey;
+		m.onUI=this.onUI;
+		return m;
+	}
+}
+
+export interface IMouseEvent{
+	mouse:MouseObject;
+	delta?:number;
+}
+
+export interface IKeyboardEvent{
+	key:string;
+}

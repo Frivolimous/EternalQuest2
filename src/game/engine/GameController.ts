@@ -1,47 +1,45 @@
-import { GameModel } from "../GameModel";
-import * as JMBL from "../../JMGE/JMBL";
+import { GameModel } from '../GameModel';
+import * as JMBL from '../../JMGE/JMBL';
 import * as _ from 'lodash';
-import { SpriteModel } from "../sprites/SpriteModel";
-import { GameEvents, SpriteEvents } from "./GameEvents";
-import { GameView } from "../ui/GameView";
+import { SpriteModel } from '../sprites/SpriteModel';
+import { GameEvents, SpriteEvents } from './GameEvents';
+import { GameView } from '../ui/GameView';
 
 export class GameController {
-  model: GameModel;
-  
-  
+  private model: GameModel;
+
   // player: SpriteModel;
   // enemy: SpriteModel;
 
-  spriteModels: SpriteModel[] = [];
+  private spriteModels: SpriteModel[] = [];
 
-  fighting = false;
+  private fighting = false;
 
   constructor(private gameV: GameView) {
-    this.model = new GameModel;
+    this.model = new GameModel();
     JMBL.events.ticker.add(this.onTick);
 
-    let player = new SpriteModel;
+    let player = new SpriteModel();
     player.tile = 0;
     player.player = true;
     this.spriteModels.push(player);
     player.accel = 0.015;
-    this.gameV.spriteAdded({sprite: player, player: true});
+    this.gameV.spriteAdded({ sprite: player, player: true });
   }
 
-  dispose() {
+  public dispose() {
     JMBL.events.ticker.remove(this.onTick);
   }
 
-
-  getTarget = (origin: SpriteModel, tryForce: SpriteModel) => {
+  public getTarget = (origin: SpriteModel, tryForce: SpriteModel) => {
     if (tryForce && tryForce.exists) {
       return tryForce;
     } else {
-      return _.find(this.spriteModels, sprite => sprite!==origin);
+      return _.find(this.spriteModels, sprite => sprite !== origin);
     }
   }
-  
-  removeSprite = (sprite: SpriteModel) => {
+
+  public removeSprite = (sprite: SpriteModel) => {
     if (sprite.exists && _.find(this.spriteModels, sprite)) {
       sprite.exists = false;
       _.pull(this.spriteModels, sprite);
@@ -50,15 +48,15 @@ export class GameController {
     }
   }
 
-  onTick = () => {
+  public onTick = () => {
     if (this.fighting) {
-     this.onFightingTick();
+      this.onFightingTick();
     } else {
       this.onBetweenTick();
     }
   }
 
-  onFightingTick = () => {
+  public onFightingTick = () => {
     _.each(this.spriteModels, sprite => {
       if (sprite.dead) {
         if (!sprite.player) {
@@ -74,8 +72,8 @@ export class GameController {
     }
     let maxVal: number = 0;
     let maxSprite: SpriteModel;
-    if (_.every(this.spriteModels, {busy: false})) {
-      this.spriteModels.forEach( sprite => {
+    if (_.every(this.spriteModels, { busy: false })) {
+      this.spriteModels.forEach(sprite => {
         sprite.action += sprite.accel;
         if (sprite.action > maxVal) {
           maxVal = sprite.action;
@@ -93,27 +91,27 @@ export class GameController {
             target.addHealth(-25);
           },
           callback: () => {
-            maxSprite.action -=1;
+            maxSprite.action -= 1;
             maxSprite.busy = false;
-          }
+          },
         });
       }
     }
   }
 
-  onBetweenTick = () => {
-    if (_.some (this.spriteModels, {player: false})) {
-      if (_.every(this.spriteModels, {busy: false})) {
+  public onBetweenTick = () => {
+    if (_.some(this.spriteModels, { player: false })) {
+      if (_.every(this.spriteModels, { busy: false })) {
         let maxPlayer = 0;
         let minEnemy = Infinity;
         _.each(this.spriteModels, sprite => {
-          if (sprite.player){ 
+          if (sprite.player) {
             maxPlayer = Math.max(maxPlayer, sprite.tile);
           } else {
-            minEnemy = Math.min (minEnemy, sprite.tile);
+            minEnemy = Math.min(minEnemy, sprite.tile);
           }
         });
-  
+
         if (minEnemy - maxPlayer < 4) {
           this.startFight();
           return;
@@ -125,13 +123,13 @@ export class GameController {
     _.each(this.spriteModels, sprite => {
       if (!sprite.busy) {
         sprite.busy = true;
-        
+
         this.gameV.animateAction({
           origin: sprite,
           action: 'walk',
           data: sprite.player ? 'right' : 'left',
           trigger: () => {
-            
+
           },
           callback: sprite.player ? () => {
             // this.player.tile ++;
@@ -140,26 +138,26 @@ export class GameController {
           } : () => {
             sprite.tile--;
             sprite.busy = false;
-          }
+          },
         });
       }
     });
   }
 
-  startFight = () => {
+  public startFight = () => {
     this.fighting = true;
-    this.spriteModels.forEach( sprite => {
+    this.spriteModels.forEach(sprite => {
       sprite.action = Math.random();
       sprite.tile = sprite.player ? 0 : 2;
     });
-    
+
     this.gameV.fightStarted();
   }
 
-  spawnEnemy = () => {
-    let enemy = new SpriteModel;
+  public spawnEnemy = () => {
+    let enemy = new SpriteModel();
     enemy.tile = 9;
     this.spriteModels.push(enemy);
-    this.gameV.spriteAdded({sprite: enemy, newSpawn: true});
+    this.gameV.spriteAdded({ sprite: enemy, newSpawn: true });
   }
 }

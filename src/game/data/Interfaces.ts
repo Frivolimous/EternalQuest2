@@ -18,33 +18,35 @@ interface IPlayerSprite extends ISpriteModel {
 }
 
 interface IEnemySprite extends ISpriteModel {
-
+  temp: string;
 }
 
 class GameSprite {
-  stats: StatModel;
+  public stats: StatModel;
+  
+  public equipment: ItemModel[] = [];
+  public actionList = new ActionList();
+  public buffList: BuffList;
+  public effectsToApply: EffectModel[];
+  public tFunction: (e: any) => void;
+  public tTarget: GameSprite;
+  public tAction: ActionBase;
+  public tValue: string;
+
+  public view: SpriteView;
+  public skillBlock: SkillBlock;
+  public updateUI: boolean;
+  public exists: boolean;
+
+  public strike = 0;
+  public shots = 0;
+  public doneTurn = true;
+  public dead = false;
+
+  public attackTarget: GameSprite;
+
   private _Health: number;
   private _Mana: number;
-  equipment: ItemModel[] = [];
-  actionList = new ActionList;
-  buffList:BuffList;
-  effectsToApply: EffectModel[];
-  tFunction: Function;
-  tTarget: GameSprite;
-  tAction: ActionBase;
-  tValue: string;
-
-  view: SpriteView;
-  skillBlock: SkillBlock;
-  updateUI: boolean;
-  exists: boolean;
-
-  strike = 0;
-  shots = 0;
-  doneTurn = true;
-  dead = false;
-
-  attackTarget: GameSprite;
 }
 
 class PlayerSprite extends GameSprite {

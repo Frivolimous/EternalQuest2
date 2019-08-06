@@ -1,11 +1,11 @@
-import { Facade } from "../index";
+import { Facade } from '../index';
 import { GameController } from './engine/GameController';
 import { GameView } from './ui/GameView';
 
 export class GameUI extends PIXI.Container {
-  display = new  GameView
-  controller: GameController;
-  
+  public display = new GameView();
+  public controller: GameController;
+
   constructor() {
     super();
 
@@ -16,15 +16,15 @@ export class GameUI extends PIXI.Container {
     window.addEventListener('keydown', this.keyDown);
   }
 
-  keyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      Facade.navBack();
-    }
-  }
-
-  dispose() {
+  public dispose() {
     window.removeEventListener('keydown', this.keyDown);
     this.controller.dispose();
     this.display.dispose();
+  }
+
+  private keyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      Facade.navBack();
+    }
   }
 }

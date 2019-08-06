@@ -1,21 +1,21 @@
 export class SpriteModel {
-  exists: boolean = true;
-  busy: boolean = false;
-  dead: boolean = false;
-  player: boolean = false;
+  public exists: boolean = true;
+  public busy: boolean = false;
+  public dead: boolean = false;
+  public player: boolean = false;
 
-  action: number = 0;
-  accel: number = 0.01;
+  public action: number = 0;
+  public accel: number = 0.01;
 
-  maxHealth = 100;
-  health = 100;
+  public maxHealth = 100;
+  public health = 100;
 
-  focusTarget: SpriteModel;
+  public focusTarget: SpriteModel;
 
-  tile: number;
+  public tile: number;
 
-  addHealth(n: number) {
-    this.health +=n;
+  public addHealth(n: number) {
+    this.health += n;
     this.health = Math.min(this.health, this.maxHealth);
 
     if (this.health <= 0) {

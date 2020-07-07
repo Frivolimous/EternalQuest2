@@ -1,53 +1,56 @@
+import * as PIXI from 'pixi.js';
 import { ColorGradient } from '../others/Colors';
 
-export class Charge extends PIXI.Graphics{
-  count:number=-1;
-  gradient1:ColorGradient;
-  gradient2:ColorGradient;
-  callback:()=>void;
-  running:boolean=false;
+export class Charge extends PIXI.Graphics {
+  public running: boolean = false;
 
-  constructor(public endRadius:number=10,public time:number=30,color:number=0xff0000){
+  private count: number = -1;
+  private gradient1: ColorGradient;
+  private gradient2: ColorGradient;
+  private callback: () => void;
+
+  constructor(public endRadius: number, public time: number, color: number) {
     super();
-    this.gradient1=new ColorGradient(0,color);
-    this.gradient2=new ColorGradient(0xffffff,color);
+    this.gradient1 = new ColorGradient(0, color);
+    this.gradient2 = new ColorGradient(0xffffff, color);
   }
 
-  startCharge(callback?:()=>void){
-    this.count=0;
-    this.callback=callback;
+  public startCharge(callback?: () => void) {
+    this.count = 0;
+    this.callback = callback;
     this.redraw();
-    this.running=true;
+    this.running = true;
   }
 
-  update(speed:number){
-    if (this.count===-1) return;
+  public update(speed: number) {
+    if (this.count === -1) return;
 
-    if (this.count<this.time){
-      this.count+=speed;
+    if (this.count < this.time) {
+      this.count += speed;
       this.redraw();
-    }else{
+    } else {
       this.endCharge();
     }
   }
 
-  redraw=()=>{
+  private redraw = () => {
     // let color=this.gradient.getColorAt(Math.random()*0.5+0.5);
-    if (Math.random()<0.5){
-      var color=this.gradient1.getColorAt(Math.random()*0.5+0.5);
-    }else{
-      color=this.gradient2.getColorAt(Math.random()*0.5+0.5);
+    let color: number;
+    if (Math.random() < 0.5) {
+      color = this.gradient1.getColorAt(Math.random() * 0.5 + 0.5);
+    } else {
+      color = this.gradient2.getColorAt(Math.random() * 0.5 + 0.5);
     }
     this.clear();
     this.beginFill(color);
-    this.drawCircle(0,0,this.endRadius*this.count/this.time);
+    this.drawCircle(0, 0, this.endRadius * this.count / this.time);
   }
 
-  endCharge=()=>{
+  private endCharge = () => {
     if (this.callback) this.callback();
-    this.callback=null;
-    this.count=-1;
+    this.callback = null;
+    this.count = -1;
     this.clear();
-    this.running=false;
+    this.running = false;
   }
 }

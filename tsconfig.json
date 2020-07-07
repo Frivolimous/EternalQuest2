@@ -1,27 +1,10 @@
 {
-  "compilerOptions": {
-     "module":"amd",
-    "sourceMap": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "removeComments": true,
-    "noImplicitAny": false,
-    "target": "ES5",
-    "allowJs": false,
-    "outFile": "scripts/game.js"
-  },
-
-  "include": [
-      "src/index.ts"
-  ],
-  "compileOnSave": false,
-  "types": [
-    "lodash",
-    "pixi.js"
-  ],
-  
-  "filesGlob": [
-    "src/*.ts",
-  ]
-
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "noImplicitAny": true,
+        "module": "esnext",
+        "target": "esnext",
+        "jsx": "react",
+        "allowJs": true
+    }
 }

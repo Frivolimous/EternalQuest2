@@ -1,130 +1,170 @@
-import * as JMBL from './JMGE/JMBL';
-import { TextureData } from './TextureData';
+import * as PIXI from 'pixi.js';
+import * as _ from 'lodash';
+import { MenuUI } from './pages/MenuUI';
 import { CONFIG } from './Config';
-import { SaveData } from './utils/SaveData';
-import { MenuUI } from './menus/MenuUI';
+import { SaveManager } from './services/SaveManager';
+import { TooltipReader } from './JMGE/TooltipReader';
+import { JMRect } from './JMGE/others/JMRect';
+import { ATSManager } from './services/ATSManager';
+import { genAchievements, genTutorials, genScores } from './data/ATSData';
+import { AchievementPopup } from './components/ui/AchievementPopup';
+import { TutorialPopup } from './components/ui/TutorialPopup';
+import { Fonts } from './data/Fonts';
+import { loadFonts } from './helpers/loadFonts';
+import { TextureCache } from './services/TextureCache';
+import { GameEvents, IResizeEvent } from './services/GameEvents';
+import { RandomSeed } from './services/RandomSeed';
+import { Debug } from './services/_Debug';
+import { BaseUI, IFadeTiming, dFadeTiming } from './pages/_BaseUI';
+import { ScreenCover } from './JMGE/effects/ScreenCover';
+import { Navbar } from './pages/Navbar';
+import { DEBUG_MODE } from './services/_Debug';
 
-export class Facade {
-    public static app: PIXI.Application;
-    public static stageBorders;
+export let interactionMode: 'desktop'|'mobile' = 'desktop';
 
-    public static navTo(o: PIXI.Container) {
-        Facade.instance.updateCurrentModule(o);
+export let Facade = new class FacadeInner {
+  private static exists = false;
+  public app: PIXI.Application;
+  public stageBorders: JMRect;
+  public innerBorders: JMRect;
+  public screen: PIXI.Container;
+  public border: PIXI.Graphics;
+
+  private element: HTMLCanvasElement;
+  private previousResize: IResizeEvent;
+  private currentPage: BaseUI;
+
+  constructor() {
+    if (FacadeInner.exists) throw new Error('Cannot instatiate more than one Facade Singleton.');
+    FacadeInner.exists = true;
+    try {
+      document.createEvent('TouchEvent');
+      interactionMode = 'mobile';
+    } catch (e) {
+
     }
 
-    public static navBack() {
-        Facade.instance.navToPreviousModule();
+    // Setup PIXI
+    this.element = document.getElementById('game-canvas') as HTMLCanvasElement;
+
+    this.app = new PIXI.Application({
+      backgroundColor: 0x770000,
+      antialias: true,
+      resolution: CONFIG.INIT.RESOLUTION,
+      width: this.element.offsetWidth,
+      height: this.element.offsetHeight,
+    });
+    this.element.append(this.app.view);
+
+    this.app.stage.scale.x = 1 / CONFIG.INIT.RESOLUTION;
+    this.app.stage.scale.y = 1 / CONFIG.INIT.RESOLUTION;
+
+    this.app.stage.interactive = true;
+    this.screen = new PIXI.Container();
+    this.app.stage.addChild(this.screen);
+    if (CONFIG.INIT.BORDER) {
+      this.border = new PIXI.Graphics();
+      this.border.lineStyle(3, 0xff00ff).drawRect(0, 0, CONFIG.INIT.SCREEN_WIDTH, CONFIG.INIT.SCREEN_HEIGHT);
+      this.app.stage.addChild(this.border);
     }
 
-    private static instance: Facade;
+    this.stageBorders = new JMRect();
+    this.innerBorders = new JMRect(0, 0, CONFIG.STAGE.SCREEN_WIDTH, CONFIG.STAGE.SCREEN_HEIGHT);
 
-    public currentModule: any;
+    // Initialize Libraries
+    new TooltipReader(this.screen, this.stageBorders, {backgroundColor: 0xff0000});
+    TextureCache.initialize(this.app);
+    Debug.initialize(this.app);
 
-    private app: PIXI.Application;
-    private _Resolution = CONFIG.INIT.RESOLUTION;
-    private previousModules: PIXI.Container[] = [];
+    // Resize Event (for full screen mode / scaling)
+    let finishResize = _.debounce(this.finishResize, 500);
+    window.addEventListener('resize', finishResize);
 
-    // windowToLocal=(e:any):PIXI.Point=>{
-    //   return new PIXI.Point((e.x+Facade.stageBorders.x)*this._Resolution,(e.y+Facade.stageBorders.y)*this._Resolution);
-    // }
+    let fonts: string[] = _.map(Fonts);
 
-    // disableGameInput(b:Boolean=true){
-    // 	if (b){
-    // 		this.inputM.mouseEnabled=false;
-    // 	}else{
-    // 		this.inputM.mouseEnabled=true;
-    // 	}
-    // }
+    // load fonts then preloader!
+    GameEvents.APP_LOG.publish({type: 'INITIALIZE', text: 'Primary Setup'});
+    window.requestAnimationFrame(() => loadFonts(fonts).then(this.init));
+  }
 
-    constructor() {
-        if (Facade.instance) throw new Error('Cannot instatiate more than one Facade Singleton.');
+  public init = () => {
+    // this will happen after 'preloader'
+    GameEvents.APP_LOG.publish({type: 'INITIALIZE', text: 'Post-Loader'});
+    SaveManager.init().then(() => {
+      GameEvents.APP_LOG.publish({type: 'INITIALIZE', text: 'Save Manager Initialized'});
+      new ATSManager({
+        Achievements: genAchievements(),
+        Tutorials: genTutorials(),
+        Scores: genScores(),
+        achievementPopup: AchievementPopup,
+        tutorialPopup: TutorialPopup,
+        canvas: this.screen,
+      });
 
-        Facade.instance = this;
+      let menu = new MenuUI();
 
-        try {
-            document.createEvent('TouchEvent');
-            JMBL.setInteractionMode('mobile');
-        } catch (e) { }
+      if (DEBUG_MODE) {
+        let navbar = new Navbar();
+        this.screen.addChild(navbar);
+      }
 
-        Facade.stageBorders = new JMBL.Rect(0, 0, CONFIG.INIT.STAGE_WIDTH / this._Resolution, CONFIG.INIT.STAGE_HEIGHT / this._Resolution);
-        this.app = new PIXI.Application(Facade.stageBorders.width, Facade.stageBorders.height, {
-            backgroundColor: 0xff0000,
-            antialias: true,
-            resolution: this._Resolution,
-            roundPixels: true,
-        });
-        Facade.app = this.app;
-        (document.getElementById('game-canvas') as any).append(this.app.view);
+      this.currentPage = menu;
+      this.screen.addChild(menu);
+      menu.navIn();
+      this.finishResize();
+    });
+  }
 
-        // if (this.app){
-        // 	let test=PIXI.Sprite.fromImage('./Bitmaps/a ship sprite sheet.png')
-        // 	this.app.stage.addChild(test);
-        // 	return;
-        // }
-        Facade.stageBorders.width *= this._Resolution;
-        Facade.stageBorders.height *= this._Resolution;
+  public setCurrentPage(nextPage: BaseUI, fadeTiming?: IFadeTiming) {
+    fadeTiming = _.defaults(fadeTiming || {}, dFadeTiming);
 
-        this.app.stage.scale.x = 1 / this._Resolution;
-        this.app.stage.scale.y = 1 / this._Resolution;
-        Facade.stageBorders.x = this.app.view.offsetLeft;
-        Facade.stageBorders.y = this.app.view.offsetTop;
-        this.app.stage.interactive = true;
+    let screen = new ScreenCover(this.previousResize.outerBounds, fadeTiming.color).onFadeComplete(() => {
+      SaveManager.saveCurrent().then(() => {
+        this.currentPage.navOut();
+        this.screen.removeChild(this.currentPage);
+        this.currentPage.destroy();
 
-        let _background = new PIXI.Graphics();
-        _background.beginFill(CONFIG.INIT.BACKGROUND_COLOR);
-        _background.drawRect(0, 0, Facade.stageBorders.width, Facade.stageBorders.height);
-        this.app.stage.addChild(_background);
-
-        // window.addEventListener('resize',()=>{
-        // 	Facade.stageBorders.left=this.app.view.offsetLeft;
-        // 	Facade.stageBorders.top=this.app.view.offsetTop;
-        // });
-
-        JMBL.init(this.app);
-        TextureData.init(this.app.renderer);
-        window.setTimeout(this.init, 10);
-    }
-
-    private  init = () => {
-        // this will happen after 'preloader'
-
-        initializeDatas();
-        SaveData.init();
-        // new ScoreTracker();
-
-        this.currentModule = new MenuUI();
-        this.currentModule.navOut = this.updateCurrentModule;
-        this.app.stage.addChild(this.currentModule);
-    }
-
-    private updateCurrentModule(nextModule: PIXI.Container) {
-        this.previousModules.push(this.currentModule);
-        this.currentModule.parent.removeChild(this.currentModule);
-        this.currentModule = nextModule;
-
-        SaveData.saveExtrinsic(() => {
-            this.app.stage.addChild(this.currentModule);
-        });
-    }
-
-    private navToPreviousModule() {
-        if (this.previousModules.length > 0) {
-            let nextModule = this.previousModules.pop();
-            if (this.currentModule.dispose) {
-                this.currentModule.dispose();
-            } else {
-                this.currentModule.destroy();
-            }
-            this.currentModule = nextModule;
-
-            SaveData.saveExtrinsic(() => {
-                this.app.stage.addChild(this.currentModule);
-            });
+        this.currentPage = nextPage;
+        this.screen.addChild(nextPage);
+        nextPage.navIn();
+        if (this.previousResize) {
+          nextPage.onResize(this.previousResize);
         }
+        let screen2 = new ScreenCover(this.previousResize.outerBounds, fadeTiming.color).fadeOut(fadeTiming.fadeOut);
+        nextPage.addChild(screen2);
+      });
+    }).fadeIn(fadeTiming.fadeIn, fadeTiming.delay, fadeTiming.delayBlank);
+    this.screen.addChild(screen);
+  }
+
+  private finishResize = () => {
+    // resize event
+    let viewWidth = this.element.offsetWidth;
+    let viewHeight = this.element.offsetHeight;
+    this.app.view.width = viewWidth;
+    this.app.view.height = viewHeight;
+
+    let innerWidth = CONFIG.STAGE.SCREEN_WIDTH;
+    let innerHeight = CONFIG.STAGE.SCREEN_HEIGHT;
+    let scale = Math.min(viewWidth / innerWidth, viewHeight / innerHeight);
+    this.screen.scale.set(scale);
+    this.screen.x = (viewWidth - innerWidth * scale) / 2;
+    this.screen.y = (viewHeight - innerHeight * scale) / 2;
+    this.stageBorders.set(0 - this.screen.x / scale, 0 - this.screen.y / scale, viewWidth / scale, viewHeight / scale);
+
+    // to show border (for sizing / spacing tests)
+    if (this.border) {
+      this.border.clear();
+      this.border.lineStyle(10, 0xff00ff);
+      this.border.drawShape(this.stageBorders);
+      this.border.lineStyle(3, 0x00ffff);
+      this.border.drawShape(this.innerBorders);
+      this.border.scale.set(scale);
+      this.border.position.set(this.screen.x, this.screen.y);
     }
-}
 
-new Facade();
+    this.previousResize = {outerBounds: this.stageBorders, innerBounds: this.innerBorders};
 
-function initializeDatas() {
-}
+    GameEvents.WINDOW_RESIZE.publish(this.previousResize);
+  }
+}();

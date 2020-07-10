@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 
-import { GameEvents } from '../services/GameEvents';
-import { GameView } from '../components/game/GameView';
+import { GameEvents, IAnimateAction } from '../services/GameEvents';
 import { SpriteModel } from './sprites/SpriteModel';
 import { GameModel } from './GameModel';
 import { SaveManager } from '../services/SaveManager';
@@ -16,10 +15,14 @@ import { ActionManager } from '../services/ActionManager';
 export class GameController {
   public onPlayerAdded = new JMEventListener<SpriteModel>();
   public onPlayerDead = new JMEventListener<null>();
+  public onSpriteAdded = new JMEventListener<SpriteModel>();
+  public onSpriteRemoved = new JMEventListener<SpriteModel>();
   public onReset = new JMEventListener<null>();
   public onEnemyDead = new JMEventListener<SpriteModel>();
   public onZoneProgress = new JMEventListener<IPlayerLevelSave>();
   public onVitalsUpdate = new JMEventListener<Vitals>();
+  public onFightStart = new JMEventListener<null>();
+  public onAction = new JMEventListener<IAnimateAction>();
 
   private model: GameModel;
   private levelData: IPlayerLevelSave;
@@ -30,10 +33,9 @@ export class GameController {
   private processing = false;
   private spawnCount = 4;
 
-  constructor(private gameV: GameView) {
+  constructor() {
     this.model = new GameModel();
 
-    gameV.onQueueEmpty.addListener(this.proceed);
     GameEvents.ticker.add(this.onTick);
 
     this.levelData = SaveManager.getCurrentPlayerLevel();
@@ -50,10 +52,10 @@ export class GameController {
     player.tile = 0;
     player.player = true;
     this.spriteModels.push(player);
-    player.stats.addBaseStat('speed', 'Base', 15);
-    this.gameV.spriteAdded({ sprite: player, player: true });
     player.setVitalsCallback(vitals => this.onVitalsUpdate.publish(vitals));
     this.onPlayerAdded.publish(player);
+    this.onSpriteAdded.publish(player);
+    this.onZoneProgress.publish(this.levelData);
   }
 
   public destroy() {
@@ -76,7 +78,7 @@ export class GameController {
     if (_.find(this.spriteModels, sprite)) {
       sprite.exists = false;
       _.pull(this.spriteModels, sprite);
-      this.gameV.spriteRemoved(sprite);
+      this.onSpriteRemoved.publish(sprite);
     }
   }
 
@@ -84,6 +86,18 @@ export class GameController {
     if (this.processing) {
       return;
     }
+
+    _.each(this.spriteModels, sprite => {
+      sprite.regenTick();
+      sprite.checkDeath();
+      if (sprite.dead) {
+        if (!sprite.player) {
+          this.enemyDead(sprite);
+        } else {
+          this.playerDead(sprite);
+        }
+      }
+    });
 
     if (this.fighting) {
       this.tickFighting();
@@ -98,6 +112,8 @@ export class GameController {
     this.spawnCount = RandomSeed.enemySpawn.getInt(1, 9);
     this.fighting = false;
     this.onEnemyDead.publishSync(sprite);
+    this.levelData.enemyCount++;
+    this.onZoneProgress.publish(this.levelData);
   }
 
   public playerDead = (sprite: SpriteModel) => {
@@ -109,15 +125,6 @@ export class GameController {
   }
 
   public tickFighting = () => {
-    _.each(this.spriteModels, sprite => {
-      if (sprite.dead) {
-        if (!sprite.player) {
-          this.enemyDead(sprite);
-        } else {
-          this.playerDead(sprite);
-        }
-      }
-    });
     if (this.spriteModels.length <= 1) {
       return;
     }
@@ -134,19 +141,11 @@ export class GameController {
     if (maxVal >= 100) {
       this.processing = true;
 
-      let target = ActionManager.chooseTarget(maxSprite, this.spriteModels);
-      let action = ActionManager.chooseAction(maxSprite, target);
-      let result = ActionManager.processAction(maxSprite, target, action);
-      this.gameV.animateAction({
-        origin: maxSprite,
-        target,
+      let result = ActionManager.chooseAction(maxSprite, this.spriteModels, true);
+      this.onAction.publish({
         result,
         trigger: () => {
-          ActionManager.finishAction(maxSprite, target, this.spriteModels, result);
-        },
-        onComplete: () => {
-          target.checkDeath();
-          console.log('Action Complete');
+          ActionManager.finishAction(result, this.spriteModels);
         },
       });
     }
@@ -179,15 +178,12 @@ export class GameController {
     _.each(this.spriteModels, sprite => {
       this.processing = true;
       if (sprite.player) {
-        let action = ActionManager.chooseAction(sprite, null);
-        let result = ActionManager.processAction(sprite, null, action);
-        this.gameV.animateAction({
-          origin: sprite,
+        let result = ActionManager.chooseAction(sprite, this.spriteModels, false);
+        this.onAction.publish({
           result,
           trigger: () => {
-            ActionManager.finishAction(sprite, null, this.spriteModels, result);
+            ActionManager.finishAction(result, this.spriteModels);
           },
-          onComplete: () => {},
         });
       }
     });
@@ -200,12 +196,13 @@ export class GameController {
   public startFight = () => {
     this.fighting = true;
     this.spriteModels.forEach(sprite => {
-      sprite.action = Math.random() * 100;
+      let init = sprite.stats.getBaseStat('initiative');
+      sprite.action = init + RandomSeed.general.getRaw() * 100;
       sprite.tile = sprite.player ? 0 : 2;
     });
 
     this.processing = true;
-    this.gameV.fightStarted();
+    this.onFightStart.publish();
   }
 
   public spawnEnemy = () => {
@@ -214,6 +211,6 @@ export class GameController {
     enemy.tile = 9;
     console.log('Enemy: ' + enemy.stats.name);
     this.spriteModels.push(enemy);
-    this.gameV.spriteAdded({ sprite: enemy, newSpawn: true });
+    this.onSpriteAdded.publish(enemy);
   }
 }

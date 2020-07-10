@@ -17,6 +17,7 @@ interface ITweenProperty {
 }
 
 export class JMTween<T = any> {
+  public static speedFactor = 1;
   private static running = false;
   private static tweens: JMTween[] = [];
 
@@ -255,11 +256,11 @@ export class JMTween<T = any> {
 
   private firstTick = (time: number) => {
     if (this.hasWait) {
-      this.startTime = time + this.waitTime;
+      this.startTime = time + this.waitTime / (JMTween.speedFactor || 1);
     } else {
       this.startTime = time;
     }
-    this.endTime = this.startTime + (this.totalTime || 0);
+    this.endTime = this.startTime + (this.totalTime / (JMTween.speedFactor || 1) || 0);
     this.tickThis = this.tailTick;
   }
 

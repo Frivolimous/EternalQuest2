@@ -13,8 +13,15 @@ export class BasePanel extends PIXI.Container {
     this.drawBack();
   }
 
+  public getWidth() {
+    return this.bounds.width;
+  }
+
+  public getHeight() {
+    return this.bounds.height;
+  }
+
   private drawBack() {
     this.background.clear().beginFill(this.bgColor).lineStyle(2).drawRoundedRect(0, 0, this.bounds.width, this.bounds.height, 10);
-    this.position.set(this.bounds.x, this.bounds.y);
   }
 }

@@ -1,3 +1,23 @@
+export type BaseStat = AttackStat | VitalStat | DefenseStat;
+
+export type AttackStat = 'baseDamage' | 'power' | 'critRate' | 'critMult' | 'hit' | 'penetration' | 'rate';
+export type VitalStat = 'health' | 'mana' | 'hregen' | 'mregen' | 'speed' | 'initiative';
+export type DefenseStat = 'resist' | 'avoid' | 'devaluation';
+
+export type CompoundStat = 'strength' | 'dexterity' | 'intellect' | 'magic' | 'accuracy' |
+  'parry' | 'block' | 'dodge' | 'turn' | 'tenacity' | 'fortification' | 'vitality' | 'spirit';
+
+export type StatTag = ItemTag | DamageTag | MiscTag | SpecTag | PhysicalTag;
+export type SpecTag = 'Base' | 'Neg' | 'Mult' | 'Critical';
+export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell';
+export type DamageTag = 'Physical' | 'Magical' | 'Chemical' | 'Holy' | 'Dark' | 'Spirit';
+export type MiscTag = 'Force' | 'Buff' | 'Curse' | 'Fire' | 'Electric' | 'Ice' | 'Toxic' | 'Gadget' | 'Cryptic' | 'Mystic' |
+  'Projectile' | 'Grenade' | 'Control';
+export type PhysicalTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Melee' | 'Ranged';
+
+export type StatMap = { stat: BaseStat, tag: StatTag, value: number }[];
+export type CompoundMap = { stat: CompoundStat, value: number }[];
+
 export const CompoundMap: { [key in CompoundStat]: { stat: BaseStat, tag: StatTag, percent: number }[] } = {
   strength: [
     { stat: 'power', tag: 'Melee', percent: 1 },
@@ -48,6 +68,14 @@ export const CompoundMap: { [key in CompoundStat]: { stat: BaseStat, tag: StatTa
     { stat: 'resist', tag: 'Critical', percent: 1 },
     { stat: 'devaluation', tag: 'Critical', percent: 1 },
   ],
+  vitality: [
+    { stat: 'health', tag: 'Base', percent: 1 },
+    { stat: 'hregen', tag: 'Base', percent: 0.0001 },
+  ],
+  spirit: [
+    { stat: 'mana', tag: 'Base', percent: 1 },
+    { stat: 'mregen', tag: 'Base', percent: 0.0001 },
+  ],
 };
 
 export type StatDisplayType = 'numeric' | 'percent' | 'x100';
@@ -64,6 +92,8 @@ export const CompoundStatDisplay: { [key in CompoundStat]: StatDisplayType} = {
   turn: 'percent',
   tenacity: 'percent',
   fortification: 'percent',
+  vitality: 'numeric',
+  spirit: 'numeric',
 };
 
 export const BaseStatDisplay: { [key in BaseStat]: StatDisplayType } = {
@@ -99,6 +129,8 @@ export const CompoundStatProgression: { [key in CompoundStat]: StatProgression} 
   turn: 'diminish',
   tenacity: 'diminish',
   fortification: 'diminish',
+  vitality: 'linear',
+  spirit: 'linear',
 };
 
 export const BaseStatProgression: { [key in BaseStat]: StatProgression } = {
@@ -132,6 +164,8 @@ export const dCompoundStats: CompoundStats = {
   turn: 0,
   tenacity: 0,
   fortification: 0,
+  vitality: 0,
+  spirit: 0,
 };
 
 export const dBaseStats: BaseStats = {
@@ -159,21 +193,10 @@ export type BaseStats = {
     base: number;
     neg?: number;
     mult: number;
-    tags: { [key: string]: { base: number, mult: number, neg?: number } };
+    tags: Partial<TagGroup>;
   }
 };
+
+type TagGroup = {[key in StatTag]: {base: number, mult: number, neg?: number}};
 export type SimpleStats = { [key in BaseStat]: number};
-
-export type BaseStat = 'health' | 'mana' | 'speed' | 'hregen' | 'mregen' | 'initiative' |
-  'baseDamage' | 'power' | 'critRate' | 'critMult' | 'hit' | 'penetration' | 'rate' |
-  'resist' | 'avoid' | 'devaluation';
-
-export type CompoundStat = 'strength' | 'dexterity' | 'intellect' | 'magic' | 'accuracy' |
-  'parry' | 'block' | 'dodge' | 'turn' | 'tenacity' | 'fortification';
-
-export type StatTag = 'Base' | 'Neg' | 'Mult' |
-  'Physical' | 'Magical' | 'Chemical' | 'Critical' | 'Spirit' | 'All' |
-  'Holy' | 'Dark' | 'Melee' | 'Ranged' | 'Force' | 'Buff' | 'Curse' |
-  'Fire' | 'Electric' | 'Ice' | 'Toxic' | 'Gadget' | 'Cryptic' | 'Light Melee' | 'Heavy' | 'Finesse' |
-  'Spell' | 'Mystic' | 'Weapon' |
-  'Projectile' | 'Grenade' | 'Control';
+export type AttackStats = { [key in AttackStat]: number};

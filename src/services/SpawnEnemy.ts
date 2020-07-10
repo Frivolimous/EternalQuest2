@@ -1,14 +1,15 @@
-import { IItemSave } from '../data/SaveData';
-import { BaseStats, dBaseStats } from '../data/StatData';
+import { BaseStats, dBaseStats, CompoundStats, dCompoundStats } from '../data/StatData';
 
 import * as _ from 'lodash';
+import { IItemSave } from '../data/ItemData';
 
 export const SpawnEnemy = {
   makeBasicEnemy: (zone: number, type: number, level: number): IEnemyStats => {
     return {
       name: 'Goblin',
       level: 2,
-      stats: _.cloneDeep(dBaseStats),
+      baseStats: _.cloneDeep(dBaseStats),
+      compoundStats: _.cloneDeep(dCompoundStats),
     };
   },
 };
@@ -16,7 +17,8 @@ export const SpawnEnemy = {
 export interface IEnemyStats {
   name: string;
   level: number;
-  stats: BaseStats;
+  baseStats: BaseStats;
+  compoundStats: CompoundStats;
   equipment?: IItemSave;
   extras?: any;
 }

@@ -1,4 +1,5 @@
 export const JMTicker = {
+  speedFactor: 1,
   prevTime: -1,
   tickEvents: [] as ((ms?: number) => void)[],
 
@@ -56,6 +57,11 @@ export const JMTicker = {
       JMTicker.prevTime = -1;
     } else {
       JMTicker.tickEvents.forEach(output => output(ms));
+      if (JMTicker.speedFactor > 1) {
+        for (let i = 0; i < JMTicker.speedFactor - 1; i++) {
+          JMTicker.tickEvents.forEach(output => output(ms));
+        }
+      }
       requestAnimationFrame(JMTicker.onTick);
     }
   },

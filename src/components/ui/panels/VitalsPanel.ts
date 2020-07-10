@@ -6,6 +6,7 @@ import { Fonts } from '../../../data/Fonts';
 import { Gauge } from '../Gauge';
 import { StatModel } from '../../../engine/stats/StatModel';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
+import { TooltipReader } from '../../../JMGE/TooltipReader';
 
 export class VitalsPanel extends BasePanel {
 
@@ -48,11 +49,18 @@ export class VitalsPanel extends BasePanel {
     this.healthGauge.position.set(50, 60);
     this.manaGauge.position.set(50, 90);
     this.actionGauge.position.set(50, 120);
+
+    TooltipReader.addTooltip(this.healthGauge, () => ({ title: 'Health', description: String(this.healthGauge.count) + ' / ' + String(this.healthGauge.total) }));
+    TooltipReader.addTooltip(this.manaGauge, () => ({ title: 'Mana', description: String(this.manaGauge.count) + ' / ' + String(this.manaGauge.total) }));
+    TooltipReader.addTooltip(this.actionGauge, () => ({ title: 'Action', description: String(this.actionGauge.count) + ' / ' + String(this.actionGauge.total) }));
+    TooltipReader.addTooltip(this.experienceGauge, () => ({ title: 'Experience', description: String(this.experienceGauge.count) + ' / ' + String(this.experienceGauge.total) }));
   }
 
   public addPlayer = (sprite: SpriteModel) => {
     this.nameT.text = sprite.stats.name;
     this.levelT.text = 'Lv: ' + String(sprite.stats.level);
+
+    this.update(sprite.vitals);
   }
 
   public update = (vitals: Vitals) => {

@@ -1,5 +1,5 @@
 export const Fonts = {
   UI: 'Roboto',
-  WORD: 'Coda Caption',
-  SCORE: 'Odibee Sans',
+  FLYING: 'Coda Caption',
+  // SCORE: 'Odibee Sans',
 };

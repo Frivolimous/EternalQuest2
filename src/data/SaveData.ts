@@ -1,3 +1,5 @@
+import { IItemSave } from './ItemData';
+
 export interface IExtrinsicModel {
   achievements?: boolean[];
   flags?: boolean[];
@@ -55,11 +57,3 @@ export const dPlayerSave: IPlayerSave = {
   skills: [],
   inventory: [],
 };
-
-export interface IItemSave {
-  index?: number;
-  enchant?: number | number[];
-  level?: number;
-  charges?: number;
-  priorities?: any;
-}

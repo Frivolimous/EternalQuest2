@@ -103,14 +103,15 @@ export let Facade = new class FacadeInner {
 
       let menu = new MenuUI();
 
+      this.currentPage = menu;
+      this.screen.addChild(menu);
+      menu.navIn();
+
       if (DEBUG_MODE) {
         let navbar = new Navbar();
         this.screen.addChild(navbar);
       }
 
-      this.currentPage = menu;
-      this.screen.addChild(menu);
-      menu.navIn();
       this.finishResize();
     });
   }
@@ -125,7 +126,7 @@ export let Facade = new class FacadeInner {
         this.currentPage.destroy();
 
         this.currentPage = nextPage;
-        this.screen.addChild(nextPage);
+        this.screen.addChildAt(nextPage, 0);
         nextPage.navIn();
         if (this.previousResize) {
           nextPage.onResize(this.previousResize);

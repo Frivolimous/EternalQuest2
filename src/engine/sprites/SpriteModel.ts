@@ -1,5 +1,6 @@
 import { StatModel } from '../stats/StatModel';
 import { Vitals } from '../stats/Vitals';
+import { IItem } from '../../data/ItemData';
 
 export class SpriteModel {
   public buffs: any;
@@ -20,6 +21,11 @@ export class SpriteModel {
     this.vitals = new Vitals();
     this.vitals.fillVital('health', this.stats.getBaseStat('health'));
     this.vitals.fillVital('mana', this.stats.getBaseStat('mana'));
+
+    this.stats.onUpdate.addListener(() => {
+      this.vitals.setTotal('health', this.stats.getBaseStat('health'));
+      this.vitals.setTotal('mana', this.stats.getBaseStat('mana'));
+    });
 
     this.resetVitals();
   }
@@ -46,12 +52,12 @@ export class SpriteModel {
 
   public set health(n: number) {
     this.vitals.setVital('health', n);
-    this.checkDeath();
+    // this.checkDeath();
   }
 
   public addHealth(n: number) {
     this.vitals.addCount('health', n);
-    this.checkDeath();
+    // this.checkDeath();
   }
 
   public get mana(): number {
@@ -60,12 +66,10 @@ export class SpriteModel {
 
   public set mana(n: number) {
     this.vitals.setVital('mana', n);
-    this.checkDeath();
   }
 
   public addMana(n: number) {
     this.vitals.addCount('mana', n);
-    this.checkDeath();
   }
   public get action(): number {
     return this.vitals.getVital('action');
@@ -73,15 +77,24 @@ export class SpriteModel {
 
   public set action(n: number) {
     this.vitals.setVital('action', n);
-    this.checkDeath();
   }
 
   public addAction(n: number) {
     this.vitals.addCount('action', n);
-    this.checkDeath();
   }
 
   public incAction() {
     this.vitals.addCount('action', this.stats.getBaseStat('speed') / 10);
+  }
+
+  public regenTick(value: number = 10) {
+    this.vitals.regen.count += value;
+    if (this.vitals.regen.count > this.vitals.regen.total) {
+      this.vitals.regen.count -= this.vitals.regen.total;
+      let hreg = this.stats.getBaseStat('hregen') * this.stats.getBaseStat('health');
+      let mreg = this.stats.getBaseStat('mregen') * this.stats.getBaseStat('mana');
+      this.vitals.addCount('health', hreg);
+      this.vitals.addCount('mana', mreg);
+    }
   }
 }

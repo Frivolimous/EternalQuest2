@@ -4,16 +4,25 @@ import { Formula } from '../../services/Formula';
 import { IPlayerSave } from '../../data/SaveData';
 import { IEnemyStats } from '../../services/SpawnEnemy';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
+import { ActionContainer } from './ActionContainer';
+import { IItem } from '../../data/ItemData';
+import { ItemManager } from '../../services/ItemManager';
 
 export class StatModel {
   public static fromSave(save: IPlayerSave): StatModel {
-    let m = new StatModel(save.name, save.title, save.level, save.cosmetics, save.equipment, save.inventory, save.artifacts, save.skills, save.talent, save.experience);
+    let m = new StatModel(save.name, save.title, save.level, save.cosmetics, _.map(save.equipment, ItemManager.loadItem), _.map(save.inventory, ItemManager.loadItem), save.artifacts, save.skills, save.talent, save.experience);
 
     return m;
   }
 
   public static fromEnemy(enemy: IEnemyStats): StatModel {
-    let m = new StatModel(enemy.name, null, enemy.level, null, enemy.equipment, null, null, null, null, null);
+    let m = new StatModel(enemy.name, null, enemy.level, null, _.map(enemy.equipment, ItemManager.loadItem), null, null, null, null, null);
+    m.baseStats = enemy.baseStats;
+    _.forEach(enemy.compoundStats, (value: number, stat: CompoundStat) => {
+      if (value !== 0) {
+        m.addCompountStat(stat, value);
+      }
+    });
 
     return m;
   }
@@ -23,7 +32,7 @@ export class StatModel {
   private baseStats: BaseStats;
   private compoundStats: CompoundStats;
 
-  private actions: any;
+  private actions: ActionContainer;
   private triggers: any;
   private unarmed: any;
   private unarmored: any;
@@ -34,8 +43,8 @@ export class StatModel {
     public level?: number,
     public cosmetics?: any,
 
-    public equipment?: any,
-    public inventory?: any,
+    public equipment?: IItem[],
+    public inventory?: IItem[],
     public artifacts?: any,
     public skills?: any,
     public talent?: any,
@@ -43,6 +52,8 @@ export class StatModel {
   ) {
     this.baseStats = _.cloneDeep(dBaseStats);
     this.compoundStats = _.cloneDeep(dCompoundStats);
+    this.actions = new ActionContainer();
+    this.equipment.forEach(item => this.equipItem(item, -1));
   }
 
   public addCompountStat(stat: CompoundStat, value: number) {
@@ -106,6 +117,7 @@ export class StatModel {
         }
       }
     }
+
     this.onUpdate.publish();
   }
 
@@ -181,10 +193,10 @@ export class StatModel {
       level: this.level,
       cosmetics: this.cosmetics,
       talent: this.talent,
-      equipment: this.equipment,
+      equipment: _.map(this.equipment, ItemManager.saveItem),
+      inventory: _.map(this.inventory, ItemManager.saveItem),
       artifacts: this.artifacts,
       skills: this.skills,
-      inventory: this.inventory,
       experience: this.experience,
     };
   }
@@ -206,12 +218,66 @@ export class StatModel {
           for (let key2 of Object.keys(stat.tags)) {
             let st = this.baseStats[key as BaseStat].tags[key2 as StatTag];
             let stv = BaseStatProgression[key as BaseStat] === 'linear' ? (st.base * (1 + st.mult)) : (Formula.addMult(st.base, st.base * st.mult) - st.neg);
-            m += '- ' + key2 + ': ' + _.round(stv * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
+            if (stv !== 0) {
+              m += '- ' + key2 + ': ' + _.round(stv * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
+            }
           }
         }
         break;
     }
 
     return m;
+  }
+
+  public getActionList(distance: 'between' | number) {
+    return this.actions.getListAtDistance(distance);
+  }
+
+  public equipItem = (item: IItem, slot: number) => {
+    if (!item) return;
+
+    if (slot > -1) {
+      this.equipment[slot] = item;
+    }
+
+    if (item.action) {
+      this.actions.addAction(item.action);
+    }
+
+    item.baseStats.forEach(stat => {
+      this.addBaseStat(stat.stat, stat.tag, stat.value);
+    });
+
+    item.compoundStats.forEach(stat => {
+      this.addCompountStat(stat.stat, stat.value);
+    });
+  }
+
+  public unequipItem = (item: IItem, slot: number) => {
+    if (!item) return;
+
+    if (slot > -1) {
+      this.equipment[slot] = null;
+    }
+
+    if (item.action) {
+      this.actions.removeAction(item.action);
+    }
+
+    item.baseStats.forEach(stat => {
+      this.subBaseStat(stat.stat, stat.tag, stat.value);
+    });
+
+    item.compoundStats.forEach(stat => {
+      this.subCompountStat(stat.stat, stat.value);
+    });
+  }
+
+  public addItem = (item: IItem, slot: number) => {
+    this.inventory[slot] = item;
+  }
+
+  public removeItem = (item: IItem, slot: number) => {
+    this.inventory[slot] = null;
   }
 }

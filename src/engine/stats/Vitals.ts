@@ -7,6 +7,8 @@ export interface IVital {
 export type VitalType = 'health' | 'mana' | 'action' | 'experience';
 
 export class Vitals {
+  public regen: IVital = {count: 0, total: 100, canOverflow: true };
+
   private health: IVital = {count: 100, total: 100};
   private mana: IVital = {count: 100, total: 100};
   private action: IVital = {count: 0, total: 100, canOverflow: true};
@@ -26,6 +28,16 @@ export class Vitals {
     this[vital].count = count;
     if (total) {
       this[vital].total = total;
+    }
+
+    this.updateCallback && this.updateCallback(this);
+  }
+
+  public setTotal(vital: VitalType, total: number) {
+    this[vital].total = total;
+
+    if (!this[vital].canOverflow) {
+      this[vital].count = Math.min(this[vital].count, this[vital].total);
     }
 
     this.updateCallback && this.updateCallback(this);

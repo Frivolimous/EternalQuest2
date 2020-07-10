@@ -14,10 +14,10 @@ const virtualSave: any = {
     level: 0,
     cosmetics: [],
     talent: 0,
-    equipment: [],
+    equipment: [{ index: 0, level: 0 }, { index: 1, level: 0 }, null, null, null, { index: 2, level: 0 }],
     artifacts: [],
     skills: [],
-    inventory: [],
+    inventory: [{index: 3, level: 0 }, {index: 4, level: 0 }],
   },
   'Player-L-0': {
     ascendedZone: 0,
@@ -268,3 +268,5 @@ export class SaveManager {
     }
   }
 }
+
+(window as any).checkSaves = () => console.log(SaveManager.getExtrinsic(), SaveManager.getCurrentPlayer(), SaveManager.getCurrentPlayerLevel());

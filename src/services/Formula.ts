@@ -8,4 +8,8 @@ export const Formula = {
   subMult(t: number, a: number): number {
     return (1 - (1 - t) / (1 - a));
   },
+
+  monstersByZone(zone: number): number {
+    return zone + 8;
+  },
 };

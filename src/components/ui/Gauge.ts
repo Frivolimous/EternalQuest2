@@ -14,6 +14,8 @@ interface IGauge {
 
 export class Gauge extends PIXI.Container {
   public percent = 1;
+
+  public count: number;
   public total: number;
 
   private back = new PIXI.Graphics();
@@ -67,6 +69,8 @@ export class Gauge extends PIXI.Container {
   }
 
   public setFraction(count: number, total: number) {
+    this.count = count;
+    this.total = total;
     this.setPercent(count / total);
   }
 

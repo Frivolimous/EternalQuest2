@@ -14,7 +14,7 @@ export class StatsPanel extends BasePanel {
   private type: 'basic' | 'compound' = 'basic';
 
   constructor() {
-    super(new PIXI.Rectangle(525, 150, 275, 500), 0xf1f1f1);
+    super(new PIXI.Rectangle(525, 150, 275, 650), 0xf1f1f1);
 
     this.nameText = new PIXI.Text('', { fontFamily: Fonts.UI, fontSize: 20 });
     this.statText = new PIXI.Text('', { fontFamily: Fonts.UI, fontSize: 15 });

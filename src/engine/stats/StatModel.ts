@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { BaseStats, CompoundStat, BaseStat, StatTag, CompoundStats, dBaseStats, dCompoundStats, CompoundMap, BaseStatProgression, BaseStatDisplay, SimpleStats, CompoundStatProgression, CompoundStatDisplay } from '../../data/StatData';
+import { BaseStats, CompoundStat, BaseStat, StatTag, CompoundStats, dBaseStats, dCompoundStats, CompoundMap, BaseStatProgression, BaseStatDisplay, SimpleStats, CompoundStatProgression, CompoundStatDisplay, StatMap } from '../../data/StatData';
 import { Formula } from '../../services/Formula';
 import { IPlayerSave } from '../../data/SaveData';
 import { IEnemyStats } from '../../services/SpawnEnemy';
@@ -7,6 +7,7 @@ import { JMEventListener } from '../../JMGE/events/JMEventListener';
 import { ActionContainer } from './ActionContainer';
 import { IItem } from '../../data/ItemData';
 import { ItemManager } from '../../services/ItemManager';
+import { IAction } from '../../data/ActionData';
 
 export class StatModel {
   public static fromSave(save: IPlayerSave): StatModel {
@@ -34,7 +35,6 @@ export class StatModel {
 
   private actions: ActionContainer;
   private triggers: any;
-  private unarmed: any;
   private unarmored: any;
 
   constructor(
@@ -229,8 +229,42 @@ export class StatModel {
     return m;
   }
 
-  public getActionList(distance: 'between' | number) {
+  public getActionList(distance: 'b' | number) {
     return this.actions.getListAtDistance(distance);
+  }
+
+  public addStatMap(baseStats?: StatMap, compoundStats?: CompoundMap) {
+    if (baseStats) {
+      baseStats.forEach(stat => {
+        this.addBaseStat(stat.stat, stat.tag, stat.value);
+      });
+    }
+    if (compoundStats) {
+      compoundStats.forEach(stat => {
+        this.addCompountStat(stat.stat, stat.value);
+      });
+    }
+  }
+
+  public removeStatMap(baseStats?: StatMap, compoundStats?: CompoundMap) {
+    if (baseStats) {
+      baseStats.forEach(stat => {
+        this.subBaseStat(stat.stat, stat.tag, stat.value);
+      });
+    }
+    if (compoundStats) {
+      compoundStats.forEach(stat => {
+        this.subCompountStat(stat.stat, stat.value);
+      });
+    }
+  }
+
+  public addAction = (action: IAction) => {
+    this.actions.addAction(action);
+  }
+
+  public removeAction = (action: IAction) => {
+    this.actions.removeAction(action);
   }
 
   public equipItem = (item: IItem, slot: number) => {
@@ -241,16 +275,10 @@ export class StatModel {
     }
 
     if (item.action) {
-      this.actions.addAction(item.action);
+      this.addAction(item.action);
     }
 
-    item.baseStats.forEach(stat => {
-      this.addBaseStat(stat.stat, stat.tag, stat.value);
-    });
-
-    item.compoundStats.forEach(stat => {
-      this.addCompountStat(stat.stat, stat.value);
-    });
+    this.addStatMap(item.baseStats, item.compoundStats);
   }
 
   public unequipItem = (item: IItem, slot: number) => {
@@ -261,16 +289,10 @@ export class StatModel {
     }
 
     if (item.action) {
-      this.actions.removeAction(item.action);
+      this.removeAction(item.action);
     }
 
-    item.baseStats.forEach(stat => {
-      this.subBaseStat(stat.stat, stat.tag, stat.value);
-    });
-
-    item.compoundStats.forEach(stat => {
-      this.subCompountStat(stat.stat, stat.value);
-    });
+    this.removeStatMap(item.baseStats, item.compoundStats);
   }
 
   public addItem = (item: IItem, slot: number) => {

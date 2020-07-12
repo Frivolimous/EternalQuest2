@@ -28,7 +28,7 @@ export class JMEventListener<T = any> {
     this.once.push(output);
   }
 
-  public publish(event?: T) {
+  public publish = (event?: T) => {
     // console.log('publish', event, this.active);
     this.events.push(event);
     if (!this.active) {
@@ -37,7 +37,7 @@ export class JMEventListener<T = any> {
     }
   }
 
-  public publishSync(event?: T) {
+  public publishSync = (event?: T) => {
     let listeners = _.clone(this.listeners);
     listeners.forEach(output => output(event));
     while (this.once.length > 0) {

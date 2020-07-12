@@ -2,7 +2,6 @@ import * as _ from 'lodash';
 
 import { GameEvents, IAnimateAction } from '../services/GameEvents';
 import { SpriteModel } from './sprites/SpriteModel';
-import { GameModel } from './GameModel';
 import { SaveManager } from '../services/SaveManager';
 import { StatModel } from './stats/StatModel';
 import { RandomSeed } from '../services/RandomSeed';
@@ -10,7 +9,10 @@ import { JMEventListener } from '../JMGE/events/JMEventListener';
 import { SpawnEnemy } from '../services/SpawnEnemy';
 import { IPlayerLevelSave } from '../data/SaveData';
 import { Vitals } from './stats/Vitals';
-import { ActionManager } from '../services/ActionManager';
+import { ActionManager, IBuffResult } from '../services/ActionManager';
+import { BuffList } from '../data/BuffData';
+import { ActionList } from '../data/ActionData';
+import { DataConverter } from '../services/DataConverter';
 
 export class GameController {
   public onPlayerAdded = new JMEventListener<SpriteModel>();
@@ -23,8 +25,9 @@ export class GameController {
   public onVitalsUpdate = new JMEventListener<Vitals>();
   public onFightStart = new JMEventListener<null>();
   public onAction = new JMEventListener<IAnimateAction>();
+  public onBuffEffect = new JMEventListener<IBuffResult>();
+  public onNavTown = new JMEventListener<null>();
 
-  private model: GameModel;
   private levelData: IPlayerLevelSave;
 
   private spriteModels: SpriteModel[] = [];
@@ -34,8 +37,6 @@ export class GameController {
   private spawnCount = 4;
 
   constructor() {
-    this.model = new GameModel();
-
     GameEvents.ticker.add(this.onTick);
 
     this.levelData = SaveManager.getCurrentPlayerLevel();
@@ -132,7 +133,7 @@ export class GameController {
     let maxSprite: SpriteModel;
     this.spriteModels.forEach(sprite => {
       sprite.incAction();
-      let action = sprite.action;
+      let action = sprite.vitals.getVital('action');
       if (action > maxVal) {
         maxVal = action;
         maxSprite = sprite;
@@ -141,7 +142,7 @@ export class GameController {
     if (maxVal >= 100) {
       this.processing = true;
 
-      let result = ActionManager.chooseAction(maxSprite, this.spriteModels, true);
+      let result = ActionManager.chooseAction(maxSprite, this.spriteModels, true, this.onBuffEffect.publish);
       this.onAction.publish({
         result,
         trigger: () => {
@@ -178,13 +179,20 @@ export class GameController {
     _.each(this.spriteModels, sprite => {
       this.processing = true;
       if (sprite.player) {
-        let result = ActionManager.chooseAction(sprite, this.spriteModels, false);
-        this.onAction.publish({
-          result,
-          trigger: () => {
-            ActionManager.finishAction(result, this.spriteModels);
-          },
-        });
+        let result = ActionManager.chooseAction(sprite, this.spriteModels, false, this.onBuffEffect.publish);
+
+        if (result) {
+          if (result.source.slug === 'gotown') {
+            this.onNavTown.publish();
+          } else {
+            this.onAction.publish({
+              result,
+              trigger: () => {
+                ActionManager.finishAction(result, this.spriteModels);
+              },
+            });
+          }
+        }
       }
     });
   }
@@ -197,7 +205,7 @@ export class GameController {
     this.fighting = true;
     this.spriteModels.forEach(sprite => {
       let init = sprite.stats.getBaseStat('initiative');
-      sprite.action = init + RandomSeed.general.getRaw() * 100;
+      sprite.vitals.setVital('action', init + RandomSeed.general.getRaw() * 100);
       sprite.tile = sprite.player ? 0 : 2;
     });
 
@@ -212,5 +220,30 @@ export class GameController {
     console.log('Enemy: ' + enemy.stats.name);
     this.spriteModels.push(enemy);
     this.onSpriteAdded.publish(enemy);
+  }
+
+  public addTownBuff = () => {
+    let player = _.find(this.spriteModels, sprite => sprite.player);
+
+    if (player.buffs.hasBuff('town')) {
+      player.buffs.expendBuff('town');
+    } else {
+      let buff = DataConverter.getBuff('town', 0);
+      let buffAction = buff.action;
+
+      let onAdd = () => {
+        player.stats.addAction(buffAction);
+      };
+      let onRemove = () => {
+        player.stats.removeAction(buffAction);
+      };
+      player.buffs.addBuff({
+        source: buff,
+        remaining: 1,
+        timer: Infinity,
+        onAdd,
+        onRemove,
+      });
+    }
   }
 }

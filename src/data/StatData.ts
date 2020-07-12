@@ -18,6 +18,11 @@ export type PhysicalTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Mel
 export type StatMap = { stat: BaseStat, tag: StatTag, value: number }[];
 export type CompoundMap = { stat: CompoundStat, value: number }[];
 
+export type StatMapLevel = { stat: BaseStat, tag: StatTag, value: LevelValue }[];
+export type CompoundMapLevel = { stat: CompoundStat, value: LevelValue }[];
+
+export type LevelValue = number | { base?: number, inc?: number, dim?: number };
+
 export const CompoundMap: { [key in CompoundStat]: { stat: BaseStat, tag: StatTag, percent: number }[] } = {
   strength: [
     { stat: 'power', tag: 'Melee', percent: 1 },
@@ -200,3 +205,4 @@ export type BaseStats = {
 type TagGroup = {[key in StatTag]: {base: number, mult: number, neg?: number}};
 export type SimpleStats = { [key in BaseStat]: number};
 export type AttackStats = { [key in AttackStat]: number};
+export type AttackStatsLevel = { [key in AttackStat]: LevelValue};

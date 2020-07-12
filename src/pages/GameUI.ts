@@ -12,6 +12,7 @@ import { ZonePanel } from '../components/ui/panels/ZonePanel';
 import { StatsPanel } from '../components/ui/panels/StatsPanel';
 import { IResizeEvent } from '../services/GameEvents';
 import { InventoryPanel } from '../components/ui/panels/InventoryPanel';
+import { SkillPanel } from '../components/ui/panels/SkillPanel';
 
 export class GameUI extends BaseUI {
   public display: GameView;
@@ -36,7 +37,7 @@ export class GameUI extends BaseUI {
     this.stats = new StatsPanel();
     this.inventory = new InventoryPanel();
     this.log = new BasePanel(new PIXI.Rectangle(525, 150, 275, 650), 0xf1cccc);
-    this.skills = new BasePanel(new PIXI.Rectangle(525, 150, 275, 650), 0xccccf1);
+    this.skills = new SkillPanel();
 
     this.swapPanelButton = new Button({ width: 80, height: 20, label: 'Next Tab', onClick: this.swapPanel, rounding: 2, labelStyle: {fontSize: 18} });
 
@@ -63,6 +64,9 @@ export class GameUI extends BaseUI {
     this.controller.onSpriteRemoved.addListener(this.display.spriteRemoved);
     this.controller.onFightStart.addListener(this.display.fightStarted);
     this.controller.onAction.addListener(this.display.animateAction);
+
+    this.controller.onBuffEffect.addListener(this.display.animateBuff);
+    this.controller.onNavTown.addListener(() => this.navBack());
   }
 
   public destroy() {
@@ -83,7 +87,8 @@ export class GameUI extends BaseUI {
   }
 
   private navTown = () => {
-    this.navBack(); // replace with 'add town buff';
+    // this.navBack(); // replace with 'add town buff';
+    this.controller.addTownBuff();
   }
 
   private playerDead = () => {

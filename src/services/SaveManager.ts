@@ -14,10 +14,10 @@ const virtualSave: any = {
     level: 0,
     cosmetics: [],
     talent: 0,
-    equipment: [{ index: 0, level: 0 }, { index: 1, level: 0 }, null, null, null, { index: 2, level: 0 }],
+    equipment: [{ slug: 'Sword', level: 0 }, { slug: 'Hat', level: 0 }, null, null, null, { slug: 'Quick Charm', level: 0 }],
     artifacts: [],
     skills: [],
-    inventory: [{index: 3, level: 0 }, {index: 4, level: 0 }],
+    inventory: [{slug: 'Magic Missile', level: 0 }, {slug: 'Life Tap', level: 0 }, {slug: 'Magic Missile', level: 10 }, {slug: 'Life Tap', level: 10 }, { slug: 'Hat', level: 10 }],
   },
   'Player-L-0': {
     ascendedZone: 0,

@@ -1,9 +1,11 @@
 import { StatModel } from '../stats/StatModel';
 import { Vitals } from '../stats/Vitals';
 import { IItem } from '../../data/ItemData';
+import { BuffManager } from './BuffManager';
 
 export class SpriteModel {
-  public buffs: any;
+  public buffs: BuffManager;
+  public vitals: Vitals;
 
   public tile = 0;
   public player = false;
@@ -11,14 +13,14 @@ export class SpriteModel {
   public dead = false;
   public focusTarget: SpriteModel;
 
-  public vitals: Vitals;
-
   constructor(public stats?: StatModel) {
     if (!stats) {
       this.stats = new StatModel();
     }
 
     this.vitals = new Vitals();
+    this.buffs = new BuffManager();
+
     this.vitals.fillVital('health', this.stats.getBaseStat('health'));
     this.vitals.fillVital('mana', this.stats.getBaseStat('mana'));
 
@@ -46,43 +48,6 @@ export class SpriteModel {
     }
   }
 
-  public get health(): number {
-    return this.vitals.getVital('health');
-  }
-
-  public set health(n: number) {
-    this.vitals.setVital('health', n);
-    // this.checkDeath();
-  }
-
-  public addHealth(n: number) {
-    this.vitals.addCount('health', n);
-    // this.checkDeath();
-  }
-
-  public get mana(): number {
-    return this.vitals.getVital('mana');
-  }
-
-  public set mana(n: number) {
-    this.vitals.setVital('mana', n);
-  }
-
-  public addMana(n: number) {
-    this.vitals.addCount('mana', n);
-  }
-  public get action(): number {
-    return this.vitals.getVital('action');
-  }
-
-  public set action(n: number) {
-    this.vitals.setVital('action', n);
-  }
-
-  public addAction(n: number) {
-    this.vitals.addCount('action', n);
-  }
-
   public incAction() {
     this.vitals.addCount('action', this.stats.getBaseStat('speed') / 10);
   }
@@ -96,5 +61,7 @@ export class SpriteModel {
       this.vitals.addCount('health', hreg);
       this.vitals.addCount('mana', mreg);
     }
+
+    this.buffs.tickBuffs(value);
   }
 }

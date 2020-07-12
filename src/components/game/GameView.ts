@@ -11,6 +11,7 @@ import { JMTween } from '../../JMGE/JMTween';
 import { CompoundStat } from '../../data/StatData';
 import { JMTicker } from '../../JMGE/events/JMTicker';
 import { Colors } from '../../data/Colors';
+import { IBuffResult } from '../../services/ActionManager';
 
 export class GameView extends PIXI.Container {
   public onQueueEmpty = new JMEventListener<void>(false, false);
@@ -77,12 +78,14 @@ export class GameView extends PIXI.Container {
     this.noActions = false;
   }
 
+  public animateBuff = (e: IBuffResult) => {
+    this.resolveBuff(e);
+  }
+
   public fightStarted = () => {
     this.playerView.proclaim('FIGHT!', 0x00ff00);
-    console.log('a');
     new JMTween({}, 0).wait(1000).start().onWaitComplete(() => {
       this.onQueueEmpty.publish();
-      console.log('b');
     });
   }
 
@@ -138,7 +141,7 @@ export class GameView extends PIXI.Container {
           action.result.vitalChange.forEach(data => {
             let view = this.getSpriteByModel(data.sprite);
             let color = data.value >= 0 ? Colors.DamageColor[data.tag] : Colors.HealColor;
-            view.proclaim(String(Math.abs(data.value)), color);
+            view.proclaim(String(Math.abs(data.value)) + (data.critical ? '!!!' : ''), color);
           });
         }
         if (action.result.positionChange) {
@@ -147,6 +150,26 @@ export class GameView extends PIXI.Container {
         }
       }
     });
+  }
+
+  private resolveBuff(buff: IBuffResult) {
+    if (buff.removeBuff) {
+    }
+    if (buff.addBuff) {
+    }
+    if (buff.vitalChange) {
+      buff.vitalChange.forEach(data => {
+        let view = this.getSpriteByModel(data.sprite);
+        let color = data.value >= 0 ? Colors.DamageColor[data.tag] : Colors.HealColor;
+        view.proclaim(String(Math.abs(data.value)), color);
+      });
+    }
+    if (buff.positionChange) {
+    }
+    if (buff.baseStatChange) {
+    }
+    if (buff.compoundStatChange) {
+    }
   }
 
   private getSpriteByModel(model: SpriteModel) {

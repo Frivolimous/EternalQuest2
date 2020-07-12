@@ -1,28 +1,42 @@
-import { StatTag, BaseStats, CompoundStats, CompoundMap, StatMap } from './StatData';
-import { IAction, ActionList } from './ActionData';
+import { StatTag, CompoundMap, StatMap, StatMapLevel, CompoundMapLevel } from './StatData';
+import { IAction, ActionSlug, IActionRaw } from './ActionData';
+
+export interface IItemRaw {
+  slug: string;
+  tags: StatTag[];
+
+  baseStats?: StatMapLevel;
+  compoundStats?: CompoundMapLevel;
+  action?: ActionSlug | IActionRaw;
+  triggers?: any;
+}
 
 export interface IItem {
   name: string;
+  slug: ItemSlug;
+  level: number;
   tags: StatTag[];
-  baseStats: StatMap;
-  compoundStats: CompoundMap;
-  save: IItemSave;
+
+  baseStats?: StatMap;
+  compoundStats?: CompoundMap;
   action?: IAction;
   triggers?: any;
 }
 
 export interface IItemSave {
-  index: number;
+  slug: ItemSlug;
   level: number;
   enchant?: number | number[];
   charges?: number;
   priorities?: any;
 }
 
-export const ItemList: IItem[] = [
-  { name: 'Sword', tags: ['Equipment', 'Weapon'], baseStats: [], compoundStats: [], save: { index: 0, level: 0 }, action: ActionList.strike },
-  { name: 'Hat', tags: ['Equipment', 'Helmet'], baseStats: [{ stat: 'health', tag: 'Base', value: 100 }], compoundStats: [{ stat: 'block', value: 0.1 }], save: { index: 1, level: 0 } },
-  { name: 'Quick Charm', tags: ['Belt'], baseStats: [], compoundStats: [{ stat: 'dexterity', value: 50 }], save: { index: 2, level: 0 } },
-  { name: 'Magic Missile', tags: ['Equipment', 'Spell'], baseStats: [], compoundStats: [], save: { index: 3, level: 0 }, action: ActionList.magicMissile },
-  { name: 'Life Tap', tags: ['Equipment', 'Spell'], baseStats: [], compoundStats: [], save: { index: 4, level: 0 }, action: ActionList.lifetap },
+export type ItemSlug = 'Sword' | 'Hat' | 'Quick Charm' | 'Magic Missile' | 'Life Tap';
+
+export const ItemList: IItemRaw[] = [
+  { slug: 'Sword', tags: ['Equipment', 'Weapon'], action: { slug: 'strike', type: 'attack', tags: ['Physical'], distance: [1], stats: { baseDamage: {base: 5, inc: 2} }, costs: { action: 100 } } },
+  { slug: 'Hat', tags: ['Equipment', 'Helmet'], baseStats: [{ stat: 'health', tag: 'Base', value: { base: 50, inc: 10} }], compoundStats: [{ stat: 'block', value: { base: 0.1, inc: 0.01 } }]},
+  { slug: 'Quick Charm', tags: ['Belt'], compoundStats: [{ stat: 'dexterity', value: {base: 10, inc: 1} }]},
+  { slug: 'Magic Missile', tags: ['Equipment', 'Spell'], action: 'magicMissile' },
+  { slug: 'Life Tap', tags: ['Equipment', 'Spell'], action: 'lifetap' },
 ];

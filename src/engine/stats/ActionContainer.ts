@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
 
 import { IAction, ActionList } from '../../data/ActionData';
+import { ActionManager } from '../../services/ActionManager';
+import { DataConverter } from '../../services/DataConverter';
 
 export class ActionContainer {
   private list: IAction[];
@@ -8,10 +10,10 @@ export class ActionContainer {
   private unarmed: IAction;
 
   constructor() {
-    this.unarmed = _.cloneDeep(ActionList.strike);
+    this.unarmed = DataConverter.getAction('strike', 0);
     this.unarmed.tags.push('Unarmed', 'Weapon', 'Melee');
 
-    this.list = [this.unarmed, _.cloneDeep(ActionList.approach), _.cloneDeep(ActionList.walk), _.cloneDeep(ActionList.idle)];
+    this.list = [this.unarmed, DataConverter.getAction('approach', 0), DataConverter.getAction('walk', 0), DataConverter.getAction('idle', 0)];
   }
 
   public addAction = (action: IAction) => {
@@ -36,8 +38,5 @@ export class ActionContainer {
     }
   }
 
-  public getListAtDistance = (distance: 'between' | number) =>
-    distance === 'between' ?
-    _.filter(this.list, {between: true}) :
-    _.filter(this.list, action => _.includes(action.distance, distance))
+  public getListAtDistance = (distance: 'b' | number) => _.filter(this.list, action => _.includes(action.distance, distance));
 }

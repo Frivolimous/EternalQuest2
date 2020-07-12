@@ -6,6 +6,7 @@ import { JMTween } from '../../../JMGE/JMTween';
 import { SimpleGauge } from '../../ui/SimpleGauge';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
 import { Vitals } from '../../../engine/stats/Vitals';
+import { BuffView } from './BuffView';
 
 export class SpriteView extends PIXI.Container {
   public facing = 1;
@@ -17,6 +18,7 @@ export class SpriteView extends PIXI.Container {
   private healthGauge: SimpleGauge;
   private yOffset: number = 0;
   private moving: boolean;
+  private buffView: BuffView = new BuffView();
 
   constructor(public model: SpriteModel, color = 0x4488ff, private showGauges: boolean = true) {
     super();
@@ -24,6 +26,7 @@ export class SpriteView extends PIXI.Container {
     this.display.beginFill(color);
     this.display.lineStyle(1);
     this.display.drawEllipse(-20, -75, 20, 75);
+    this.addChild(this.buffView);
     if (showGauges) {
       this.healthGauge = new SimpleGauge({color: 0xcc2222, bgColor: 0x550000, width: 40, height: 3});
       this.manaGauge = new SimpleGauge({color: 0x2222cc, bgColor: 0x000055, width: 40, height: 3});
@@ -37,6 +40,9 @@ export class SpriteView extends PIXI.Container {
       this.healthGauge.setTotal(model.stats.getBaseStat('health'));
       this.manaGauge.setTotal(model.stats.getBaseStat('mana'));
       model.setVitalsCallback(this.vitalsUpdate);
+      this.buffView.position.set(-40, -200);
+    } else {
+      this.buffView.position.set(-40, -170);
     }
   }
 
@@ -88,6 +94,8 @@ export class SpriteView extends PIXI.Container {
       }
       // this.y = CONFIG.GAME.FLOOR_HEIGHT + CONFIG.GAME.Y_TILE * this.yOffset;
     }
+
+    this.buffView.updateBuffs(this.model.buffs);
   }
 
   public isBusy = () => this.moving || this.animating;

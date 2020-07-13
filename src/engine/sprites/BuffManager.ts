@@ -16,6 +16,7 @@ export class BuffManager {
   public addBuff(buff: IActiveBuff) {
     let existing = this.getBuff(buff.source.name);
     if (existing) {
+      buff.timer = existing.timer;
       existing.onRemove && existing.onRemove();
       _.pull(this.buffs, existing);
     }

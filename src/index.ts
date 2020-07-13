@@ -13,7 +13,6 @@ import { Fonts } from './data/Fonts';
 import { loadFonts } from './helpers/loadFonts';
 import { TextureCache } from './services/TextureCache';
 import { GameEvents, IResizeEvent } from './services/GameEvents';
-import { RandomSeed } from './services/RandomSeed';
 import { Debug } from './services/_Debug';
 import { BaseUI, IFadeTiming, dFadeTiming } from './pages/_BaseUI';
 import { ScreenCover } from './JMGE/effects/ScreenCover';
@@ -53,6 +52,7 @@ export let Facade = new class FacadeInner {
       resolution: CONFIG.INIT.RESOLUTION,
       width: this.element.offsetWidth,
       height: this.element.offsetHeight,
+
     });
     this.element.append(this.app.view);
 

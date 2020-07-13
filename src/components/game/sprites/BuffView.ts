@@ -18,9 +18,9 @@ export class BuffView extends PIXI.Container {
     let modelBuffs = buffList.buffs;
     let viewBuffs = this.buffs;
 
-    let toAdd = _.filter(modelBuffs, model => !_.some(viewBuffs, view => view.settings.source.name === model.source.name));
-    let toRemove = _.filter(viewBuffs, view => !_.some(modelBuffs, model => model.source.name === view.settings.source.name));
-    let toUpdate = _.filter(viewBuffs, view => _.some(modelBuffs, model => model.source.name === view.settings.source.name));
+    let toAdd = _.filter(modelBuffs, model => !_.some(viewBuffs, view => view.settings === model));
+    let toRemove = _.filter(viewBuffs, view => !_.some(modelBuffs, model => model === view.settings));
+    let toUpdate = _.filter(viewBuffs, view => _.some(modelBuffs, model => model === view.settings));
 
     toAdd.forEach(this.addBuff);
     toRemove.forEach(this.removeBuff);

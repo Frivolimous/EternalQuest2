@@ -5,6 +5,7 @@ import { Facade } from '../../index';
 import { IItem } from '../../data/ItemData';
 import { TooltipReader } from '../../JMGE/TooltipReader';
 import { Descriptions } from '../../data/StringData';
+import { Fonts } from '../../data/Fonts';
 
 export interface IInventoryItem {
   width: number;
@@ -21,6 +22,7 @@ export class InventoryItem extends PIXI.Container {
 
   private background = new PIXI.Graphics();
   private dragging: boolean = false;
+  private text: PIXI.Text;
 
   constructor(public source: IItem, private settings?: IInventoryItem) {
     super();
@@ -35,6 +37,12 @@ export class InventoryItem extends PIXI.Container {
     this.addListener('pointerdown', this.pointerDown);
     this.addListener('pointerup', this.pointerUp);
     this.addListener('pointermove', this.pointerMove);
+
+    this.text = new PIXI.Text(source.name, {fontFamily: Fonts.UI, fontSize: 25, wordWrap: true, wordWrapWidth: 100});
+    this.addChild(this.text);
+    this.text.width = this.getWidth() - 10;
+    this.text.scale.y = this.text.scale.x;
+    this.text.position.set(5, (this.getHeight() - this.text.height) / 2);
 
     TooltipReader.addTooltip(this, {title: source.name, description: Descriptions.makeItemDescription(source)});
   }

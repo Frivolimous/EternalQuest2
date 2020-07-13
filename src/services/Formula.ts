@@ -16,6 +16,10 @@ export const Formula = {
     return zone + 8;
   },
 
+  experienceByLevel(level: number): number {
+    return level * 2;
+  },
+
   statLevelMapToStatMap(map: StatMapLevel, level: number): StatMap {
     return _.map(map, sl => ({stat: sl.stat, tag: sl.tag, value: Formula.statLevelToStat(sl.value, level)}));
   },

@@ -13,12 +13,17 @@ import { ActionManager, IBuffResult } from '../services/ActionManager';
 import { BuffList } from '../data/BuffData';
 import { ActionList } from '../data/ActionData';
 import { DataConverter } from '../services/DataConverter';
+import { ItemManager } from '../services/ItemManager';
+import { IItem } from '../data/ItemData';
+import { Formula } from '../services/Formula';
+import { IEnemy } from '../data/EnemyData';
 
 export class GameController {
   public onPlayerAdded = new JMEventListener<SpriteModel>();
   public onPlayerDead = new JMEventListener<null>();
   public onSpriteAdded = new JMEventListener<SpriteModel>();
   public onSpriteRemoved = new JMEventListener<SpriteModel>();
+  public onPlayerLevel = new JMEventListener<SpriteModel>();
   public onReset = new JMEventListener<null>();
   public onEnemyDead = new JMEventListener<SpriteModel>();
   public onZoneProgress = new JMEventListener<IPlayerLevelSave>();
@@ -27,14 +32,19 @@ export class GameController {
   public onAction = new JMEventListener<IAnimateAction>();
   public onBuffEffect = new JMEventListener<IBuffResult>();
   public onNavTown = new JMEventListener<null>();
+  public onLoot = new JMEventListener<IItem>();
+  public onLevelComplete = new JMEventListener<null>();
 
   private levelData: IPlayerLevelSave;
 
   private spriteModels: SpriteModel[] = [];
+  private player: SpriteModel;
 
   private fighting = false;
   private processing = false;
   private spawnCount = 4;
+
+  private levelComplete = false;
 
   constructor() {
     GameEvents.ticker.add(this.onTick);
@@ -48,14 +58,15 @@ export class GameController {
   }
 
   public startLevel() {
-    let player = new SpriteModel(StatModel.fromSave(SaveManager.getCurrentPlayer()));
-    console.log('Player: ', player.stats.name);
-    player.tile = 0;
-    player.player = true;
-    this.spriteModels.push(player);
-    player.setVitalsCallback(vitals => this.onVitalsUpdate.publish(vitals));
-    this.onPlayerAdded.publish(player);
-    this.onSpriteAdded.publish(player);
+    this.player = new SpriteModel(StatModel.fromSave(SaveManager.getCurrentPlayer()));
+    console.log('Player: ', this.player.stats.name);
+    this.player.tile = 0;
+    this.player.player = true;
+    this.player.onLevelUp.addListener(this.onPlayerLevel.publish);
+    this.spriteModels.push(this.player);
+    this.player.setVitalsCallback(vitals => this.onVitalsUpdate.publish(vitals));
+    this.onPlayerAdded.publish(this.player);
+    this.onSpriteAdded.publish(this.player);
     this.onZoneProgress.publish(this.levelData);
   }
 
@@ -84,11 +95,12 @@ export class GameController {
   }
 
   public onTick = () => {
-    if (this.processing) {
+    if (this.processing || this.levelComplete) {
       return;
     }
 
-    _.each(this.spriteModels, sprite => {
+    for (let i = this.spriteModels.length - 1; i >= 0; i--) {
+      let sprite = this.spriteModels[i];
       sprite.regenTick();
       sprite.checkDeath();
       if (sprite.dead) {
@@ -96,9 +108,10 @@ export class GameController {
           this.enemyDead(sprite);
         } else {
           this.playerDead(sprite);
+          return;
         }
       }
-    });
+    }
 
     if (this.fighting) {
       this.tickFighting();
@@ -110,11 +123,24 @@ export class GameController {
   public enemyDead = (sprite: SpriteModel) => {
     console.log('enemy dead');
     this.removeSprite(sprite);
-    this.spawnCount = RandomSeed.enemySpawn.getInt(1, 9);
-    this.fighting = false;
     this.onEnemyDead.publishSync(sprite);
     this.levelData.enemyCount++;
     this.onZoneProgress.publish(this.levelData);
+    this.player.earnXp();
+
+    let item = ItemManager.getLootFor(this.player, this.levelData, sprite);
+    if (item) {
+      this.onLoot.publish(item);
+    }
+
+    if (!_.some(this.spriteModels, {player: false})) {
+      this.endFight();
+    }
+  }
+
+  public endFight = () => {
+    this.spawnCount = RandomSeed.enemySpawn.getInt(1, 9);
+    this.fighting = false;
   }
 
   public playerDead = (sprite: SpriteModel) => {
@@ -214,7 +240,17 @@ export class GameController {
   }
 
   public spawnEnemy = () => {
-    let spawn = SpawnEnemy.makeBasicEnemy(this.levelData.zoneType, this.levelData.monsterType, this.levelData.zone);
+    let totalMonsters = Formula.monstersByZone(this.levelData.zone);
+    if (this.levelData.enemyCount > totalMonsters) {
+      this.levelData.zone++;
+      this.levelData.enemyCount = 0;
+      this.onLevelComplete.publish();
+      this.levelComplete = true;
+      return;
+    }
+
+    let spawn = SpawnEnemy.makeBasicEnemy(this.levelData.zoneType, this.levelData.monsterType, this.levelData.zone, this.levelData.enemyCount === totalMonsters);
+
     let enemy = new SpriteModel(StatModel.fromEnemy(spawn));
     enemy.tile = 9;
     console.log('Enemy: ' + enemy.stats.name);
@@ -223,21 +259,19 @@ export class GameController {
   }
 
   public addTownBuff = () => {
-    let player = _.find(this.spriteModels, sprite => sprite.player);
-
-    if (player.buffs.hasBuff('town')) {
-      player.buffs.expendBuff('town');
+    if (this.player.buffs.hasBuff('town')) {
+      this.player.buffs.expendBuff('town');
     } else {
       let buff = DataConverter.getBuff('town', 0);
       let buffAction = buff.action;
 
       let onAdd = () => {
-        player.stats.addAction(buffAction);
+        this.player.stats.addAction(buffAction);
       };
       let onRemove = () => {
-        player.stats.removeAction(buffAction);
+        this.player.stats.removeAction(buffAction);
       };
-      player.buffs.addBuff({
+      this.player.buffs.addBuff({
         source: buff,
         remaining: 1,
         timer: Infinity,
@@ -245,5 +279,11 @@ export class GameController {
         onRemove,
       });
     }
+  }
+
+  public getPlayerSave = () => {
+    let save = this.player.stats.getSave();
+
+    return save;
   }
 }

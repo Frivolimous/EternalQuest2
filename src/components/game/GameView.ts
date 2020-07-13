@@ -53,6 +53,9 @@ export class GameView extends PIXI.Container {
     view.display.interactive = true;
     view.display.buttonMode = true;
     view.display.addListener('pointerdown', () => this.onSpriteClicked.publishSync(sprite));
+    if (this.spriteViews.length >= 2) {
+      view.display.position.set(10 * (this.spriteViews.length - 1), 10 * (this.spriteViews.length - 1));
+    }
 
     this.spriteViews.push(view);
     this.addChild(view);
@@ -87,6 +90,10 @@ export class GameView extends PIXI.Container {
     new JMTween({}, 0).wait(1000).start().onWaitComplete(() => {
       this.onQueueEmpty.publish();
     });
+  }
+
+  public playerLevel = (sprite: SpriteModel) => {
+    this.playerView.proclaim('Level Up!', 0x00ff00);
   }
 
   private onTick = () => {

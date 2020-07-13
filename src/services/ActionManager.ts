@@ -13,39 +13,40 @@ import { DataConverter } from './DataConverter';
 
 export const ActionManager = {
   chooseAction: (origin: SpriteModel, sprites: SpriteModel[], fighting: boolean, onBuffUpdate: (result: IBuffResult) => void): IActionResult => {
+    let target: SpriteModel;
+    let actions: IAction[];
+
     if (fighting) {
-      let target = ActionManager.chooseTarget(origin, sprites, null);
+      target = ActionManager.chooseTarget(origin, sprites, null);
       let distance = Math.abs(origin.tile - target.tile);
-      let actions = origin.stats.getActionList(distance);
+      actions = origin.stats.getActionList(distance);
       if (origin.buffs.hasBuff('rushed')) {
         actions = _.filter(actions, data => (data.slug === 'strike' || data.slug === 'idle'));
       }
-      let action = actions[0];
-
-      return processAction(action, origin, target, sprites, onBuffUpdate);
     } else {
-      let actions = origin.stats.getActionList('b');
-      actions = _.filter(actions, data => {
-        if (data.costs) {
-          if (data.costs.health > 0 && data.costs.health > origin.vitals.getVital('health')) {
-            return false;
-          }
-          if (data.costs.mana > 0 && data.costs.mana > origin.vitals.getVital('mana')) {
-            return false;
-          }
-
-          return true;
-        }
-      });
-
-      let action = actions[0];
-
-      return processAction(action, origin, null, sprites, onBuffUpdate);
+      target = null;
+      actions = origin.stats.getActionList('b');
     }
+
+    actions = _.filter(actions, data => {
+      if (data.costs) {
+        if (data.costs.health > 0 && data.costs.health > origin.vitals.getVital('health')) {
+          return false;
+        }
+        if (data.costs.mana > 0 && data.costs.mana > origin.vitals.getVital('mana')) {
+          return false;
+        }
+
+        return true;
+      }
+    });
+    let action = actions[0];
+
+    return processAction(action, origin, target, sprites, onBuffUpdate);
   },
 
   chooseTarget: (origin: SpriteModel, sprites: SpriteModel[], action?: any) => {
-    return _.find(sprites, sprite => sprite !== origin);
+    return _.sample(_.filter(sprites, sprite => sprite.player !== origin.player));
   },
 
   finishAction: (result: IActionResult, others: SpriteModel[]) => {

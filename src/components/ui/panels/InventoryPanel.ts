@@ -6,6 +6,7 @@ import { InventoryDisplay } from '../../inventory/InventoryDisplay';
 import { InventoryItem } from '../../inventory/InventoryItem';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
 import { ItemManager } from '../../../services/ItemManager';
+import { IItem } from '../../../data/ItemData';
 
 export class InventoryPanel extends BasePanel {
   private equip: InventoryDisplay;
@@ -62,5 +63,9 @@ export class InventoryPanel extends BasePanel {
     this.belt.slot0Index = 5;
     this.inventory.onItemAdded = player.stats.addItem;
     this.inventory.onItemRemoved = player.stats.removeItem;
+  }
+
+  public addItem = (item: IItem) => {
+    this.inventory.addItem(new InventoryItem(item));
   }
 }

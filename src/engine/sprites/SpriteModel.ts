@@ -1,9 +1,11 @@
 import { StatModel } from '../stats/StatModel';
 import { Vitals } from '../stats/Vitals';
-import { IItem } from '../../data/ItemData';
 import { BuffManager } from './BuffManager';
+import { Formula } from '../../services/Formula';
+import { JMEventListener } from '../../JMGE/events/JMEventListener';
 
 export class SpriteModel {
+  public onLevelUp = new JMEventListener<SpriteModel>();
   public buffs: BuffManager;
   public vitals: Vitals;
 
@@ -23,6 +25,7 @@ export class SpriteModel {
 
     this.vitals.fillVital('health', this.stats.getBaseStat('health'));
     this.vitals.fillVital('mana', this.stats.getBaseStat('mana'));
+    this.vitals.setVital('experience', this.stats.experience, Formula.experienceByLevel(this.stats.level));
 
     this.stats.onUpdate.addListener(() => {
       this.vitals.setTotal('health', this.stats.getBaseStat('health'));
@@ -63,5 +66,24 @@ export class SpriteModel {
     }
 
     this.buffs.tickBuffs(value);
+  }
+
+  public earnXp(n: number = 1) {
+    if (this.stats.level >= 50) {
+      return;
+    }
+    this.vitals.addCount('experience', n);
+    let cXp = this.vitals.getVital('experience');
+    let tXp = this.vitals.getTotal('experience');
+
+    if (cXp >= tXp) {
+      this.stats.level += 1;
+      this.stats.skillpoints += 1;
+      cXp -= tXp;
+      tXp = Formula.experienceByLevel(this.stats.level);
+      this.onLevelUp.publish(this);
+    }
+    this.stats.experience = cXp;
+    this.vitals.setVital('experience', cXp, tXp);
   }
 }

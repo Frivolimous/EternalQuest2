@@ -1,8 +1,9 @@
-import { StatTag, CompoundMap, StatMap, StatMapLevel, CompoundMapLevel } from './StatData';
+import { StatTag, CompoundMap, StatMap, StatMapLevel, CompoundMapLevel, AttackStatsLevel, LevelValue } from './StatData';
 import { IAction, ActionSlug, IActionRaw } from './ActionData';
+import { EffectSlug, IEffectRaw } from './EffectData';
 
 export interface IItemRaw {
-  slug: string;
+  slug: ItemSlug;
   tags: StatTag[];
 
   baseStats?: StatMapLevel;
@@ -14,6 +15,7 @@ export interface IItemRaw {
 export interface IItem {
   name: string;
   slug: ItemSlug;
+  enchantSlug?: EnchantSlug;
   level: number;
   tags: StatTag[];
 
@@ -26,7 +28,7 @@ export interface IItem {
 export interface IItemSave {
   slug: ItemSlug;
   level: number;
-  enchant?: number | number[];
+  enchant?: EnchantSlug | EnchantSlug[];
   charges?: number;
   priorities?: any;
 }
@@ -39,4 +41,31 @@ export const ItemList: IItemRaw[] = [
   { slug: 'Quick Charm', tags: ['Belt'], compoundStats: [{ stat: 'dexterity', value: {base: 10, inc: 1} }]},
   { slug: 'Magic Missile', tags: ['Equipment', 'Spell'], action: 'magicMissile' },
   { slug: 'Life Tap', tags: ['Equipment', 'Spell'], action: 'lifetap' },
+];
+
+export type EnchantSlug = 'Master' | 'Mystic';
+
+export interface IEnchantRaw {
+  slug: EnchantSlug;
+  tags?: StatTag[];
+  baseStats?: StatMapLevel;
+  compoundStats?: CompoundMapLevel;
+  triggers?: any;
+
+  action?: {
+    tags?: StatTag[];
+
+    stats?: Partial<AttackStatsLevel>;
+    effects?: (EffectSlug | IEffectRaw)[];
+    costs?: {
+      mana?: LevelValue;
+      action?: LevelValue;
+      health?: LevelValue;
+    };
+  };
+}
+
+export const EnchantList: IEnchantRaw[] = [
+  {slug: 'Master', action: {stats: { baseDamage: {base: 2, inc: 1}}}},
+  {slug: 'Mystic', action: {tags: ['Mystic']}},
 ];

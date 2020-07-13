@@ -1,4 +1,5 @@
 import { IItemSave } from './ItemData';
+import { ISkillSave, SkillTreeSlug } from './SkillData';
 
 export interface IExtrinsicModel {
   achievements?: boolean[];
@@ -28,7 +29,8 @@ export interface IPlayerSave {
   talent?: number;
   equipment?: IItemSave[];
   artifacts?: number[];
-  skills?: [number, number][];
+  skills?: ISkillSave[];
+  skillTrees?: SkillTreeSlug[];
   skillPoints?: number;
   inventory?: IItemSave[];
   experience?: number;

@@ -12,6 +12,7 @@ import { Button } from '../components/ui/Button';
 import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { GameUI } from './GameUI';
+import { BuffIcon } from '../components/game/sprites/BuffIcon';
 // import { GameManager } from '../TDDR/GameManager';
 // import { facade };
 
@@ -36,6 +37,26 @@ export class MenuUI extends BaseUI {
 
     this.muter = new MuterOverlay();
     this.addChild(this.muter);
+
+    // let width = 50;
+    // let iconb = new PIXI.Graphics();
+    // let icon = new PIXI.Graphics();
+    // this.addChild(iconb, icon);
+    // iconb.beginFill(0x00ff00).lineStyle(2).drawCircle(width / 2, width / 2, width / 2);
+    // iconb.position.set(200, 200);
+    // icon.position.set(200, 200);
+
+    // window.addEventListener('keydown', e => {
+    //   if (e.key === 'e') {
+    //     new JMTween({percent: 0}, 5000).to({percent: 1}).start().onUpdate(obj => {
+    //       icon.clear().beginFill(0xff0000).lineStyle(2)
+    //         .moveTo(width / 2, width / 2)
+    //         // .lineTo(0, width / 2)
+    //         .arc(width / 2, width / 2, width / 2, - Math.PI / 2, - Math.PI / 2 + Math.PI * 2 - Math.PI * 2 * obj.percent)
+    //         .lineTo(width / 2, width / 2);
+    //     });
+    //   }
+    // });
   }
 
   public navIn = () => {

@@ -84,6 +84,12 @@ export class Button extends PIXI.Container {
     });
   }
 
+  public startCustomDraw() {
+    this.background.clear();
+    this.background.beginFill(0xffffff);
+    return this.background;
+  }
+
   public setColor(color: number) {
     this.color = color;
     this.background.tint = color;

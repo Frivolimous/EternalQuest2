@@ -1,5 +1,6 @@
 import { IAction } from './ActionData';
 import { IItem } from './ItemData';
+import { ISkill } from './SkillData';
 
 export const StringData = {
   GAME_TITLE: 'Eternal Quest',
@@ -27,6 +28,18 @@ export const Descriptions = {
     item.compoundStats && item.compoundStats.forEach(stat => str += stat.stat + ': ' + stat.value + '\n');
     if (item.action) {
       str += Descriptions.makeActionDescription(item.action) + '\n';
+    }
+
+    return str;
+  },
+  makeSkillDescription: (skill: ISkill): string => {
+    let str = '';
+    str += 'Level ' + skill.level + '\n';
+    str += '\n\n';
+    skill.baseStats && skill.baseStats.forEach(stat => str += stat.tag + ' ' + stat.stat + ': ' + stat.value + '\n');
+    skill.compoundStats && skill.compoundStats.forEach(stat => str += stat.stat + ': ' + stat.value + '\n');
+    if (skill.action) {
+      str += Descriptions.makeActionDescription(skill.action) + '\n';
     }
 
     return str;

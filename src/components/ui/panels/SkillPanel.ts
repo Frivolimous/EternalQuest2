@@ -10,12 +10,14 @@ import { SkillPage } from '../../skill/SkillPage';
 import { SkillPageMap, SkillTreeSlug } from '../../../data/SkillData';
 import { DataConverter } from '../../../services/DataConverter';
 import { SkillTree } from '../../skill/SkillTree';
+import { StatModel } from '../../../engine/stats/StatModel';
 
 export class SkillPanel extends BasePanel {
   private tree: SkillTree;
   private skillpoints: PIXI.Text;
-  constructor() {
-    super(new PIXI.Rectangle(525, 150, 275, 650), 0xccccf1);
+
+  constructor(bounds: PIXI.Rectangle = new PIXI.Rectangle(525, 150, 275, 650), color: number = 0xf1f1f1) {
+    super(bounds, color);
 
     this.tree = new SkillTree();
     this.addChild(this.tree);
@@ -27,17 +29,23 @@ export class SkillPanel extends BasePanel {
     this.skillpoints.position.set(100, 303);
   }
 
-  public addPlayer = (sprite: SpriteModel) => {
-    this.tree.loadPages(sprite.stats.skills, _.filter(SkillPageMap, page => _.some(sprite.stats.skillTrees, slug => slug === page.slug)), skill => {
-      skill = sprite.stats.tryLevelSkill(skill);
-      this.skillpoints.text = 'Skillpoints: ' + sprite.stats.skillpoints;
+  public addPlayer = (sprite: SpriteModel | StatModel) => {
+    if (sprite instanceof SpriteModel) {
+      sprite = sprite.stats;
+    }
+    this.tree.loadPages(sprite.skills, _.filter(SkillPageMap, page => _.some((sprite as StatModel).skillTrees, slug => slug === page.slug)), skill => {
+      skill = (sprite as StatModel).tryLevelSkill(skill);
+      this.skillpoints.text = 'Skillpoints: ' + (sprite as StatModel).skillpoints;
       return skill;
     });
-    this.skillpoints.text = 'Skillpoints: ' + sprite.stats.skillpoints;
+    this.skillpoints.text = 'Skillpoints: ' + (sprite as StatModel).skillpoints;
   }
 
-  public update = (sprite: SpriteModel) => {
+  public update = (sprite: SpriteModel | StatModel) => {
+    if (sprite instanceof SpriteModel) {
+      sprite = sprite.stats;
+    }
     console.log('panel update');
-    this.skillpoints.text = 'Skillpoints: ' + sprite.stats.skillpoints;
+    this.skillpoints.text = 'Skillpoints: ' + sprite.skillpoints;
   }
 }

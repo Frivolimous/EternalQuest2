@@ -43,6 +43,7 @@ export class SpriteModel {
     this.vitals.fillVital('health');
     this.vitals.fillVital('mana');
     this.vitals.setVital('action', 0);
+    this.dead = false;
   }
 
   public checkDeath() {

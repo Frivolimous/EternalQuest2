@@ -28,13 +28,15 @@ export class SimpleModal extends BaseModal {
 
     this.scoreText = new PIXI.Text(message, { fontSize: 33, fontFamily: Fonts.UI, fill: this.config.colorFront, wordWrap: true, wordWrapWidth: width - 100 });
     this.addChild(this.scoreText);
+    this.scoreText.height = Math.min(this.scoreText.height, height * 5 / 8);
+    this.scoreText.scale.x = this.scoreText.scale.y;
 
     this.scoreText.position.set(50, 50);
     if (onClose !== null) {
       this.closeButton = new Button({
         label: this.config.closeText || 'Close',
         width: width / 4,
-        height: 60,
+        height: width / 8,
         onClick: this.closeModal,
         color: this.config.colorFront,
         labelStyle: {fill: this.config.colorBack},

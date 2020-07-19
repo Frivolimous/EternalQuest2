@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 class SingleSeed {
   private numberSeed: number;
   private current: number = 0;
@@ -40,6 +42,14 @@ class SingleSeed {
 export const RandomSeed = {
   general: new SingleSeed('general'),
   enemySpawn: new SingleSeed('enemy'),
+  randomSlug: () => {
+    let str = '';
+    for (let i = 0; i < 20; i++) {
+      str += _.sample(alphabet);
+    }
+
+    return str;
+  },
 };
 
-// (window as any).RandomSeed = RandomSeed; // for testing
+let alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];

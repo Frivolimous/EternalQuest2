@@ -43,11 +43,10 @@ export class GameUI extends BaseUI {
 
     this.swapPanelButton = new Button({ width: 80, height: 20, label: 'Next Tab', onClick: this.swapPanel, rounding: 2, labelStyle: {fontSize: 18} });
 
-    this.addChild(this.vitals, this.zone, this.swapPanelButton, this.inventory);
+    this.addChild(this.vitals, this.zone, this.swapPanelButton, this.inventory, this.skills);
+  }
 
-    // this.addChild(this.stats);
-    this.addChild(this.skills);
-
+  public navIn = () => {
     this.stitchComponents();
   }
 

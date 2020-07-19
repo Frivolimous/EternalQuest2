@@ -8,10 +8,14 @@ import { Facade } from '../index';
 import { CreditsUI } from './CreditsUI';
 import { GameUI } from './GameUI';
 import { BlankUI } from './BlankUI';
+import { LoadCharacterUI } from './LoadCharacterUI';
+import { HomeUI } from './HomeUI';
+import { NewCharacterUI } from './NewCharacterUI';
+import { StatisticsUI } from './StatisticsUI';
 
 export class Navbar extends PIXI.Container {
-  background = new PIXI.Graphics();
-  contents: PIXI.Container[] = [];
+  private background = new PIXI.Graphics();
+  private contents: PIXI.Container[] = [];
 
   constructor() {
     super();
@@ -19,11 +23,11 @@ export class Navbar extends PIXI.Container {
     this.addChild(this.background);
     this.addContent('Intro', BlankUI, true);
     this.addContent('Main Menu', MenuUI);
-    this.addContent('Home', BlankUI, true);
-    this.addContent('► New Character', BlankUI, true);
-    this.addContent('► Load Character', BlankUI, true);
-    this.addContent('► Statistics', BlankUI, true);
-    this.addContent('► Stash', BlankUI, true);
+    this.addContent('Home', HomeUI);
+    this.addContent('► New Character', NewCharacterUI);
+    this.addContent('► Load Character', LoadCharacterUI);
+    this.addContent('► Statistics', StatisticsUI);
+    this.addContent2('► Stash', () => { let page = new StatisticsUI(); page.selectLeft.selectButton(2); page.selectRight.selectButton(0); Facade.setCurrentPage(page); });
     this.addContent('Game', GameUI);
     this.addContent('► Duel Arena', BlankUI, true);
     this.addContent('► Epic Mode', BlankUI, true);
@@ -47,10 +51,20 @@ export class Navbar extends PIXI.Container {
     content.interactive = true;
     content.buttonMode = true;
 
-    content.addListener("pointerdown", () => {
+    content.addListener('pointerdown', () => {
       let page = new PageConstructor();
       Facade.setCurrentPage(page);
     });
+  }
+
+  private addContent2(title: string, onDown: () => void, nowhere = false) {
+    let content = new PIXI.Text(title, {fontFamily: Fonts.UI, fill: nowhere ? 0xff7777 : 0xffffff, fontSize: 20});
+    this.addChild(content);
+    this.contents.push(content);
+    content.interactive = true;
+    content.buttonMode = true;
+
+    content.addListener('pointerdown', onDown);
   }
 
   private onResize = (e: IResizeEvent) => {

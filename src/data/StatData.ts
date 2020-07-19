@@ -12,8 +12,11 @@ export type SpecTag = 'Base' | 'Neg' | 'Mult' | 'Critical';
 export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell';
 export type DamageTag = 'Physical' | 'Magical' | 'Chemical' | 'Holy' | 'Dark' | 'Spirit';
 export type MiscTag = 'Force' | 'Buff' | 'Curse' | 'Fire' | 'Electric' | 'Ice' | 'Toxic' | 'Gadget' | 'Cryptic' | 'Mystic' |
-  'Projectile' | 'Grenade' | 'Control';
+  'Projectile' | 'Grenade' | 'Potion' | 'Control';
 export type PhysicalTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Melee' | 'Ranged';
+
+export const PRIMARY_TAGS: StatTag[] = ['Melee', 'Light Melee', 'Heavy', 'Ranged', 'Spell', 'Grenade', 'Potion', 'Mystic', 'Cryptic'];
+export const DAMAGE_TAGS: StatTag[] = ['Physical', 'Magical', 'Chemical', 'Holy', 'Dark', 'Spirit'];
 
 export type StatMap = { stat: BaseStat, tag: StatTag, value: number }[];
 export type CompoundMap = { stat: CompoundStat, value: number }[];

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { SpriteModel } from '../engine/sprites/SpriteModel';
-import { StatTag, AttackStats, DamageTag, StatMap, CompoundMap } from '../data/StatData';
+import { StatTag, AttackStats, DamageTag, StatMap, CompoundMap, DAMAGE_TAGS } from '../data/StatData';
 import { RandomSeed } from './RandomSeed';
 import { StatModel } from '../engine/stats/StatModel';
 import { IAction, ActionType, ActionList, ActionSlug, IActionRaw } from '../data/ActionData';
@@ -248,9 +248,8 @@ function makeAttackResult(action: IAction, origin: SpriteModel, target: SpriteMo
 }
 
 function getDamageTag(tags: StatTag[]): DamageTag {
-  return _.filter(tags, tag => {
-    return (tag === 'Physical' || tag === 'Magical' || tag === 'Chemical' || tag === 'Holy' || tag === 'Dark');
-  })[0] as DamageTag;
+  let m = _.intersection(tags, DAMAGE_TAGS);
+  return m[0] as DamageTag;
 }
 
 function getAttackDamage(origin: StatModel, target: StatModel, tags: StatTag[], actionStats: Partial<AttackStats>): number {

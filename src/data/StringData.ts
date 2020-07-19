@@ -1,6 +1,9 @@
+import * as _ from 'lodash';
+
 import { IAction } from './ActionData';
 import { IItem } from './ItemData';
 import { ISkill } from './SkillData';
+import { BaseStatDisplay, BaseStat } from './StatData';
 
 export const StringData = {
   GAME_TITLE: 'Eternal Quest',
@@ -46,7 +49,27 @@ export const Descriptions = {
   },
   makeActionDescription: (action: IAction): string => {
     let str = '';
-    str += action.slug;
+    str += action.slug + '\n';
+    if (action.tags && action.tags.length > 0) {
+      action.tags.forEach(tag => str += tag + ' ');
+      str += '\n\n';
+      str += 'Cost: ';
+      _.forIn(action.costs, (val, key) => {
+        str += key + ': ' + val + ', ';
+      });
+    }
+    if (action.stats && _.size(action.stats) > 0) {
+      str += '\n\n';
+      _.forIn(action.stats, (stat, key) => {
+        let percent = BaseStatDisplay[key as BaseStat] === 'percent';
+        str += key + ': ' + _.round(stat * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
+      });
+    }
+    str += '\n\n';
+    if (action.effects && action.effects.length > 0) {
+      let effect = action.effects[0];
+      str += effect.name + '\n';
+    }
 
     return str;
   },

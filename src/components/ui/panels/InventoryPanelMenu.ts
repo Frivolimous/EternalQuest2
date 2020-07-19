@@ -7,17 +7,18 @@ import { InventoryItem } from '../../inventory/InventoryItem';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
 import { ItemManager } from '../../../services/ItemManager';
 import { IItem } from '../../../data/ItemData';
+import { StatModel } from '../../../engine/stats/StatModel';
 
-export class InventoryPanel extends BasePanel {
+export class InventoryPanelMenu extends BasePanel {
   private equip: InventoryDisplay;
   private belt: InventoryDisplay;
   private inventory: InventoryDisplay;
-  constructor() {
-    super(new PIXI.Rectangle(0, 650, 800, 250), 0x999999);
+  constructor(bounds: PIXI.Rectangle = new PIXI.Rectangle(0, 0, 300, 500), color: number = 0xf1f1f1) {
+    super(bounds, color);
 
-    this.equip = new InventoryDisplay({ width: 60, height: 50, across: 5, down: 1, padding: 5, hasButtons: true, headers: [{label: 'Weapon', length: 1}, {label: 'Helmet', length: 1}, {label: 'Magic', length: 3}] });
-    this.belt = new InventoryDisplay({ width: 60, height: 50, across: 5, down: 1, padding: 5, hasButtons: true, headers: [{label: 'Belt', length: 5}] });
-    this.inventory = new InventoryDisplay({ width: 60, height: 60, across: 10, down: 2, padding: 5 });
+    this.equip = new InventoryDisplay({ width: 50, height: 50, across: 5, down: 1, padding: 5, hasButtons: true, headers: [{label: 'Weapon', length: 1}, {label: 'Helmet', length: 1}, {label: 'Magic', length: 3}] });
+    this.belt = new InventoryDisplay({ width: 50, height: 50, across: 5, down: 1, padding: 5, hasButtons: true, headers: [{label: 'Belt', length: 5}] });
+    this.inventory = new InventoryDisplay({ width: 50, height: 50, across: 5, down: 4, padding: 5 });
     this.equip.overflow = this.inventory;
     this.belt.overflow = this.inventory;
     this.inventory.overflow = this.inventory;
@@ -31,23 +32,26 @@ export class InventoryPanel extends BasePanel {
 
     this.belt.addRequirement('all', {tags: ['Belt']});
 
-    this.equip.position.set(50, 30);
-    this.belt.position.set(400, 30);
-    this.inventory.position.set(50, 120);
+    this.equip.position.set(10, 30);
+    this.belt.position.set(10, 140);
+    this.inventory.position.set(10, 230);
   }
 
-  public addPlayer = (player: SpriteModel) => {
+  public addPlayer = (sprite: SpriteModel | StatModel) => {
+    if (sprite instanceof SpriteModel) {
+      sprite = sprite.stats;
+    }
     // create items in the inventory
     this.equip.clear();
     this.belt.clear();
     this.inventory.clear();
-    player.stats.inventory.forEach((item, i) => {
+    sprite.inventory.forEach((item, i) => {
       if (item) {
         this.inventory.addItemAt(new InventoryItem(item), i, true);
       }
     });
 
-    player.stats.equipment.forEach((item, i) => {
+    sprite.equipment.forEach((item, i) => {
       if (item) {
         if (i < 5) {
           this.equip.addItemAt(new InventoryItem(item), i, true);
@@ -57,13 +61,13 @@ export class InventoryPanel extends BasePanel {
       }
     });
 
-    this.equip.onItemAdded = player.stats.equipItem;
-    this.equip.onItemRemoved = player.stats.unequipItem;
-    this.belt.onItemAdded = player.stats.equipItem;
-    this.belt.onItemRemoved = player.stats.unequipItem;
+    this.equip.onItemAdded = sprite.equipItem;
+    this.equip.onItemRemoved = sprite.unequipItem;
+    this.belt.onItemAdded = sprite.equipItem;
+    this.belt.onItemRemoved = sprite.unequipItem;
     this.belt.slot0Index = 5;
-    this.inventory.onItemAdded = player.stats.addItem;
-    this.inventory.onItemRemoved = player.stats.removeItem;
+    this.inventory.onItemAdded = sprite.addItem;
+    this.inventory.onItemRemoved = sprite.removeItem;
   }
 
   public addItem = (item: IItem) => {

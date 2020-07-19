@@ -219,31 +219,29 @@ export class StatModel {
     let m: string = '';
     switch (sort) {
       case 'compound':
-        for (let key of Object.keys(this.compoundStats)) {
+        _.forIn(this.compoundStats, (stat, key) => {
           let percent = CompoundStatDisplay[key as CompoundStat] === 'percent';
-          m += key + ': ' + _.round(this.compoundStats[key as CompoundStat] * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
-        }
+          m += key + ': ' + _.round(stat * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
+        });
         break;
       case 'basic':
-        for (let key of Object.keys(this.baseStats)) {
-          let stat = this.baseStats[key as BaseStat];
+        _.forIn(this.baseStats, (stat, key) => {
           let percent = BaseStatDisplay[key as BaseStat] === 'percent';
           m += key + ': ' + _.round(this.getBaseStat(key as BaseStat) * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
-          for (let key2 of Object.keys(stat.tags)) {
-            let st = this.baseStats[key as BaseStat].tags[key2 as StatTag];
+          _.forIn(stat.tags, (st, key2) => {
             let stv = BaseStatProgression[key as BaseStat] === 'linear' ? (st.base * (1 + st.mult)) : (Formula.addMult(st.base, st.base * st.mult) - st.neg);
             if (stv !== 0) {
               m += '- ' + key2 + ': ' + _.round(stv * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
             }
-          }
-        }
+          });
+        });
         break;
     }
 
     return m;
   }
 
-  public getActionList(distance: 'b' | number) {
+  public getActionList(distance?: 'b' | number) {
     return this.actions.getListAtDistance(distance);
   }
 
@@ -275,10 +273,12 @@ export class StatModel {
 
   public addAction = (action: IAction) => {
     this.actions.addAction(action);
+    this.onUpdate.publish();
   }
 
   public removeAction = (action: IAction) => {
     this.actions.removeAction(action);
+    this.onUpdate.publish();
   }
 
   public equipItem = (item: IItem, slot: number) => {

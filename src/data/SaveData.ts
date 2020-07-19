@@ -9,11 +9,15 @@ export interface IExtrinsicModel {
   firstVersion?: number;
   logins?: number;
 
-  lastCharacter?: number;
+  lastCharacter?: string;
 
   artifacts?: number[];
   cosmetics?: number[];
-  stash?: IItemSave[][][];
+  // stash?: IItemSave[][][];
+  playerStash?: {[key: string]: IItemSave[]};
+  sharedStash?: IItemSave[][];
+  overflowStash?: IItemSave[];
+
   skillTrees?: number[];
 }
 
@@ -34,6 +38,7 @@ export interface IPlayerSave {
   skillPoints?: number;
   inventory?: IItemSave[];
   experience?: number;
+  __id?: string;
 }
 
 export interface IPlayerLevelSave {
@@ -51,11 +56,26 @@ export interface IPlayerLevelSave {
 export const dPlayerSave: IPlayerSave = {
   name: 'Blank',
   title: 'Ordinary',
-  level: 0,
+  level: 1,
+  experience: 0,
   cosmetics: [],
   talent: 0,
-  equipment: [],
+  equipment: [{ slug: 'Sword', level: 0, enchant: 'Master' }, { slug: 'Hat', level: 0 }],
   artifacts: [],
   skills: [],
+  skillTrees: ['Warrior', 'Mage', 'Ranger'],
+  skillPoints: 0,
   inventory: [],
+};
+
+export const dPlayerLevelSave: IPlayerLevelSave = {
+  ascendedZone: 0,
+  zone: 1,
+  zoneType: 0,
+  monsterType: 0,
+  enemyCount: 0,
+  highestChallenge: [],
+  flags: [],
+  gambleShop: [],
+  premiumShop: [],
 };

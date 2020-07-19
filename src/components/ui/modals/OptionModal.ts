@@ -27,6 +27,8 @@ export class OptionModal extends BaseModal {
 
     this.scoreText = new PIXI.Text(message, { fontSize: 33, fontFamily: Fonts.UI, fill: this.config.colorFront, wordWrap: true, wordWrapWidth: width - 100 });
     this.addChild(this.scoreText);
+    this.scoreText.height = Math.min(this.scoreText.height, height * 6 / 8);
+    this.scoreText.scale.x = this.scoreText.scale.y;
 
     this.scoreText.position.set(50, 50);
 
@@ -34,7 +36,7 @@ export class OptionModal extends BaseModal {
       let button = new Button({
         label: option.label,
         width: width / 4,
-        height: 60,
+        height: height / 8,
         onClick: () => this.closeModal(option.onClick),
         color: option.color || this.config.colorFront,
         labelStyle: {fill: this.config.colorBack},

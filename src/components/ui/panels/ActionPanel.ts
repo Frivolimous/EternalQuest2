@@ -6,13 +6,19 @@ import { IPlayerLevelSave } from '../../../data/SaveData';
 import { Fonts } from '../../../data/Fonts';
 import { StatModel } from '../../../engine/stats/StatModel';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
+import { SelectList } from '../SelectButton';
+import { IAction } from '../../../data/ActionData';
+import { Descriptions } from '../../../data/StringData';
 
-export class StatsPanel extends BasePanel {
+export class ActionPanel extends BasePanel {
   private source: StatModel;
   private temp: StatModel;
   private nameText: PIXI.Text;
   private statText: PIXI.Text;
-  private type: 'basic' | 'compound' = 'basic';
+
+  private actions: IAction[];
+
+  private list: SelectList;
 
   constructor(bounds: PIXI.Rectangle = new PIXI.Rectangle(525, 150, 275, 650), color: number = 0xf1f1f1) {
     super(bounds, color);
@@ -21,16 +27,11 @@ export class StatsPanel extends BasePanel {
     this.statText = new PIXI.Text('', { fontFamily: Fonts.UI, fontSize: 15 });
 
     this.addChild(this.statText, this.nameText);
-    let swapButton = new Button({ width: 100, height: 30, label: 'Swap', onClick: () => {
-      this.type = this.type === 'compound' ? 'basic' : 'compound';
-      this.update();
-    } });
-
-    this.addChild(swapButton);
 
     this.nameText.position.set(10, 10);
-    this.statText.position.set(10, 40);
-    swapButton.position.set(165, 10);
+    this.statText.position.set(120, 40);
+
+    this.list = new SelectList({width: 100, height: 30}, this.selectAction);
   }
 
   public changeSource = (sprite: SpriteModel | StatModel) => {
@@ -80,9 +81,25 @@ export class StatsPanel extends BasePanel {
     }
   }
 
+  public selectAction = (i: number) => {
+    this.statText.text = Descriptions.makeActionDescription(this.actions[i]);
+  }
+
   public update = () => {
     let source = this.temp || this.source;
+
     this.nameText.text = source.name;
-    this.statText.text = source.getText(this.type);
+    let actions = source.getActionList();
+    this.actions = actions;
+
+    this.list.destroyAll();
+
+    actions.forEach((action, i) => {
+      let button = this.list.makeButton(action.slug);
+      this.addChild(button);
+      button.position.set(10, 40 + i * 35);
+    });
+
+    this.list.selectButton(0);
   }
 }

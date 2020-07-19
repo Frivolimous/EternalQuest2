@@ -53,7 +53,11 @@ export class BaseUI extends PIXI.Container {
   }
 
   public navBack = (fadeTiming?: IFadeTiming) => {
-    this.finishNav(new MenuUI(), fadeTiming, true);
+    // if (this.previousUI) {
+    //   this.finishNav(this.previousUI, fadeTiming, true);
+    // } else {
+      this.finishNav(new MenuUI(), fadeTiming, true);
+    // }
     // if (this.saveCallback) {
     //   this.saveCallback(() => {
     //     this.finishNav(this.previousUI, fadeTiming, true);

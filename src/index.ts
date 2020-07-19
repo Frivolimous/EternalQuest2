@@ -16,7 +16,7 @@ import { GameEvents, IResizeEvent } from './services/GameEvents';
 import { Debug } from './services/_Debug';
 import { BaseUI, IFadeTiming, dFadeTiming } from './pages/_BaseUI';
 import { ScreenCover } from './JMGE/effects/ScreenCover';
-import { Navbar } from './pages/Navbar';
+import { Navbar } from './pages/_Navbar';
 import { DEBUG_MODE } from './services/_Debug';
 
 export let interactionMode: 'desktop'|'mobile' = 'desktop';
@@ -120,8 +120,8 @@ export let Facade = new class FacadeInner {
     fadeTiming = _.defaults(fadeTiming || {}, dFadeTiming);
 
     let screen = new ScreenCover(this.previousResize.outerBounds, fadeTiming.color).onFadeComplete(() => {
+      this.currentPage.navOut();
       SaveManager.saveCurrent().then(() => {
-        this.currentPage.navOut();
         this.screen.removeChild(this.currentPage);
         this.currentPage.destroy();
 

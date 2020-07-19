@@ -38,5 +38,11 @@ export class ActionContainer {
     }
   }
 
-  public getListAtDistance = (distance: 'b' | number) => _.filter(this.list, action => _.includes(action.distance, distance));
+  public getListAtDistance = (distance?: 'b' | number) => {
+    if (!distance && distance !== 0) {
+      return this.list;
+    } else {
+      return _.filter(this.list, action => _.includes(action.distance, distance));
+    }
+  }
 }

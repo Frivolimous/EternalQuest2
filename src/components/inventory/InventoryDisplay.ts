@@ -4,6 +4,8 @@ import { InventoryItem } from './InventoryItem';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
 import { StatTag } from '../../data/StatData';
 import { IItem } from '../../data/ItemData';
+import { StateButton } from '../ui/StateButton';
+import { Fonts } from '../../data/Fonts';
 
 export const ItemDragEvent = new JMEventListener<IItemDragEvent>();
 const inventoryDisplays: InventoryDisplay[] = [];
@@ -94,6 +96,8 @@ export interface IInventoryDisplay {
   across: number;
   down: number;
   padding: number;
+  headers?: { label: string, length: number }[];
+  hasButtons?: boolean;
 }
 // {width: 700, height: 130}
 const dInventoryDisplay: IInventoryDisplay = {
@@ -105,7 +109,8 @@ const dInventoryDisplay: IInventoryDisplay = {
 };
 
 interface IInventoryRequirements {
-  tags: StatTag[];
+  tags?: StatTag[];
+  never?: boolean;
 }
 
 export class InventoryDisplay extends PIXI.Container {
@@ -121,6 +126,8 @@ export class InventoryDisplay extends PIXI.Container {
 
   private requirements: IInventoryRequirements[] = [];
 
+  private priorityButtons: StateButton[] = [];
+
   constructor(private settings: Partial<IInventoryDisplay> = {}) {
     super();
     this.settings = _.defaults(settings, dInventoryDisplay);
@@ -133,14 +140,37 @@ export class InventoryDisplay extends PIXI.Container {
 
   public drawSquares() {
     this.background.clear().beginFill(0x777777).lineStyle(1).drawRoundedRect(-this.settings.padding,
-                                                                             -this.settings.padding,
+                                                                             -this.settings.padding - (this.settings.headers ? 20 : 0),
                                                                              this.settings.width * this.settings.across + this.settings.padding * (this.settings.across + 1),
-                                                                             this.settings.height * this.settings.down + this.settings.padding * (this.settings.down + 1),
+                                                                             this.settings.height * this.settings.down + this.settings.padding * (this.settings.down + 1) + (this.settings.headers ? 20 : 0) + (this.settings.hasButtons ? 20 : 0),
                                                                              2);
+
+    if (this.settings.headers) {
+      this.background.beginFill(0xcccccc).lineStyle(1);
+      let x = 0;
+      this.settings.headers.forEach((header) => {
+        this.background.drawRect(x * (this.settings.width + this.settings.padding), (-this.settings.padding - 17), this.settings.width * header.length + this.settings.padding * (header.length - 1), 18);
+        let label = new PIXI.Text(header.label, {fontSize: 12, fontFamily: Fonts.UI});
+        this.addChild(label);
+        label.position.set(x * (this.settings.width + this.settings.padding) + (this.settings.width * header.length + this.settings.padding * (header.length - 1) - label.width) / 2, -20);
+        x += header.length;
+      });
+    }
+
     this.background.beginFill(0xaaaaaa).lineStyle(1);
     for (let y = 0; y < this.settings.down; y++) {
       for (let x = 0; x < this.settings.across; x++) {
         this.background.drawRoundedRect(x * (this.settings.width + this.settings.padding), y * (this.settings.height + this.settings.padding), this.settings.width, this.settings.height, 3);
+      }
+    }
+
+    if (this.settings.hasButtons) {
+      console.log('buttons!');
+      for (let i = 0; i < this.settings.across; i++) {
+        let button = new StateButton([], {width: this.settings.width, onToggle: () => {}});
+        this.priorityButtons.push(button);
+        button.position.set(i * (this.settings.width + this.settings.padding),  this.settings.height);
+        this.addChild(button);
       }
     }
   }
@@ -169,7 +199,14 @@ export class InventoryDisplay extends PIXI.Container {
     }
   }
 
+  public clearRequirements() {
+    this.requirements = [];
+  }
+
   public addItem = (item: InventoryItem) => {
+    if (!item) {
+      return;
+    }
     this.addChild(item);
     let i: number;
     for (i = 0; i < this.length; i++) {
@@ -182,6 +219,8 @@ export class InventoryDisplay extends PIXI.Container {
     this.items[i] = item;
     item.currentInventory = this;
     item.position.set(loc.x, loc.y);
+    item.width = this.settings.width;
+    item.height = this.settings.height;
     if (this.onItemAdded) {
       this.onItemAdded(item.source, this.slot0Index + i);
     }
@@ -197,6 +236,9 @@ export class InventoryDisplay extends PIXI.Container {
   }
 
   public addItemAt = (item: InventoryItem, index?: number, noStats?: boolean) => {
+    if (!item) {
+      return;
+    }
     if (!index && index !== 0) {
       let loc2: {x: number, y: number} = this.toLocal(item.position, item.parent);
       index = this.getIndexByLoc(loc2);
@@ -205,6 +247,8 @@ export class InventoryDisplay extends PIXI.Container {
     let loc = this.getLocByIndex(index);
     this.addChild(item);
     item.position.set(loc.x, loc.y);
+    item.width = this.settings.width;
+    item.height = this.settings.height;
     this.items[index] = item;
     item.currentInventory = this;
     if (!noStats && this.onItemAdded) {
@@ -274,6 +318,9 @@ export class InventoryDisplay extends PIXI.Container {
     }
     if (index >= 0 && index < this.length) {
       if (this.requirements[index]) {
+        if (this.requirements[index].never) {
+          return false;
+        }
         if (_.intersection(this.requirements[index].tags, item.source.tags).length === this.requirements[index].tags.length) {
           return true;
         } else {

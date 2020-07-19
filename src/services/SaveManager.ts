@@ -1,37 +1,74 @@
 import * as _ from 'lodash';
 import { IExtrinsicModel, dExtrinsicModel, IPlayerSave, dPlayerSave, IPlayerLevelSave } from '../data/SaveData';
+import { IItemSave } from '../data/ItemData';
 
 const CURRENT_VERSION = 8;
 const SAVE_LOC: 'virtual' | 'local' | 'online' = 'virtual';
-const virtualSave: any = {
-  'version': 8,
-  'extrinsic': {
-    lastCharacter: 0,
+const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players: {[key: string]: IPlayerSave}, PlayerLevels: {[key: string]: IPlayerLevelSave}} = {
+  version: 8,
+  extrinsic: {
+    lastCharacter: 'aewfinwgo',
+    playerStash: {
+      aewfinwgo: [{ slug: 'Sword', level: 5, enchant: 'Mystic' }, { slug: 'Hat', level: 5 }],
+    },
+    sharedStash: [
+      [{ slug: 'Sword', level: 10 }, { slug: 'Hat', level: 10 }],
+    ],
+    overflowStash: [{slug: 'Magic Missile', level: 0 }, {slug: 'Magic Missile', level: 10 }, {slug: 'Life Tap', level: 1 }, {slug: 'Life Tap', level: 10 }],
   },
-  'Player-0': {
-    name: 'Auster',
-    title: 'Ordinary',
-    level: 1,
-    experience: 0,
-    cosmetics: [],
-    talent: 0,
-    equipment: [{ slug: 'Sword', level: 0, enchant: 'Master' }, { slug: 'Hat', level: 0 }, null, null, null, { slug: 'Quick Charm', level: 0 }],
-    artifacts: [],
-    skills: [{ slug: 'Fitness', level: 5}],
-    skillTrees: ['Warrior', 'Mage'],
-    skillPoints: 10,
-    inventory: [{ slug: 'Sword', level: 0 }, {slug: 'Magic Missile', level: 0 }, {slug: 'Life Tap', level: 0 }, {slug: 'Magic Missile', level: 10 }, {slug: 'Life Tap', level: 10 }, { slug: 'Hat', level: 10 }],
+  Players: {
+    aewfinwgo: {
+      name: 'Auster',
+      title: 'Ordinary',
+      level: 1,
+      experience: 0,
+      cosmetics: [],
+      talent: 0,
+      equipment: [{ slug: 'Sword', level: 0, enchant: 'Master' }, { slug: 'Hat', level: 0 }, null, null, null, { slug: 'Quick Charm', level: 0 }],
+      artifacts: [],
+      skills: [{ slug: 'Fitness', level: 5}],
+      skillTrees: ['Warrior', 'Mage'],
+      skillPoints: 10,
+      inventory: [{ slug: 'Sword', level: 0 }, {slug: 'Magic Missile', level: 0 }, {slug: 'Life Tap', level: 0 }, {slug: 'Magic Missile', level: 10 }, {slug: 'Life Tap', level: 10 }, { slug: 'Hat', level: 10 }],
+    },
+    ewfngibna: {
+      name: 'Rustus',
+      title: 'Ordinary',
+      level: 1,
+      experience: 0,
+      cosmetics: [],
+      talent: 0,
+      equipment: [{ slug: 'Sword', level: 0, enchant: 'Master' }, { slug: 'Hat', level: 0 }, null, null, null, { slug: 'Quick Charm', level: 0 }],
+      artifacts: [],
+      skills: [{ slug: 'Fitness', level: 5}],
+      skillTrees: ['Warrior', 'Ranger'],
+      skillPoints: 10,
+      inventory: [{ slug: 'Sword', level: 0 }, {slug: 'Magic Missile', level: 0 }, {slug: 'Life Tap', level: 0 }, {slug: 'Magic Missile', level: 10 }, {slug: 'Life Tap', level: 10 }, { slug: 'Hat', level: 10 }],
+    },
   },
-  'Player-L-0': {
-    ascendedZone: 0,
-    zone: 0,
-    zoneType: 1,
-    monsterType: 1,
-    enemyCount: 0,
-    highestChallenge: [1],
-    flags: [],
-    gambleShop: [],
-    premiumShop: [],
+  PlayerLevels: {
+    aewfinwgo: {
+      ascendedZone: 0,
+      zone: 0,
+      zoneType: 1,
+      monsterType: 1,
+      enemyCount: 0,
+      highestChallenge: [1],
+      flags: [],
+      gambleShop: [],
+      premiumShop: [],
+    },
+    ewfngibna: {
+      ascendedZone: 0,
+      zone: 10,
+      zoneType: 1,
+      monsterType: 1,
+      enemyCount: 0,
+      highestChallenge: [1],
+      flags: [],
+      gambleShop: [],
+      premiumShop: [],
+    },
   },
 };
 
@@ -49,14 +86,14 @@ export class SaveManager {
     return new Promise((resolve) => {
       SaveManager.loadExtrinsic().then(extrinsic => {
         if (extrinsic) {
-          this.loadVersion().then(version => {
+          SaveManager.loadVersion().then(version => {
             if (version < CURRENT_VERSION) {
               extrinsic = versionControl(version, extrinsic);
               SaveManager.saveVersion(CURRENT_VERSION);
               SaveManager.saveExtrinsic(extrinsic);
             }
             SaveManager.extrinsic = extrinsic;
-            this.loadPlayer(extrinsic.lastCharacter, true).then(() => {
+            SaveManager.loadPlayer(extrinsic.lastCharacter, true).then(() => {
               resolve();
             });
           });
@@ -72,7 +109,7 @@ export class SaveManager {
 
   public static resetData(): () => void {
     // returns the confirmation function
-    return this.confirmReset;
+    return SaveManager.confirmReset;
   }
 
   public static getExtrinsic(): IExtrinsicModel {
@@ -82,25 +119,29 @@ export class SaveManager {
   }
 
   public static getCurrentPlayer(): IPlayerSave {
-    return this.player || dPlayerSave;
-    // change to get current player;
-    // return new IPlayerSave;
+    return SaveManager.player || dPlayerSave;
   }
 
   public static getCurrentPlayerLevel(): IPlayerLevelSave {
-    return this.playerLevel;
+    return SaveManager.playerLevel;
+  }
+
+  public static getStashesForPlayer(): Promise<{personal: IItemSave[], public: IItemSave[][], overflow: IItemSave[]}> {
+    return new Promise(resolve => {
+
+    });
   }
 
   public static async saveCurrent(): Promise<null> {
     return new Promise(resolve => {
       let processes = 2;
-      this.saveExtrinsic().then(() => {
+      SaveManager.saveExtrinsic().then(() => {
         processes--;
         if (processes === 0) {
           resolve();
         }
       });
-      this.savePlayer().then(() => {
+      SaveManager.savePlayer().then(() => {
         processes--;
         if (processes === 0) {
           resolve();
@@ -111,7 +152,7 @@ export class SaveManager {
 
   public static async saveExtrinsic(extrinsic?: IExtrinsicModel): Promise<IExtrinsicModel> {
     return new Promise((resolve) => {
-      extrinsic = extrinsic || this.extrinsic;
+      extrinsic = extrinsic || SaveManager.extrinsic;
 
       switch (SAVE_LOC) {
         case 'virtual': virtualSave.extrinsic = extrinsic; break;
@@ -129,23 +170,22 @@ export class SaveManager {
     });
   }
 
-  public static async savePlayer(player?: IPlayerSave, i?: number, makeCurrent?: boolean, playerLevel?: IPlayerLevelSave): Promise<IPlayerSave> {
+  public static async savePlayer(player?: IPlayerSave, playerSlug?: string, makeCurrent?: boolean, playerLevel?: IPlayerLevelSave): Promise<IPlayerSave> {
     return new Promise((resolve) => {
-      player = player || this.player;
-      if (i === undefined) {
-        i = this.playerIndex;
-      }
-      playerLevel = playerLevel || this.playerLevel;
+      player = player || SaveManager.player;
+      playerLevel = playerLevel || SaveManager.playerLevel;
+      playerSlug = playerSlug || this.player.__id;
+      player.__id = playerSlug;
 
       switch (SAVE_LOC) {
         case 'virtual':
-          virtualSave['Player-' + i] = player;
-          virtualSave['Player-L-' + i] = playerLevel;
+          virtualSave.Players[playerSlug] = player;
+          virtualSave.PlayerLevels[playerSlug] = playerLevel;
           break;
         case 'local':
           if (typeof Storage !== undefined) {
-            window.localStorage.setItem('Player-' + i, JSON.stringify(player));
-            window.localStorage.setItem('Player-L-' + i, JSON.stringify(playerLevel));
+            // window.localStorage.setItem('Player-' + i, JSON.stringify(player));
+            // window.localStorage.setItem('Player-L-' + i, JSON.stringify(playerLevel));
           } else {
             console.log('NO STORAGE!');
           }
@@ -154,18 +194,105 @@ export class SaveManager {
       }
 
       if (makeCurrent) {
-        this.player = player;
-        this.playerLevel = playerLevel;
-        this.playerIndex = i;
+        SaveManager.player = player;
+        SaveManager.playerLevel = playerLevel;
       }
 
       resolve(player);
     });
   }
 
+  public static getNumPlayers = () => {
+    return new Promise((resolve) => {
+      switch (SAVE_LOC) {
+        case 'virtual':
+          resolve(_.size(virtualSave.Players));
+          break;
+        case 'local':
+        case 'online':
+      }
+    });
+  }
+
+  public static getAllPlayers = (): Promise<IPlayerSave[]> => {
+    return new Promise((resolve) => {
+      switch (SAVE_LOC) {
+        case 'virtual':
+          resolve(_.values(_.mapValues(virtualSave.Players, (value, key) => (value.__id = key, value))));
+          break;
+        case 'local':
+        case 'online':
+      }
+    });
+  }
+
+  public static null = () => {
+    return new Promise((resolve) => {
+      switch (SAVE_LOC) {
+        case 'virtual':
+        case 'local':
+        case 'online':
+      }
+    });
+  }
+
+  public static async deletePlayer(slug: string) {
+    return new Promise((resolve) => {
+      switch (SAVE_LOC) {
+        case 'virtual':
+          delete virtualSave.Players[slug];
+          delete virtualSave.PlayerLevels[slug];
+          resolve();
+          break;
+        case 'local':
+        case 'online':
+      }
+    });
+  }
+
+  public static async loadPlayer(playerSlug: string, makeCurrent: boolean = true): Promise <IPlayerSave> {
+    if (playerSlug) {
+      let player: IPlayerSave;
+      let playerLevel: IPlayerLevelSave;
+      return new Promise((resolve) => {
+        switch (SAVE_LOC) {
+          case 'virtual':
+            player = virtualSave.Players[playerSlug];
+            playerLevel = virtualSave.PlayerLevels[playerSlug];
+            player.__id = playerSlug;
+            break;
+          case 'local':
+            if (typeof Storage !== undefined) {
+              // let playerStr = window.localStorage.getItem('Player-' + i);
+              // if (playerStr !== 'undefined') {
+              //   player = JSON.parse(playerStr);
+              // }
+              // playerStr = window.localStorage.getItem('Player-L-' + i);
+              // if (playerStr !== 'undefined') {
+              //   playerLevel = JSON.parse(playerStr);
+              // }
+            } else {
+              console.log('NO STORAGE!');
+            }
+            break;
+          case 'online': break;
+        }
+
+        if (makeCurrent) {
+          SaveManager.player = player;
+          SaveManager.playerLevel = playerLevel;
+        }
+
+        resolve(player);
+      });
+    } else {
+      console.log('NO CHARACTER INDEX!');
+      return new Promise((resolve) => resolve());
+    }
+  }
+
   private static player: IPlayerSave;
   private static playerLevel: IPlayerLevelSave;
-  private static playerIndex: number;
   private static extrinsic: IExtrinsicModel;
 
   private static confirmReset = () => {
@@ -192,47 +319,6 @@ export class SaveManager {
       }
       resolve(extrinsic);
     });
-  }
-
-  private static async loadPlayer(i: number, makeCurrent: boolean = true): Promise <IPlayerSave> {
-    if (i || i === 0) {
-      let player: IPlayerSave;
-      let playerLevel: IPlayerLevelSave;
-      return new Promise((resolve) => {
-        switch (SAVE_LOC) {
-          case 'virtual':
-            player = virtualSave['Player-' + i];
-            playerLevel = virtualSave['Player-L-' + i];
-            break;
-          case 'local':
-            if (typeof Storage !== undefined) {
-              let playerStr = window.localStorage.getItem('Player-' + i);
-              if (playerStr !== 'undefined') {
-                player = JSON.parse(playerStr);
-              }
-              playerStr = window.localStorage.getItem('Player-L-' + i);
-              if (playerStr !== 'undefined') {
-                playerLevel = JSON.parse(playerStr);
-              }
-            } else {
-              console.log('NO STORAGE!');
-            }
-            break;
-          case 'online': break;
-        }
-
-        if (makeCurrent) {
-          this.player = player;
-          this.playerLevel = playerLevel;
-          this.playerIndex = i;
-        }
-
-        resolve(player);
-      });
-    } else {
-      console.log('NO CHARACTER INDEX!');
-      return new Promise((resolve) => resolve());
-    }
   }
 
   // == Version Controls == //

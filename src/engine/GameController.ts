@@ -54,20 +54,24 @@ export class GameController {
       new Error('No level data - - you should not be here!!!');
     }
 
+    this.importPlayer();
     this.startLevel();
   }
 
-  public startLevel() {
+  public importPlayer() {
     this.player = new SpriteModel(StatModel.fromSave(SaveManager.getCurrentPlayer()));
     console.log('Player: ', this.player.stats.name);
-    this.player.tile = 0;
     this.player.player = true;
-    this.player.onLevelUp.addListener(this.onPlayerLevel.publish);
-    this.spriteModels.push(this.player);
     this.player.setVitalsCallback(vitals => this.onVitalsUpdate.publish(vitals));
+    this.spriteModels.push(this.player);
     this.onPlayerAdded.publish(this.player);
     this.onSpriteAdded.publish(this.player);
     this.onZoneProgress.publish(this.levelData);
+    this.player.onLevelUp.addListener(this.onPlayerLevel.publish);
+  }
+
+  public startLevel() {
+    this.player.tile = 0;
   }
 
   public destroy() {
@@ -83,6 +87,8 @@ export class GameController {
     this.processing = false;
     this.spawnCount = 4;
 
+    // this.player.resetVitals();
+    this.importPlayer();
     this.startLevel();
   }
 
@@ -123,7 +129,6 @@ export class GameController {
   public enemyDead = (sprite: SpriteModel) => {
     console.log('enemy dead');
     this.removeSprite(sprite);
-    this.onEnemyDead.publishSync(sprite);
     this.levelData.enemyCount++;
     this.onZoneProgress.publish(this.levelData);
     this.player.earnXp();
@@ -136,6 +141,8 @@ export class GameController {
     if (!_.some(this.spriteModels, {player: false})) {
       this.endFight();
     }
+
+    this.onEnemyDead.publishSync(sprite);
   }
 
   public endFight = () => {
@@ -145,8 +152,6 @@ export class GameController {
 
   public playerDead = (sprite: SpriteModel) => {
     console.log('player dead');
-    sprite.resetVitals();
-    sprite.dead = false;
     this.processing = true;
     this.onPlayerDead.publish();
   }

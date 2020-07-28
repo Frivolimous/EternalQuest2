@@ -15,6 +15,7 @@ import { Button } from '../Button';
 import { SelectList } from '../SelectButton';
 
 export class InventoryPanelStash extends BasePanel {
+  public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
   private inventory: InventoryDisplay;
 
   private save: IPlayerSave;
@@ -50,6 +51,8 @@ export class InventoryPanelStash extends BasePanel {
     this.list.buttons[6].position.set(180, 350);
 
     this.list.selectButton(0);
+
+    this.inventory.onItemSell = this.sellItem;
   }
 
   public addPlayer = (sprite: IPlayerSave) => {
@@ -112,5 +115,9 @@ export class InventoryPanelStash extends BasePanel {
         this.inventory.addItemAt(new InventoryItem(items[i]), i);
       }
     }
+  }
+
+  public sellItem = (item: IItem, slot: number, callback: () => void) => {
+    if (this.onItemSell) this.onItemSell(item, slot, callback);
   }
 }

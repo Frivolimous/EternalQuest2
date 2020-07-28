@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { TooltipReader } from '../../../JMGE/TooltipReader';
-import { IActiveBuff } from '../../../engine/sprites/BuffManager';
+import { IActiveBuff } from '../../../engine/sprites/BuffContainer';
 import { Fonts } from '../../../data/Fonts';
 
 let width: number = 15;

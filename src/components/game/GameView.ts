@@ -4,24 +4,25 @@ import * as PIXI from 'pixi.js';
 import { SpriteView } from './sprites/SimpleView';
 import { Background } from './Background';
 import { CONFIG } from '../../Config';
-import { GameEvents, IAnimateAction, IResizeEvent } from '../../services/GameEvents';
+import { GameEvents, IResizeEvent } from '../../services/GameEvents';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
 import { SpriteModel } from '../../engine/sprites/SpriteModel';
 import { JMTween } from '../../JMGE/JMTween';
-import { CompoundStat } from '../../data/StatData';
 import { JMTicker } from '../../JMGE/events/JMTicker';
 import { Colors } from '../../data/Colors';
-import { IBuffResult } from '../../services/ActionManager';
+import { IBuffResult, IActionResult } from '../../engine/ActionController';
+import { AnyStat, StatTag, ICompoundMap } from '../../data/StatData';
 
 export class GameView extends PIXI.Container {
   public onQueueEmpty = new JMEventListener<void>(false, false);
   public onSpriteClicked = new JMEventListener<SpriteModel>(false, true);
+  public onActionComplete = new JMEventListener<IActionResult>();
 
   private background: Background;
   private spriteViews: SpriteView[] = [];
   private playerView: SpriteView;
 
-  private actionQueue: IAnimateAction[] = [];
+  private actionQueue: IActionResult[] = [];
   private noActions = true;
   private auto = false;
 
@@ -76,8 +77,9 @@ export class GameView extends PIXI.Container {
     }
   }
 
-  public animateAction = (e: IAnimateAction) => {
+  public animateAction = (e: IActionResult) => {
     this.actionQueue.push(e);
+
     this.noActions = false;
   }
 
@@ -121,42 +123,61 @@ export class GameView extends PIXI.Container {
     this.resolveAction(action);
   }
 
-  private resolveAction(action: IAnimateAction) {
-    let origin = this.getSpriteByModel(action.result.origin);
-    origin.proclaim(action.result.name);
+  private resolveAction(action: IActionResult) {
+    let origin = this.getSpriteByModel(action.origin);
+    origin.proclaim(action.name);
 
-    if (action.result.type === 'walk') {
-      origin.tempWalk(action.trigger);
+    if (action.type === 'walk') {
+      origin.tempWalk(() => this.onActionComplete.publish(action));
       return;
-    }
-
-    origin.animateAttack(() => {
-      action.trigger();
-      if (action.result.type === 'attack') {
-        if (action.result.removeBuff) {
-
-        }
-        if (action.result.addBuff) {
-        }
-        if (action.result.defended) {
-          action.result.defended.forEach(data => {
-            let view = this.getSpriteByModel(data.sprite);
-            view.proclaim(data.type, Colors.DefendColor);
-          });
-        }
-        if (action.result.vitalChange) {
-          action.result.vitalChange.forEach(data => {
-            let view = this.getSpriteByModel(data.sprite);
-            let color = data.value >= 0 ? Colors.DamageColor[data.tag] : Colors.HealColor;
-            view.proclaim(String(Math.abs(data.value)) + (data.critical ? '!!!' : ''), color);
-          });
-        }
-        if (action.result.positionChange) {
-        }
-        if (action.result.chain) {
-        }
+    } else if (action.type === 'attack') {
+      if (_.includes(action.source.tags, 'Projectile')) {
+        let projectile = new PIXI.Graphics();
+        projectile.beginFill(0x00ffff).lineStyle(1).drawEllipse(-5, -2.5, 10, 5);
+        this.addChild(projectile);
+        projectile.position.set(origin.x, origin.y - origin.height / 2);
+        let target = this.getSpriteByModel(action.target);
+        origin.animating = true;
+        new JMTween(projectile.position, 500).to({x: target.x, y: target.y - target.height / 2}).start().onComplete(() => {
+          this.finishAction(action);
+          projectile.destroy();
+          JMTicker.addOnce(() => origin.animating = false);
+        });
+      } else {
+        origin.animateAttack(() => this.finishAction(action));
       }
-    });
+    } else if (action.type === 'instant' || action.type === 'self' || action.type === 'heal') {
+      this.finishAction(action);
+    }
+  }
+
+  private finishAction = (action: IActionResult) => {
+    this.onActionComplete.publish(action);
+    if (action.removeBuff) {
+
+    }
+    if (action.addBuff) {
+    }
+    if (action.defended) {
+      action.defended.forEach(data => {
+        let view = this.getSpriteByModel(data.sprite);
+        view.proclaim(data.type, Colors.DefendColor);
+      });
+    }
+    if (action.vitalChange) {
+      action.vitalChange.forEach(data => {
+        if (data.vital === 'health') {
+          let view = this.getSpriteByModel(data.sprite);
+          let color = data.value >= 0 ? Colors.DamageColor[data.tag] : Colors.HealColor;
+          view.proclaim(String(Math.abs(Math.round(data.value))) + (data.critical ? '!!!' : ''), color);
+        }
+      });
+    }
+    if (action.positionChange) {
+    }
+    if (action.chain) {
+      new JMTween({percent: 0}, 0).to({percent: 1}).wait(200).start().onWaitComplete(() => this.finishAction(action.chain));
+    }
   }
 
   private resolveBuff(buff: IBuffResult) {
@@ -173,9 +194,7 @@ export class GameView extends PIXI.Container {
     }
     if (buff.positionChange) {
     }
-    if (buff.baseStatChange) {
-    }
-    if (buff.compoundStatChange) {
+    if (buff.statChange) {
     }
   }
 
@@ -189,7 +208,8 @@ export class GameView extends PIXI.Container {
     } else if (e.key === 'p') {
       this.auto = !this.auto;
     } else if (e.key === 'q') {
-      (window as any).addCompoundStat = (stat: CompoundStat, value: number) => this.playerView.model.stats.addCompountStat(stat, value);
+      (window as any).addStat = (stat: AnyStat, tag: StatTag, value: number | ICompoundMap) => this.playerView.model.stats.addStat(stat, tag, value);
+      (window as any).subStat = (stat: AnyStat, tag: StatTag, value: number | ICompoundMap) => this.playerView.model.stats.subStat(stat, tag, value);
       // this.playerView.model.stats.addCompountStat('strength', 50);
     } else if (!isNaN(Number(e.key))) {
       let speed = Number(e.key);

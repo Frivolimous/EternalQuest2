@@ -4,17 +4,21 @@ import { IItemSave } from '../data/ItemData';
 
 const CURRENT_VERSION = 8;
 const SAVE_LOC: 'virtual' | 'local' | 'online' = 'virtual';
-const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players: {[key: string]: IPlayerSave}, PlayerLevels: {[key: string]: IPlayerLevelSave}} = {
+export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players: {[key: string]: IPlayerSave}, PlayerLevels: {[key: string]: IPlayerLevelSave}} = {
   version: 8,
   extrinsic: {
     lastCharacter: 'aewfinwgo',
     playerStash: {
-      aewfinwgo: [{ slug: 'Sword', level: 5, enchant: 'Mystic' }, { slug: 'Hat', level: 5 }],
+      aewfinwgo: [{ slug: 'Greatsword', level: 5, enchant: 'Mystic' }, { slug: 'Armet', level: 5 }],
     },
     sharedStash: [
-      [{ slug: 'Sword', level: 10 }, { slug: 'Hat', level: 10 }],
+      [{ slug: 'Greatsword', level: 10 }, { slug: 'Cap', level: 10 }],
     ],
-    overflowStash: [{slug: 'Magic Missile', level: 0 }, {slug: 'Magic Missile', level: 10 }, {slug: 'Life Tap', level: 1 }, {slug: 'Life Tap', level: 10 }],
+    currency: {
+      gold: 0,
+      tokens: 0,
+    },
+    overflowStash: [],
   },
   Players: {
     aewfinwgo: {
@@ -24,12 +28,12 @@ const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players: {[key:
       experience: 0,
       cosmetics: [],
       talent: 0,
-      equipment: [{ slug: 'Sword', level: 0, enchant: 'Master' }, { slug: 'Hat', level: 0 }, null, null, null, { slug: 'Quick Charm', level: 0 }],
+      equipment: [{ slug: 'Greatsword', level: 0, enchant: 'Master' }, { slug: 'Armet', level: 0 }, null, null, null],
       artifacts: [],
-      skills: [{ slug: 'Fitness', level: 5}],
-      skillTrees: ['Warrior', 'Mage'],
-      skillPoints: 10,
-      inventory: [{ slug: 'Sword', level: 0 }, {slug: 'Magic Missile', level: 0 }, {slug: 'Life Tap', level: 0 }, {slug: 'Magic Missile', level: 10 }, {slug: 'Life Tap', level: 10 }, { slug: 'Hat', level: 10 }],
+      skills: [],
+      skillTrees: ['Warrior', 'Ranger', 'Mage'],
+      skillPoints: 50,
+      inventory: [],
     },
     ewfngibna: {
       name: 'Rustus',
@@ -38,12 +42,12 @@ const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players: {[key:
       experience: 0,
       cosmetics: [],
       talent: 0,
-      equipment: [{ slug: 'Sword', level: 0, enchant: 'Master' }, { slug: 'Hat', level: 0 }, null, null, null, { slug: 'Quick Charm', level: 0 }],
+      equipment: [{ slug: 'Greatsword', level: 0, enchant: 'Master' }, { slug: 'Armet', level: 0 }, null, null, null],
       artifacts: [],
       skills: [{ slug: 'Fitness', level: 5}],
       skillTrees: ['Warrior', 'Ranger'],
       skillPoints: 10,
-      inventory: [{ slug: 'Sword', level: 0 }, {slug: 'Magic Missile', level: 0 }, {slug: 'Life Tap', level: 0 }, {slug: 'Magic Missile', level: 10 }, {slug: 'Life Tap', level: 10 }, { slug: 'Hat', level: 10 }],
+      inventory: [{ slug: 'Greatsword', level: 0 }, {slug: 'Magic Bolt', level: 0 }, {slug: 'Fireball', level: 0 }, {slug: 'Magic Bolt', level: 10 }, null, { slug: 'Armet', level: 10 }],
     },
   },
   PlayerLevels: {

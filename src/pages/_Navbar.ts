@@ -79,7 +79,5 @@ export class Navbar extends PIXI.Container {
     for (let i = 0; i < this.contents.length; i++) {
       this.contents[i].position.set(left, top + i * inc);
     }
-
-    // console.log('nav bounds', bounds, this.position);
   }
 }

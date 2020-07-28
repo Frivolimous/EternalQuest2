@@ -6,6 +6,11 @@ export interface IExtrinsicModel {
   flags?: boolean[];
   scores?: number[];
 
+  currency: {
+    gold: number;
+    tokens: number;
+  };
+
   firstVersion?: number;
   logins?: number;
 
@@ -13,7 +18,7 @@ export interface IExtrinsicModel {
 
   artifacts?: number[];
   cosmetics?: number[];
-  // stash?: IItemSave[][][];
+
   playerStash?: {[key: string]: IItemSave[]};
   sharedStash?: IItemSave[][];
   overflowStash?: IItemSave[];
@@ -23,6 +28,10 @@ export interface IExtrinsicModel {
 
 export const dExtrinsicModel: IExtrinsicModel = {
   lastCharacter: undefined,
+  currency: {
+    gold: 0,
+    tokens: 0,
+  },
 };
 
 export interface IPlayerSave {
@@ -60,7 +69,7 @@ export const dPlayerSave: IPlayerSave = {
   experience: 0,
   cosmetics: [],
   talent: 0,
-  equipment: [{ slug: 'Sword', level: 0, enchant: 'Master' }, { slug: 'Hat', level: 0 }],
+  equipment: [{ slug: 'Greatsword', level: 0, enchant: 'Master' }, { slug: 'Cap', level: 0 }],
   artifacts: [],
   skills: [],
   skillTrees: ['Warrior', 'Mage', 'Ranger'],

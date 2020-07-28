@@ -1,12 +1,12 @@
 import { StatModel } from '../stats/StatModel';
 import { Vitals } from '../stats/Vitals';
-import { BuffManager } from './BuffManager';
+import { BuffContainer } from './BuffContainer';
 import { Formula } from '../../services/Formula';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
 
 export class SpriteModel {
   public onLevelUp = new JMEventListener<SpriteModel>();
-  public buffs: BuffManager;
+  public buffs: BuffContainer;
   public vitals: Vitals;
 
   public tile = 0;
@@ -21,15 +21,15 @@ export class SpriteModel {
     }
 
     this.vitals = new Vitals();
-    this.buffs = new BuffManager();
+    this.buffs = new BuffContainer();
 
-    this.vitals.fillVital('health', this.stats.getBaseStat('health'));
-    this.vitals.fillVital('mana', this.stats.getBaseStat('mana'));
+    this.vitals.fillVital('health', this.stats.getStat('health'));
+    this.vitals.fillVital('mana', this.stats.getStat('mana'));
     this.vitals.setVital('experience', this.stats.experience, Formula.experienceByLevel(this.stats.level));
 
     this.stats.onUpdate.addListener(() => {
-      this.vitals.setTotal('health', this.stats.getBaseStat('health'));
-      this.vitals.setTotal('mana', this.stats.getBaseStat('mana'));
+      this.vitals.setTotal('health', this.stats.getStat('health'));
+      this.vitals.setTotal('mana', this.stats.getStat('mana'));
     });
 
     this.resetVitals();
@@ -53,20 +53,7 @@ export class SpriteModel {
   }
 
   public incAction() {
-    this.vitals.addCount('action', this.stats.getBaseStat('speed') / 10);
-  }
-
-  public regenTick(value: number = 10) {
-    this.vitals.regen.count += value;
-    if (this.vitals.regen.count > this.vitals.regen.total) {
-      this.vitals.regen.count -= this.vitals.regen.total;
-      let hreg = this.stats.getBaseStat('hregen') * this.stats.getBaseStat('health');
-      let mreg = this.stats.getBaseStat('mregen') * this.stats.getBaseStat('mana');
-      this.vitals.addCount('health', hreg);
-      this.vitals.addCount('mana', mreg);
-    }
-
-    this.buffs.tickBuffs(value);
+    this.vitals.addCount('action', Math.max(0, this.stats.getStat('speed') / 10));
   }
 
   public earnXp(n: number = 1) {

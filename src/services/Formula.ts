@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { StatMapLevel, StatMap, LevelValue, CompoundMapLevel, CompoundMap } from '../data/StatData';
+import { StatMapLevel, StatMap, LevelValue, StatTag, DamageTags, DamageTag } from '../data/StatData';
 
 export const Formula = {
   diminish(a: number, level: number): number {
@@ -24,15 +24,16 @@ export const Formula = {
     return _.map(map, sl => ({stat: sl.stat, tag: sl.tag, value: Formula.statLevelToStat(sl.value, level)}));
   },
 
-  compoundLevelMapToStatMap(map: CompoundMapLevel, level: number): CompoundMap {
-    return _.map(map, sl => ({stat: sl.stat, value: Formula.statLevelToStat(sl.value, level)}));
-  },
-
   statLevelToStat(stat: LevelValue, level: number): number {
     if (_.isNumber(stat)) {
       return stat;
     } else {
-      return (stat.base || 0) + (stat.inc || 0) * level + (stat.dim ? Formula.diminish(stat.dim, level) : 0);
+      return (stat.base || 0) + (stat.inc || 0) * level + ((stat.dim && level >= 0) ? Formula.diminish(stat.dim, level) : 0);
     }
   },
+
+  getDamageTag(tags: StatTag[]) {
+    let m = _.intersection(tags, DamageTags);
+    return m[0] as DamageTag;
+  }
 };

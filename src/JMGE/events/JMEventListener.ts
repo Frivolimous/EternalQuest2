@@ -29,7 +29,6 @@ export class JMEventListener<T = any> {
   }
 
   public publish = (event?: T) => {
-    // console.log('publish', event, this.active);
     this.events.push(event);
     if (!this.active) {
       requestAnimationFrame(this.process);

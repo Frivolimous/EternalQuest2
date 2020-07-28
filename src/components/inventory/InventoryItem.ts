@@ -56,18 +56,26 @@ export class InventoryItem extends PIXI.Container {
   }
 
   private pointerDown = (e: PIXI.interaction.InteractionEvent) => {
-    ItemDragEvent.publishSync({
-      type: 'start',
-      item: this,
-      callback: (result: IItemDragResult) => {
-        if (result.allow && !this.dragging) {
-          this.dragging = true;
-          Facade.screen.addChild(this);
-          let loc = e.data.getLocalPosition(Facade.screen);
-          this.position.set(loc.x - this.getWidth() / 2, loc.y - this.getHeight() / 2);
-        }
-      },
-    });
+    if (e.data.originalEvent.ctrlKey) {
+      ItemDragEvent.publishSync({
+        type: 'sell',
+        item: this,
+        callback: () => this.destroy(),
+      });
+    } else {
+      ItemDragEvent.publishSync({
+        type: 'start',
+        item: this,
+        callback: (result: IItemDragResult) => {
+          if (result.allow && !this.dragging) {
+            this.dragging = true;
+            Facade.screen.addChild(this);
+            let loc = e.data.getLocalPosition(Facade.screen);
+            this.position.set(loc.x - this.getWidth() / 2, loc.y - this.getHeight() / 2);
+          }
+        },
+      });
+    }
   }
 
   private pointerUp = (e: PIXI.interaction.InteractionEvent) => {

@@ -14,6 +14,8 @@ import { InventoryPanelMenu } from '../components/ui/panels/InventoryPanelMenu';
 import { SkillPanel } from '../components/ui/panels/SkillPanel';
 import { InventoryPanelStash } from '../components/ui/panels/InventoryPanelStash';
 import { ActionPanel } from '../components/ui/panels/ActionPanel';
+import { OptionModal } from '../components/ui/modals/OptionModal';
+import { IItem } from '../data/ItemData';
 
 export class StatisticsUI extends BaseUI {
   public selectLeft: SelectList;
@@ -75,6 +77,9 @@ export class StatisticsUI extends BaseUI {
     this.selectRight.selectButton(0);
 
     this.getPlayer();
+
+    this.stashPanel.onItemSell = this.sellItem; // very deep callback, goes through like 5 layers
+    this.inventoryPanel.onItemSell = this.sellItem; // very deep callback, goes through like 5 layers
   }
 
   public destroy() {
@@ -122,5 +127,20 @@ export class StatisticsUI extends BaseUI {
 
   private navMenu = () => {
     this.navBack();
+  }
+
+  private sellItem = (item: IItem, slot: number, callback: () => void) => {
+    // if (item.cost > 80) {
+    //   this.addDialogueWindow(new OptionModal('Sell ' + item.name + ' for ' + item.cost + ' Gold?', { colorBack: 0x333333, colorFront: 0x666666}, 300, 300, [
+    //     {label: 'Yes', onClick: () => {
+    //       SaveManager.getExtrinsic().currency.gold += item.cost;
+    //       callback();
+    //     }},
+    //     {label: 'No', color: 0xf16666, onClick: () => {}},
+    //   ]));
+    // } else {
+      SaveManager.getExtrinsic().currency.gold += item.cost;
+      callback();
+    // }
   }
 }

@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import * as _ from 'lodash';
 
 import { BuffIcon } from './BuffIcon';
-import { BuffManager, IActiveBuff } from '../../../engine/sprites/BuffManager';
+import { BuffContainer, IActiveBuff } from '../../../engine/sprites/BuffContainer';
 
 let across = 8;
 let space = 12;
@@ -14,7 +14,7 @@ export class BuffView extends PIXI.Container {
     super();
   }
 
-  public updateBuffs = (buffList: BuffManager) => {
+  public updateBuffs = (buffList: BuffContainer) => {
     let modelBuffs = buffList.buffs;
     let viewBuffs = this.buffs;
 

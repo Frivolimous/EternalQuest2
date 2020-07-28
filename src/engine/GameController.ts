@@ -9,14 +9,12 @@ import { JMEventListener } from '../JMGE/events/JMEventListener';
 import { SpawnEnemy } from '../services/SpawnEnemy';
 import { IPlayerLevelSave } from '../data/SaveData';
 import { Vitals } from './stats/Vitals';
-import { ActionManager, IBuffResult } from '../services/ActionManager';
-import { BuffList } from '../data/BuffData';
-import { ActionList } from '../data/ActionData';
+import { IBuffResult, ActionController, IActionResult } from './ActionController';
 import { DataConverter } from '../services/DataConverter';
 import { ItemManager } from '../services/ItemManager';
 import { IItem } from '../data/ItemData';
 import { Formula } from '../services/Formula';
-import { IEnemy } from '../data/EnemyData';
+import { EffectTrigger } from '../data/EffectData';
 
 export class GameController {
   public onPlayerAdded = new JMEventListener<SpriteModel>();
@@ -29,7 +27,7 @@ export class GameController {
   public onZoneProgress = new JMEventListener<IPlayerLevelSave>();
   public onVitalsUpdate = new JMEventListener<Vitals>();
   public onFightStart = new JMEventListener<null>();
-  public onAction = new JMEventListener<IAnimateAction>();
+  public onAction = new JMEventListener<IActionResult>();
   public onBuffEffect = new JMEventListener<IBuffResult>();
   public onNavTown = new JMEventListener<null>();
   public onLoot = new JMEventListener<IItem>();
@@ -45,6 +43,8 @@ export class GameController {
   private spawnCount = 4;
 
   private levelComplete = false;
+
+  private actionC = new ActionController(this.onBuffEffect.publish);
 
   constructor() {
     GameEvents.ticker.add(this.onTick);
@@ -107,14 +107,17 @@ export class GameController {
 
     for (let i = this.spriteModels.length - 1; i >= 0; i--) {
       let sprite = this.spriteModels[i];
-      sprite.regenTick();
+      this.regenTick(sprite, this.fighting ? 10 : 50);
       sprite.checkDeath();
       if (sprite.dead) {
-        if (!sprite.player) {
-          this.enemyDead(sprite);
-        } else {
-          this.playerDead(sprite);
-          return;
+        this.processTriggersFor('death', sprite);
+        if (sprite.dead) {
+          if (!sprite.player) {
+            this.enemyDead(sprite);
+          } else {
+            this.playerDead(sprite);
+            return;
+          }
         }
       }
     }
@@ -148,6 +151,7 @@ export class GameController {
   public endFight = () => {
     this.spawnCount = RandomSeed.enemySpawn.getInt(1, 9);
     this.fighting = false;
+    this.processTriggersFor('fightEnd', this.player);
   }
 
   public playerDead = (sprite: SpriteModel) => {
@@ -173,14 +177,13 @@ export class GameController {
     if (maxVal >= 100) {
       this.processing = true;
 
-      let result = ActionManager.chooseAction(maxSprite, this.spriteModels, true, this.onBuffEffect.publish);
-      this.onAction.publish({
-        result,
-        trigger: () => {
-          ActionManager.finishAction(result, this.spriteModels);
-        },
-      });
+      let result = this.actionC.chooseAction(maxSprite, this.spriteModels, true);
+      this.onAction.publish(result);
     }
+  }
+
+  public finishAction = (result: IActionResult) => {
+    this.actionC.finishAction(result, this.spriteModels);
   }
 
   public tickBetween = () => {
@@ -210,18 +213,13 @@ export class GameController {
     _.each(this.spriteModels, sprite => {
       this.processing = true;
       if (sprite.player) {
-        let result = ActionManager.chooseAction(sprite, this.spriteModels, false, this.onBuffEffect.publish);
+        let result = this.actionC.chooseAction(sprite, this.spriteModels, false);
 
         if (result) {
           if (result.source.slug === 'gotown') {
             this.onNavTown.publish();
           } else {
-            this.onAction.publish({
-              result,
-              trigger: () => {
-                ActionManager.finishAction(result, this.spriteModels);
-              },
-            });
+            this.onAction.publish(result);
           }
         }
       }
@@ -235,13 +233,41 @@ export class GameController {
   public startFight = () => {
     this.fighting = true;
     this.spriteModels.forEach(sprite => {
-      let init = sprite.stats.getBaseStat('initiative');
+      let init = sprite.stats.getStat('initiative');
       sprite.vitals.setVital('action', init + RandomSeed.general.getRaw() * 100);
       sprite.tile = sprite.player ? 0 : 2;
+      this.processTriggersFor('fightStart', sprite);
     });
 
     this.processing = true;
     this.onFightStart.publish();
+  }
+
+  public processTriggersFor = (event: EffectTrigger, origin: SpriteModel, target?: SpriteModel) => {
+    let result = this.actionC.processTriggers(origin, target, this.spriteModels, event);
+    if (result) {
+      this.onAction.publish(result);
+    }
+  }
+
+  public regenTick = (sprite: SpriteModel, value: number = 10) => {
+    this.actionC.tickBuffs(sprite, value);
+
+    sprite.vitals.regen.count += value;
+
+    if (sprite.vitals.regen.count > sprite.vitals.regen.total) {
+      sprite.vitals.regen.count -= sprite.vitals.regen.total;
+      let hreg = sprite.stats.getStat('hregen') * sprite.stats.getStat('health');
+      let mreg = sprite.stats.getStat('mregen') * sprite.stats.getStat('mana');
+      sprite.vitals.addCount('health', hreg);
+      sprite.vitals.addCount('mana', mreg);
+      this.processTriggersFor('constant', sprite);
+      if (this.fighting) {
+        this.processTriggersFor('constantBattle', sprite);
+      } else {
+        this.processTriggersFor('constantSafe', sprite);
+      }
+    }
   }
 
   public spawnEnemy = () => {
@@ -265,14 +291,12 @@ export class GameController {
 
   public addTownBuff = () => {
     if (this.player.buffs.hasBuff('town')) {
-      this.player.buffs.expendBuff('town');
+      this.actionC.expendBuff(this.player, 'town');
     } else {
       let buff = DataConverter.getBuff('town', 0);
       let buffAction = buff.action;
 
-      let onAdd = () => {
-        this.player.stats.addAction(buffAction);
-      };
+      this.player.stats.addAction(buffAction);
       let onRemove = () => {
         this.player.stats.removeAction(buffAction);
       };
@@ -280,7 +304,6 @@ export class GameController {
         source: buff,
         remaining: 1,
         timer: Infinity,
-        onAdd,
         onRemove,
       });
     }

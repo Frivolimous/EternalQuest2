@@ -1,24 +1,24 @@
 import * as _ from 'lodash';
-import { LevelValue, StatMapLevel, CompoundMapLevel, StatMap, CompoundMap } from './StatData';
+import { StatMapLevel, StatMap } from './StatData';
 import { IItemSave, IItem } from './ItemData';
 import { IActionRaw, ActionSlug, IAction } from './ActionData';
+import { EffectSlug, IEffectRaw, IEffect } from './EffectData';
 
 export type EnemySlug = 'Goblin' | 'Vine' | 'Brute' | 'Goblin Boss';
 
 export const EnemyList: IEnemyRaw[] = [
-  {slug: 'Goblin', compoundStats: [{stat: 'strength', value: { base: 50, inc: 5}}], baseStats: [{stat: 'health', tag: 'Base', value: { base: 100, inc: 5}}]},
-  {slug: 'Goblin Boss', compoundStats: [{stat: 'strength', value: { base: 50, inc: 5}}], baseStats: [{stat: 'health', tag: 'Base', value: { base: 500, inc: 5}}]},
+  {slug: 'Goblin', stats: [{stat: 'strength', value: { base: 50, inc: 5}}, {stat: 'health', tag: 'Base', value: { base: 100, inc: 5}}]},
+  {slug: 'Goblin Boss', stats: [{stat: 'strength', value: { base: 50, inc: 5}}, {stat: 'health', tag: 'Base', value: { base: 500, inc: 5}}]},
 ];
 
 export interface IEnemyRaw {
   slug: EnemySlug;
   cosmetics?: number[];
-  baseStats?: StatMapLevel;
-  compoundStats?: CompoundMapLevel;
+  stats?: StatMapLevel;
   equipment?: IItemSave[];
 
   actions?: (ActionSlug | IActionRaw)[];
-  triggers?: any;
+  triggers?: (EffectSlug | IEffectRaw)[];
 }
 
 export interface IEnemy {
@@ -26,10 +26,9 @@ export interface IEnemy {
   slug: EnemySlug;
   level: number;
   cosmetics?: number[];
-  baseStats?: StatMap;
-  compoundStats?: CompoundMap;
+  stats?: StatMap;
   equipment?: IItem[];
 
   actions?: IAction[];
-  triggers?: any;
+  triggers?: IEffect[];
 }

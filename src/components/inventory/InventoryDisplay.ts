@@ -11,7 +11,14 @@ export const ItemDragEvent = new JMEventListener<IItemDragEvent>();
 const inventoryDisplays: InventoryDisplay[] = [];
 
 ItemDragEvent.addListener((e: IItemDragEvent) => {
-  if (e.type === 'start') {
+  if (e.type === 'sell') {
+    for (let i = 0; i < inventoryDisplays.length; i++) {
+      if (inventoryDisplays[i].allowedSell(e.item)) {
+        inventoryDisplays[i].sellItem(e.item, () => e.callback({allow: true}));
+        return;
+      }
+    }
+  } else if (e.type === 'start') {
     for (let i = 0; i < inventoryDisplays.length; i++) {
       if (inventoryDisplays[i].allowedRemove(e.item)) {
         e.callback({allow: true});
@@ -28,14 +35,11 @@ ItemDragEvent.addListener((e: IItemDragEvent) => {
       if (newDisplay.itemLocOverThis(oldItem)) {
         let newIndex = newDisplay.getIndexByItemLoc(oldItem);
         if (newDisplay.allowedAdd(oldItem, newIndex)) {
-          // console.log('allowed to add', oldItem, newIndex, newDisplay);
           let newItem = newDisplay.getItemAt(newIndex);
           if (newItem) {
             let oldDisplay = oldItem.currentInventory;
             let oldIndex = oldDisplay.getItemIndex(oldItem);
-            // console.log('is new item', newItem, oldDisplay, oldIndex);
             if (oldDisplay.allowedAdd(newItem, oldIndex)) {
-              // console.log('can swap, so swap!');
               newDisplay.removeItem(newItem);
               oldDisplay.removeItem(oldItem);
               newDisplay.addItemAt(oldItem, newIndex);
@@ -43,10 +47,8 @@ ItemDragEvent.addListener((e: IItemDragEvent) => {
               e.callback({allow: true});
               return;
             } else {
-              // console.log('cannot swap');
               let overflow = oldDisplay.overflow;
               if (overflow && overflow.roomToAdd()) {
-                // console.log('can overflow');
                 newDisplay.removeItem(newItem);
                 oldDisplay.removeItem(oldItem);
                 newDisplay.addItemAt(oldItem, newIndex);
@@ -54,34 +56,30 @@ ItemDragEvent.addListener((e: IItemDragEvent) => {
                 e.callback({allow: true});
                 return;
               } else {
-                // console.log('cannot overflow');
                 oldDisplay.returnItem(oldItem);
                 e.callback({allow: false});
                 return;
               }
             }
           } else {
-            // console.log('no other item');
             oldItem.currentInventory.removeItem(oldItem);
             newDisplay.addItemAt(oldItem);
             e.callback({allow: true});
             return;
           }
         }
-        // console.log('not allowed to add');
         oldItem.currentInventory.returnItem(oldItem);
         e.callback({allow: false});
         return;
       }
     }
-    // console.log('no drop point');
     oldItem.currentInventory.returnItem(oldItem);
     e.callback({allow: false});
   }
 });
 
 export interface IItemDragEvent {
-  type: 'start' | 'end';
+  type: 'start' | 'end' | 'sell';
   item: InventoryItem;
   callback: (result: IItemDragResult) => void;
 }
@@ -118,6 +116,8 @@ export class InventoryDisplay extends PIXI.Container {
 
   public onItemAdded: (item: IItem, slot: number) => void;
   public onItemRemoved: (item: IItem, slot: number) => void;
+  public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
+
   public slot0Index: number = 0;
 
   private background = new PIXI.Graphics();
@@ -165,7 +165,6 @@ export class InventoryDisplay extends PIXI.Container {
     }
 
     if (this.settings.hasButtons) {
-      console.log('buttons!');
       for (let i = 0; i < this.settings.across; i++) {
         let button = new StateButton([], {width: this.settings.width, onToggle: () => {}});
         this.priorityButtons.push(button);
@@ -214,7 +213,6 @@ export class InventoryDisplay extends PIXI.Container {
         break;
       }
     }
-    // console.log('add item', i);
     let loc = this.getLocByIndex(i);
     this.items[i] = item;
     item.currentInventory = this;
@@ -243,7 +241,6 @@ export class InventoryDisplay extends PIXI.Container {
       let loc2: {x: number, y: number} = this.toLocal(item.position, item.parent);
       index = this.getIndexByLoc(loc2);
     }
-    // console.log('add item at', index);
     let loc = this.getLocByIndex(index);
     this.addChild(item);
     item.position.set(loc.x, loc.y);
@@ -259,7 +256,6 @@ export class InventoryDisplay extends PIXI.Container {
   public returnItem = (item: InventoryItem) => {
     this.addChild(item);
     let index = _.indexOf(this.items, item);
-    // console.log('return item', index);
     let loc = this.getLocByIndex(index);
     item.position.set(loc.x, loc.y);
   }
@@ -267,11 +263,18 @@ export class InventoryDisplay extends PIXI.Container {
   public removeItem = (item: InventoryItem) => {
     if (item.currentInventory === this) {
       let index = this.getItemIndex(item);
-      // console.log('remove item', index);
       this.items[index] = null;
       if (this.onItemRemoved) {
         this.onItemRemoved(item.source, this.slot0Index + index);
       }
+    }
+  }
+
+  public sellItem = (item: InventoryItem, callback: () => void) => {
+    if (this.onItemSell) {
+      let index = this.getItemIndex(item);
+      this.onItemSell(item.source, index, callback);
+      this.removeItem(item);
     }
   }
 
@@ -289,6 +292,10 @@ export class InventoryDisplay extends PIXI.Container {
     } else {
       return false;
     }
+  }
+
+  public allowedSell = (item: InventoryItem) => {
+    return this.allowedRemove(item);
   }
 
   public itemLocOverThis = (item: InventoryItem) => {
@@ -330,6 +337,10 @@ export class InventoryDisplay extends PIXI.Container {
         return true;
       }
     }
+  }
+
+  public hasItem(item: InventoryItem) {
+    return _.includes(this.items, item);
   }
 
   private getIndexByLoc(loc: {x: number, y: number}): number {

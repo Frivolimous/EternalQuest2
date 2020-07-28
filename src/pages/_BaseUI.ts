@@ -40,7 +40,7 @@ export class BaseUI extends PIXI.Container {
       this.redrawBase(e);
       this.positionElements(e);
 
-      if (this.dialogueWindow) {
+      if (this.dialogueWindow && this.dialogueWindow.parent) {
         this.dialogueWindow.updatePosition(e.outerBounds);
         this.dialogueWindow.position.set(e.outerBounds.width / 2, e.outerBounds.height / 2);
       }

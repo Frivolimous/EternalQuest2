@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 
-import { IAction, ActionList } from '../../data/ActionData';
-import { ActionManager } from '../../services/ActionManager';
+import { IAction } from '../../data/ActionData';
 import { DataConverter } from '../../services/DataConverter';
 
 export class ActionContainer {
@@ -25,6 +24,7 @@ export class ActionContainer {
     } else {
       this.list.unshift(action);
     }
+    this.sortActions();
   }
 
   public removeAction = (action: IAction) => {
@@ -44,5 +44,26 @@ export class ActionContainer {
     } else {
       return _.filter(this.list, action => _.includes(action.distance, distance));
     }
+  }
+
+  private sortActions() {
+    this.list = _.sortBy(this.list, action => {
+      let val = 0;
+      if (action.slug === 'idle') {
+        return 10;
+      } else if (action.slug === 'gotown') {
+        return 0;
+      } else if (action.slug === 'withdraw') {
+        return 1;
+      } else if (action.type === 'walk') {
+        return 9;
+      } else if (action.slug === 'strike') {
+        return 8;
+      } else if (action.type === 'attack') {
+        return 7;
+      } else {
+        return 6;
+      }
+    });
   }
 }

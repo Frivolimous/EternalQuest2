@@ -10,6 +10,7 @@ import { IItem } from '../../../data/ItemData';
 import { StatModel } from '../../../engine/stats/StatModel';
 
 export class InventoryPanelMenu extends BasePanel {
+  public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
   private equip: InventoryDisplay;
   private belt: InventoryDisplay;
   private inventory: InventoryDisplay;
@@ -68,6 +69,14 @@ export class InventoryPanelMenu extends BasePanel {
     this.belt.slot0Index = 5;
     this.inventory.onItemAdded = sprite.addItem;
     this.inventory.onItemRemoved = sprite.removeItem;
+
+    this.equip.onItemSell = this.sellItem;
+    this.belt.onItemSell = this.sellItem;
+    this.inventory.onItemSell = this.sellItem;
+  }
+
+  public sellItem = (item: IItem, slot: number, callback: () => void) => {
+    if (this.onItemSell) this.onItemSell(item, slot, callback);
   }
 
   public addItem = (item: IItem) => {

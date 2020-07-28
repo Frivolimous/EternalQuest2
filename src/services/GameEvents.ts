@@ -1,8 +1,7 @@
 import { JMTicker } from '../JMGE/events/JMTicker';
 import { JMRect } from '../JMGE/others/JMRect';
 import { JMEventListener } from '../JMGE/events/JMEventListener';
-import { SpriteModel } from '../engine/sprites/SpriteModel';
-import { IActionResult } from './ActionManager';
+import { IActionResult } from '../engine/ActionController';
 
 export const GameEvents = {
   ticker: JMTicker,

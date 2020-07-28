@@ -1,22 +1,22 @@
 import * as PIXI from 'pixi.js';
 
 import { BasePanel } from './_BasePanel';
-import { Button } from '../Button';
 import { InventoryDisplay } from '../../inventory/InventoryDisplay';
 import { InventoryItem } from '../../inventory/InventoryItem';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
-import { ItemManager } from '../../../services/ItemManager';
 import { IItem } from '../../../data/ItemData';
 
 export class InventoryPanel extends BasePanel {
+  public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
   private equip: InventoryDisplay;
   private belt: InventoryDisplay;
   private inventory: InventoryDisplay;
-  constructor() {
-    super(new PIXI.Rectangle(0, 650, 800, 250), 0x999999);
 
-    this.equip = new InventoryDisplay({ width: 60, height: 50, across: 5, down: 1, padding: 5, hasButtons: true, headers: [{label: 'Weapon', length: 1}, {label: 'Helmet', length: 1}, {label: 'Magic', length: 3}] });
-    this.belt = new InventoryDisplay({ width: 60, height: 50, across: 5, down: 1, padding: 5, hasButtons: true, headers: [{label: 'Belt', length: 5}] });
+  constructor() {
+    super(new PIXI.Rectangle(0, 650, 800, 270), 0x999999);
+
+    this.equip = new InventoryDisplay({ width: 60, height: 60, across: 5, down: 1, padding: 5, hasButtons: true, headers: [{label: 'Weapon', length: 1}, {label: 'Helmet', length: 1}, {label: 'Magic', length: 3}] });
+    this.belt = new InventoryDisplay({ width: 60, height: 60, across: 5, down: 1, padding: 5, hasButtons: true, headers: [{label: 'Belt', length: 5}] });
     this.inventory = new InventoryDisplay({ width: 60, height: 60, across: 10, down: 2, padding: 5 });
     this.equip.overflow = this.inventory;
     this.belt.overflow = this.inventory;
@@ -33,7 +33,7 @@ export class InventoryPanel extends BasePanel {
 
     this.equip.position.set(50, 30);
     this.belt.position.set(400, 30);
-    this.inventory.position.set(50, 120);
+    this.inventory.position.set(50, 130);
   }
 
   public addPlayer = (player: SpriteModel) => {
@@ -64,6 +64,14 @@ export class InventoryPanel extends BasePanel {
     this.belt.slot0Index = 5;
     this.inventory.onItemAdded = player.stats.addItem;
     this.inventory.onItemRemoved = player.stats.removeItem;
+
+    this.equip.onItemSell = this.sellItem;
+    this.belt.onItemSell = this.sellItem;
+    this.inventory.onItemSell = this.sellItem;
+  }
+
+  public sellItem = (item: IItem, slot: number, callback: () => void) => {
+    if (this.onItemSell) this.onItemSell(item, slot, callback);
   }
 
   public addItem = (item: IItem) => {

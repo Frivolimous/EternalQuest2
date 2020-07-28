@@ -12,7 +12,8 @@ export class SpriteView extends PIXI.Container {
   public facing = 1;
   public display = new PIXI.Graphics();
 
-  private animating: boolean;
+  public animating: boolean;
+
   private actionGauge: SimpleGauge;
   private manaGauge: SimpleGauge;
   private healthGauge: SimpleGauge;
@@ -37,8 +38,8 @@ export class SpriteView extends PIXI.Container {
       this.manaGauge.position.set(-40, -166);
       this.healthGauge.position.set(-40, -172);
 
-      this.healthGauge.setTotal(model.stats.getBaseStat('health'));
-      this.manaGauge.setTotal(model.stats.getBaseStat('mana'));
+      this.healthGauge.setTotal(model.stats.getStat('health'));
+      this.manaGauge.setTotal(model.stats.getStat('mana'));
       model.setVitalsCallback(this.vitalsUpdate);
       this.buffView.position.set(-40, -200);
     } else {

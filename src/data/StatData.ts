@@ -1,32 +1,45 @@
+export type AnyStat = BaseStat | CompoundStat;
+
 export type BaseStat = AttackStat | VitalStat | DefenseStat;
 
 export type AttackStat = 'baseDamage' | 'power' | 'critRate' | 'critMult' | 'hit' | 'penetration' | 'rate';
-export type VitalStat = 'health' | 'mana' | 'hregen' | 'mregen' | 'speed' | 'initiative';
+export type VitalStat = 'health' | 'mana' | 'hregen' | 'mregen' | 'speed' | 'initiative' | 'efficiency' | 'manacost';
 export type DefenseStat = 'resist' | 'avoid' | 'devaluation';
 
 export type CompoundStat = 'strength' | 'dexterity' | 'intellect' | 'magic' | 'accuracy' |
-  'parry' | 'block' | 'dodge' | 'turn' | 'tenacity' | 'fortification' | 'vitality' | 'spirit';
+  'parry' | 'block' | 'dodge' | 'turn' | 'tenacity' | 'fortification';
 
-export type StatTag = ItemTag | DamageTag | MiscTag | SpecTag | PhysicalTag;
-export type SpecTag = 'Base' | 'Neg' | 'Mult' | 'Critical';
-export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell';
-export type DamageTag = 'Physical' | 'Magical' | 'Chemical' | 'Holy' | 'Dark' | 'Spirit';
-export type MiscTag = 'Force' | 'Buff' | 'Curse' | 'Fire' | 'Electric' | 'Ice' | 'Toxic' | 'Gadget' | 'Cryptic' | 'Mystic' |
-  'Projectile' | 'Grenade' | 'Potion' | 'Control';
-export type PhysicalTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Melee' | 'Ranged';
+export function isCompoundStat(stat: BaseStat | CompoundStat): stat is CompoundStat {
+  return (stat === 'strength' || stat === 'dexterity' || stat === 'intellect' || stat === 'magic' || stat === 'accuracy' || stat === 'parry' || stat === 'block' || stat === 'dodge' || stat === 'turn' || stat === 'tenacity' || stat === 'fortification');
+}
 
-export const PRIMARY_TAGS: StatTag[] = ['Melee', 'Light Melee', 'Heavy', 'Ranged', 'Spell', 'Grenade', 'Potion', 'Mystic', 'Cryptic'];
-export const DAMAGE_TAGS: StatTag[] = ['Physical', 'Magical', 'Chemical', 'Holy', 'Dark', 'Spirit'];
+export type StatTag = SpecTag | ItemTag | ActionTag | EffectTag;
+export type SpecTag = 'Base' | 'Neg' | 'Mult' | 'Map';
+export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell' | 'Thrown' | 'Incanted';
+export type ActionTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Melee' | 'Ranged' | 'Grenade' | 'Potion' | 'Cryptic' | 'Mystic' | 'Agile';
+export type EffectTag = 'Healing' | 'Force' | 'Buff' | 'Curse' | 'Fire' | 'Electric' | 'Ice' | 'Toxic' | 'Gadget' | 'Projectile' | 'Control' | 'Critical' | 'OverTime' | DamageTag;
+export type DamageTag = 'Physical' | 'Magical' | 'Chemical' | 'Holy' | 'Dark' | 'Spirit' | 'None';
+export const DamageTags = ['Physical', 'Magical', 'Chemical', 'Holy', 'Dark', 'Spirit', 'None'];
 
-export type StatMap = { stat: BaseStat, tag: StatTag, value: number }[];
-export type CompoundMap = { stat: CompoundStat, value: number }[];
+export function getPowerType(tag: StatTag): 'action' | 'effect' | 'item' {
+  if (tag === 'Equipment' || tag === 'Belt' || tag === 'Weapon' || tag === 'Helmet' || tag === 'Spell') {
+    return 'item';
+  }
+  if (tag === 'Light Melee' || tag === 'Heavy' || tag === 'Finesse' || tag === 'Unarmed' || tag === 'Melee' || tag === 'Ranged' || tag === 'Grenade' || tag === 'Potion' || tag === 'Cryptic' || tag === 'Mystic' || tag === 'Agile') {
+    return 'action';
+  }
+  return 'effect';
+}
 
-export type StatMapLevel = { stat: BaseStat, tag: StatTag, value: LevelValue }[];
-export type CompoundMapLevel = { stat: CompoundStat, value: LevelValue }[];
+export type StatMap = { stat: AnyStat, tag?: StatTag, value: number }[];
+
+export type StatMapLevel = { stat: AnyStat, tag?: StatTag, value: LevelValue }[];
 
 export type LevelValue = number | { base?: number, inc?: number, dim?: number };
+export type CompoundMap = Partial<{ [key in AnyStat]: ICompoundMap[] }>;
+export interface ICompoundMap { sourceTag?: StatTag; stat: BaseStat; tag?: StatTag; percent: number; }
 
-export const CompoundMap: { [key in CompoundStat]: { stat: BaseStat, tag: StatTag, percent: number }[] } = {
+export const dCompoundMap: CompoundMap = {
   strength: [
     { stat: 'power', tag: 'Melee', percent: 1 },
     { stat: 'power', tag: 'Light Melee', percent: 0.5 },
@@ -36,16 +49,20 @@ export const CompoundMap: { [key in CompoundStat]: { stat: BaseStat, tag: StatTa
     { stat: 'power', tag: 'Ranged', percent: 1 },
     { stat: 'power', tag: 'Light Melee', percent: 0.5 },
     { stat: 'power', tag: 'Finesse', percent: 0.5 },
+    { stat: 'power', tag: 'Thrown', percent: 0.5 },
+    { stat: 'speed', percent: 0.05 },
   ],
   intellect: [
     { stat: 'power', tag: 'Gadget', percent: 1 },
     { stat: 'power', tag: 'Cryptic', percent: 0.5 },
     { stat: 'rate', tag: 'Gadget', percent: 0.001 },
     { stat: 'rate', tag: 'Cryptic', percent: 0.0005 },
+    { stat: 'initiative', percent: 0.1 },
   ],
   magic: [
     { stat: 'power', tag: 'Spell', percent: 1 },
     { stat: 'power', tag: 'Mystic', percent: 0.5 },
+    { stat: 'power', tag: 'Incanted', percent: -0.5 },
   ],
   accuracy: [
     { stat: 'hit', tag: 'Melee', percent: 1 },
@@ -76,19 +93,11 @@ export const CompoundMap: { [key in CompoundStat]: { stat: BaseStat, tag: StatTa
     { stat: 'resist', tag: 'Critical', percent: 1 },
     { stat: 'devaluation', tag: 'Critical', percent: 1 },
   ],
-  vitality: [
-    { stat: 'health', tag: 'Base', percent: 1 },
-    { stat: 'hregen', tag: 'Base', percent: 0.0001 },
-  ],
-  spirit: [
-    { stat: 'mana', tag: 'Base', percent: 1 },
-    { stat: 'mregen', tag: 'Base', percent: 0.0001 },
-  ],
 };
 
 export type StatDisplayType = 'numeric' | 'percent' | 'x100';
 
-export const CompoundStatDisplay: { [key in CompoundStat]: StatDisplayType} = {
+export const StatDisplay: { [key in AnyStat]: StatDisplayType } = {
   strength: 'numeric',
   dexterity: 'numeric',
   intellect: 'numeric',
@@ -100,11 +109,7 @@ export const CompoundStatDisplay: { [key in CompoundStat]: StatDisplayType} = {
   turn: 'percent',
   tenacity: 'percent',
   fortification: 'percent',
-  vitality: 'numeric',
-  spirit: 'numeric',
-};
 
-export const BaseStatDisplay: { [key in BaseStat]: StatDisplayType } = {
   health: 'numeric',
   mana: 'numeric',
   speed: 'numeric',
@@ -121,11 +126,13 @@ export const BaseStatDisplay: { [key in BaseStat]: StatDisplayType } = {
   resist: 'percent',
   avoid: 'percent',
   devaluation: 'percent',
+  efficiency: 'percent',
+  manacost: 'percent',
 };
 
 export type StatProgression = 'linear' | 'diminish';
 
-export const CompoundStatProgression: { [key in CompoundStat]: StatProgression} = {
+export const StatProgression: { [key in AnyStat]: StatProgression } = {
   strength: 'linear',
   dexterity: 'linear',
   intellect: 'linear',
@@ -137,11 +144,7 @@ export const CompoundStatProgression: { [key in CompoundStat]: StatProgression} 
   turn: 'diminish',
   tenacity: 'diminish',
   fortification: 'diminish',
-  vitality: 'linear',
-  spirit: 'linear',
-};
 
-export const BaseStatProgression: { [key in BaseStat]: StatProgression } = {
   health: 'linear',
   mana: 'linear',
   speed: 'linear',
@@ -158,32 +161,30 @@ export const BaseStatProgression: { [key in BaseStat]: StatProgression } = {
   resist: 'diminish',
   avoid: 'diminish',
   devaluation: 'diminish',
+  efficiency: 'diminish',
+  manacost: 'diminish',
 };
 
-export const dCompoundStats: CompoundStats = {
-  strength: 0,
-  dexterity: 0,
-  intellect: 0,
-  magic: 0,
-  accuracy: 0,
-  parry: 0,
-  block: 0,
-  dodge: 0,
-  turn: 0,
-  tenacity: 0,
-  fortification: 0,
-  vitality: 0,
-  spirit: 0,
-};
+export const dStatBlock: StatBlock = {
+  strength: { base: 0, mult: 0 },
+  dexterity: { base: 0, mult: 0 },
+  intellect: { base: 0, mult: 0 },
+  magic: { base: 0, mult: 0 },
+  accuracy: { base: 0, mult: 0, neg: 0 },
+  parry: { base: 0, mult: 0, neg: 0 },
+  block: { base: 0, mult: 0, neg: 0 },
+  dodge: { base: 0, mult: 0, neg: 0 },
+  turn: { base: 0, mult: 0, neg: 0 },
+  tenacity: { base: 0, mult: 0, neg: 0 },
+  fortification: { base: 0, mult: 0, neg: 0 },
 
-export const dBaseStats: BaseStats = {
   health: { base: 100, mult: 0, tags: {} },
   mana: { base: 50, mult: 0, tags: {} },
   speed: { base: 100, mult: 0, tags: {} },
   hregen: { base: 0, mult: 0, tags: {} },
   mregen: { base: 0.03, mult: 0, tags: {} },
   initiative: { base: 0, mult: 0, tags: {} },
-  baseDamage: { base: 0, mult: 0, tags: { Unarmed: { base: 10, mult: 0 }} },
+  baseDamage: { base: 0, mult: 0, tags: { Unarmed: { base: 10, mult: 0 } } },
   power: { base: 100, mult: 0, tags: {} },
   critRate: { base: 0, mult: 0, neg: 0, tags: { Weapon: { base: 0.15, mult: 0, neg: 0 } } },
   critMult: { base: 1.5, mult: 0, tags: {} },
@@ -193,19 +194,21 @@ export const dBaseStats: BaseStats = {
   resist: { base: 0, mult: 0, neg: 0, tags: {} },
   avoid: { base: 0, mult: 0, neg: 0, tags: {} },
   devaluation: { base: 0, mult: 0, neg: 0, tags: {} },
+  efficiency: { base: 0, mult: 0, neg: 0, tags: {} },
+  manacost: { base: 0, mult: 0, neg: 0, tags: {} },
 };
 
-export type CompoundStats = { [key in CompoundStat]: number };
-export type BaseStats = {
-  [key in BaseStat]: {
+export type StatBlock = {
+  [key in AnyStat]: {
     base: number;
     neg?: number;
     mult: number;
-    tags: Partial<TagGroup>;
+    tags?: Partial<TagGroup>;
   }
 };
 
-type TagGroup = {[key in StatTag]: {base: number, mult: number, neg?: number}};
-export type SimpleStats = { [key in BaseStat]: number};
-export type AttackStats = { [key in AttackStat]: number};
-export type AttackStatsLevel = { [key in AttackStat]: LevelValue};
+type TagGroup = { [key in StatTag]: { base: number, mult: number, neg?: number } };
+
+export type SimpleStats = { [key in BaseStat]: number };
+export type AttackStats = { [key in AttackStat]: number };
+export type AttackStatsLevel = { [key in AttackStat]: LevelValue };

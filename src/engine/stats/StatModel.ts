@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { BaseStats, CompoundStat, BaseStat, StatTag, CompoundStats, dBaseStats, dCompoundStats, CompoundMap, BaseStatProgression, BaseStatDisplay, SimpleStats, CompoundStatProgression, CompoundStatDisplay, StatMap } from '../../data/StatData';
+import { StatTag, dCompoundMap, StatMap, StatBlock, dStatBlock, AnyStat, StatProgression, StatDisplay, isCompoundStat, getPowerType, CompoundMap, ICompoundMap } from '../../data/StatData';
 import { Formula } from '../../services/Formula';
 import { IPlayerSave } from '../../data/SaveData';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
@@ -10,6 +10,7 @@ import { IAction } from '../../data/ActionData';
 import { ISkill, SkillPrerequisiteMap, SkillTreeSlug } from '../../data/SkillData';
 import { DataConverter } from '../../services/DataConverter';
 import { IEnemy } from '../../data/EnemyData';
+import { IEffect, EffectTrigger } from '../../data/EffectData';
 
 export class StatModel {
   public static fromSave(save: IPlayerSave): StatModel {
@@ -21,7 +22,7 @@ export class StatModel {
 
   public static fromEnemy(enemy: IEnemy): StatModel {
     let m = new StatModel(enemy.name, null, enemy.level, enemy.cosmetics, enemy.equipment);
-    m.addStatMap(enemy.baseStats, enemy.compoundStats);
+    m.addStatMap(enemy.stats);
 
     if (enemy.actions) {
       enemy.actions.forEach(action => {
@@ -36,12 +37,12 @@ export class StatModel {
   public skillTrees: SkillTreeSlug[];
   public onUpdate = new JMEventListener<void>(false, true);
 
-  private baseStats: BaseStats;
-  private compoundStats: CompoundStats;
+  private stats: StatBlock;
 
   private actions: ActionContainer;
-  private triggers: any;
+  private triggers: IEffect[] = [];
   private unarmored: any;
+  private compoundMap: CompoundMap;
 
   constructor(
     public name?: string,
@@ -56,9 +57,9 @@ export class StatModel {
     public talent?: any,
     public experience?: number,
   ) {
-    this.baseStats = _.cloneDeep(dBaseStats);
-    this.compoundStats = _.cloneDeep(dCompoundStats);
+    this.stats = _.cloneDeep(dStatBlock);
     this.actions = new ActionContainer();
+    this.compoundMap = _.cloneDeep(dCompoundMap);
     if (this.equipment) {
       this.equipment.forEach(item => this.equipItem(item, -1));
     }
@@ -68,119 +69,175 @@ export class StatModel {
     }
   }
 
-  public addCompountStat(stat: CompoundStat, value: number) {
-    for (let val of CompoundMap[stat]) {
-      this.subBaseStat(val.stat, val.tag, this.compoundStats[stat] * val.percent);
-    }
+  public addStat(stat: AnyStat, tag?: StatTag, value?: number | ICompoundMap, publish: boolean = true) {
+    if (tag === 'Map') {
+      value = value as ICompoundMap;
 
-    if (CompoundStatProgression[stat] === 'linear') {
-      this.compoundStats[stat] += value;
-    } else if (CompoundStatProgression[stat] === 'diminish') {
-      this.compoundStats[stat] = Formula.addMult(this.compoundStats[stat], value);
-    }
-
-    for (let val of CompoundMap[stat]) {
-      this.addBaseStat(val.stat, val.tag, this.compoundStats[stat] * val.percent);
-    }
-  }
-
-  public subCompountStat(stat: CompoundStat, value: number) {
-    for (let val of CompoundMap[stat]) {
-      this.subBaseStat(val.stat, val.tag, this.compoundStats[stat] * val.percent);
-    }
-
-    if (CompoundStatProgression[stat] === 'linear') {
-      this.compoundStats[stat] -= value;
-    } else if (CompoundStatProgression[stat] === 'diminish') {
-      this.compoundStats[stat] = Formula.subMult(this.compoundStats[stat], value);
-    }
-
-    for (let val of CompoundMap[stat]) {
-      this.addBaseStat(val.stat, val.tag, this.compoundStats[stat] * val.percent);
-    }
-  }
-
-  public getCompoundStat(stat: CompoundStat) {
-    return this.compoundStats[stat];
-  }
-
-  public addBaseStat(stat: BaseStat, tag: StatTag, value: number) {
-    let bs = this.baseStats[stat];
-    if (BaseStatProgression[stat] === 'linear') {
-      if (tag === 'Base') {
-        bs.base += value;
-      } else {
-        if (!bs.tags[tag]) {
-          bs.tags[tag] = {base: 0, mult: 0};
-        }
-        bs.tags[tag].base += value;
+      if (!this.compoundMap[stat]) {
+        this.compoundMap[stat] = [];
       }
+
+      let amt = this.getStat(stat, value.sourceTag ? [value.sourceTag] : null);
+      let existing = _.find(this.compoundMap[stat], {sourceTag: value.sourceTag, stat: value.stat, tag: value.tag});
+
+      if (existing) {
+        this.subStat(value.stat, value.tag, amt * existing.percent, false);
+
+        existing.percent += value.percent;
+      } else {
+        existing = _.clone(value);
+        this.compoundMap[stat].push(existing);
+      }
+
+      this.addStat(value.stat, value.tag, amt * existing.percent);
     } else {
-      if (tag === 'Base') {
-        bs.base = Formula.addMult(bs.base, value);
-      } else {
-        if (!bs.tags[tag]) {
-          bs.tags[tag] = {base: 0, mult: 0, neg: 0};
+      let chunk = this.stats[stat];
+      value = value as number;
+
+      if (this.compoundMap[stat]) {
+        for (let val of this.compoundMap[stat]) {
+          let amt = this.getStat(stat, val.sourceTag ? [val.sourceTag] : null);
+          this.subStat(val.stat, val.tag, amt * val.percent, false);
         }
-        if (value < 0) {
-          bs.tags[tag].neg = Formula.addMult(bs.tags[tag].neg, -value);
+      }
+
+      if (tag === 'Mult') {
+        chunk.mult += value;
+      } else {
+        if (StatProgression[stat] === 'linear') {
+          if (!tag || tag === 'Base') {
+            chunk.base += value;
+          } else {
+            if (!chunk.tags[tag]) {
+              chunk.tags[tag] = {base: 0, mult: 0};
+            }
+            chunk.tags[tag].base += value;
+          }
         } else {
-          bs.tags[tag].base = Formula.addMult(bs.tags[tag].base, value);
+          if (!tag || tag === 'Base') {
+            chunk.base = Formula.addMult(chunk.base, value);
+          } else {
+            if (!chunk.tags[tag]) {
+              chunk.tags[tag] = {base: 0, mult: 0, neg: 0};
+            }
+            if (value < 0) {
+              chunk.tags[tag].neg = Formula.addMult(chunk.tags[tag].neg, -value);
+            } else {
+              chunk.tags[tag].base = Formula.addMult(chunk.tags[tag].base, value);
+            }
+          }
+        }
+      }
+
+      if (this.compoundMap[stat]) {
+        for (let val of this.compoundMap[stat]) {
+          let amt = this.getStat(stat, val.sourceTag ? [val.sourceTag] : null);
+          this.addStat(val.stat, val.tag, amt * val.percent, false);
         }
       }
     }
 
-    this.onUpdate.publish();
+    if (publish) {
+      this.onUpdate.publish();
+    }
   }
 
-  public subBaseStat(stat: BaseStat, tag: StatTag, value: number) {
-    let bs = this.baseStats[stat];
-    if (BaseStatProgression[stat] === 'linear') {
-      if (tag === 'Base') {
-        bs.base -= value;
-      } else {
-        if (!bs.tags[tag]) {
-          bs.tags[tag] = {base: 0, mult: 0};
-        }
-        bs.tags[tag].base -= value;
+  public subStat(stat: AnyStat, tag?: StatTag, value?: number | ICompoundMap, publish: boolean = true) {
+    if (tag === 'Map') {
+      value = value as ICompoundMap;
+
+      if (!this.compoundMap[stat]) {
+        this.compoundMap[stat] = [];
       }
+
+      let amt = this.getStat(stat, value.sourceTag ? [value.sourceTag] : null);
+      let existing = _.find(this.compoundMap[stat], {sourceTag: value.sourceTag, stat: value.stat, tag: value.tag});
+
+      if (existing) {
+        this.subStat(value.stat, value.tag, amt * existing.percent, false);
+
+        existing.percent -= value.percent;
+      } else {
+        existing = _.clone(value);
+        existing.percent = -existing.percent;
+        this.compoundMap[stat].push(existing);
+      }
+
+      this.addStat(value.stat, value.tag, amt * existing.percent);
     } else {
-      if (tag === 'Base') {
-        bs.base = Formula.subMult(bs.base, value);
-      } else {
-        if (!bs.tags[tag]) {
-          bs.tags[tag] = {base: 0, mult: 0, neg: 0};
+      let chunk = this.stats[stat];
+      value = value as number;
+
+      if (this.compoundMap[stat]) {
+        for (let val of this.compoundMap[stat]) {
+          let amt = this.getStat(stat, val.sourceTag ? [val.sourceTag] : null);
+          this.subStat(val.stat, val.tag, amt * val.percent, false);
         }
-        if (value < 0) {
-          bs.tags[tag].neg = Formula.subMult(bs.tags[tag].neg, -value);
+      }
+
+      if (tag === 'Mult') {
+        chunk.mult -= value;
+      } else {
+        if (StatProgression[stat] === 'linear') {
+          if (!tag || tag === 'Base') {
+            chunk.base -= value;
+          } else {
+            if (!chunk.tags[tag]) {
+              chunk.tags[tag] = {base: 0, mult: 0};
+            }
+            chunk.tags[tag].base -= value;
+          }
         } else {
-          bs.tags[tag].base = Formula.subMult(bs.tags[tag].base, value);
+          if (!tag || tag === 'Base') {
+            chunk.base = Formula.subMult(chunk.base, value);
+          } else {
+            if (!chunk.tags[tag]) {
+              chunk.tags[tag] = {base: 0, mult: 0, neg: 0};
+            }
+            if (value < 0) {
+              chunk.tags[tag].neg = Formula.subMult(chunk.tags[tag].neg, -value);
+            } else {
+              chunk.tags[tag].base = Formula.subMult(chunk.tags[tag].base, value);
+            }
+          }
+        }
+      }
+
+      if (this.compoundMap[stat]) {
+        for (let val of this.compoundMap[stat]) {
+          let amt = this.getStat(stat, val.sourceTag ? [val.sourceTag] : null);
+          this.addStat(val.stat, val.tag, amt * val.percent, false);
         }
       }
     }
-    this.onUpdate.publish();
+
+    if (publish) {
+      this.onUpdate.publish();
+    }
   }
 
-  public getBaseStat(stat: BaseStat, tags?: StatTag[], withValue?: number) {
-    let bs = this.baseStats[stat];
+  public getStat(stat: AnyStat, tags?: StatTag[], withValue?: number) {
+    let bs = this.stats[stat];
     let m = bs.base;
     let mult = bs.mult;
 
-    if (tags) {
-      if (BaseStatProgression[stat] === 'linear') {
+    if (StatProgression[stat] === 'linear') {
+      if (tags) {
         tags.forEach(tag => {
           if (bs.tags[tag]) {
             m += bs.tags[tag].base;
             mult += bs.tags[tag].mult;
           }
         });
-        if (withValue) {
-          m += withValue;
-        }
-        m *= 1 + mult;
-      } else if (BaseStatProgression[stat] === 'diminish') {
-        let neg = bs.neg;
+      }
+      if (withValue) {
+        m += withValue;
+      }
+      m *= 1 + mult;
+    } else if (StatProgression[stat] === 'diminish') {
+      let neg = bs.neg;
 
+      if (tags) {
         tags.forEach(tag => {
           if (bs.tags[tag]) {
             m = Formula.addMult(m, bs.tags[tag].base);
@@ -188,14 +245,62 @@ export class StatModel {
             neg += bs.tags[tag].neg;
           }
         });
-        if (withValue) {
-          m = Formula.addMult(m, withValue);
-        }
-        m = Formula.addMult(m, m * mult) - neg;
       }
+      if (withValue) {
+        m = Formula.addMult(m, withValue);
+      }
+      m = Formula.addMult(m, m * mult) - neg;
     }
 
     return m;
+  }
+
+  public getPower(tags?: StatTag[], misc?: number) {
+    let power = this.stats.power;
+
+    let itemPower = 100;
+    let actionPower = 100;
+    let effectPower = 100;
+    let miscPower = power.base;
+
+    let itemMult = 1;
+    let actionMult = 1;
+    let effectMult = 1;
+    let miscMult = 1 + power.mult;
+
+    if (tags) {
+      tags.forEach(tag => {
+        if (power.tags[tag]) {
+          let type = getPowerType(tag);
+          if (type === 'item') {
+            itemPower += power.tags[tag].base;
+            itemMult += power.tags[tag].mult;
+          } else if (type === 'action') {
+            actionPower += power.tags[tag].base;
+            actionMult += power.tags[tag].mult;
+          } else if (type === 'effect') {
+            effectPower += power.tags[tag].base;
+            effectMult += power.tags[tag].mult;
+          }
+        }
+      });
+    }
+
+    if (misc) {
+      miscPower += misc;
+    }
+
+    itemPower *= itemMult;
+    actionPower *= actionMult;
+    effectPower *= effectMult;
+    miscPower *= miscMult;
+
+    console.log('power!', itemPower, actionPower, effectPower, miscPower);
+    return itemPower * actionPower * effectPower * miscPower / 100000000;
+  }
+
+  public addMap() {
+
   }
 
   public getSave(): IPlayerSave {
@@ -216,27 +321,20 @@ export class StatModel {
   }
 
   public getText(sort: 'compound' | 'basic'): string {
+    let wantCompound = sort === 'compound';
     let m: string = '';
-    switch (sort) {
-      case 'compound':
-        _.forIn(this.compoundStats, (stat, key) => {
-          let percent = CompoundStatDisplay[key as CompoundStat] === 'percent';
-          m += key + ': ' + _.round(stat * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
-        });
-        break;
-      case 'basic':
-        _.forIn(this.baseStats, (stat, key) => {
-          let percent = BaseStatDisplay[key as BaseStat] === 'percent';
-          m += key + ': ' + _.round(this.getBaseStat(key as BaseStat) * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
-          _.forIn(stat.tags, (st, key2) => {
-            let stv = BaseStatProgression[key as BaseStat] === 'linear' ? (st.base * (1 + st.mult)) : (Formula.addMult(st.base, st.base * st.mult) - st.neg);
-            if (stv !== 0) {
-              m += '- ' + key2 + ': ' + _.round(stv * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
-            }
-          });
-        });
-        break;
-    }
+
+    _.forIn(this.stats, (stat, key) => {
+      if (isCompoundStat(key as AnyStat) !== wantCompound) return;
+      let percent = StatDisplay[key as AnyStat] === 'percent';
+      m += key + ': ' + _.round(this.getStat(key as AnyStat) * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
+      _.forIn(stat.tags, (st, key2) => {
+        let stv = StatProgression[key as AnyStat] === 'linear' ? (st.base * (1 + st.mult)) : (Formula.addMult(st.base, st.base * st.mult) - st.neg);
+        if (stv !== 0) {
+          m += '- ' + key2 + ': ' + _.round(stv * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
+        }
+      });
+    });
 
     return m;
   }
@@ -245,28 +343,18 @@ export class StatModel {
     return this.actions.getListAtDistance(distance);
   }
 
-  public addStatMap(baseStats?: StatMap, compoundStats?: CompoundMap) {
-    if (baseStats) {
-      baseStats.forEach(stat => {
-        this.addBaseStat(stat.stat, stat.tag, stat.value);
-      });
-    }
-    if (compoundStats) {
-      compoundStats.forEach(stat => {
-        this.addCompountStat(stat.stat, stat.value);
+  public addStatMap(stats: StatMap) {
+    if (stats) {
+      stats.forEach(stat => {
+        this.addStat(stat.stat, stat.tag, stat.value);
       });
     }
   }
 
-  public removeStatMap(baseStats?: StatMap, compoundStats?: CompoundMap) {
-    if (baseStats) {
-      baseStats.forEach(stat => {
-        this.subBaseStat(stat.stat, stat.tag, stat.value);
-      });
-    }
-    if (compoundStats) {
-      compoundStats.forEach(stat => {
-        this.subCompountStat(stat.stat, stat.value);
+  public removeStatMap(stats: StatMap) {
+    if (stats) {
+      stats.forEach(stat => {
+        this.subStat(stat.stat, stat.tag, stat.value);
       });
     }
   }
@@ -291,8 +379,11 @@ export class StatModel {
     if (item.action) {
       this.addAction(item.action);
     }
+    if (item.triggers) {
+      item.triggers.forEach(this.addTrigger);
+    }
 
-    this.addStatMap(item.baseStats, item.compoundStats);
+    this.addStatMap(item.stats);
   }
 
   public unequipItem = (item: IItem, slot: number) => {
@@ -305,8 +396,11 @@ export class StatModel {
     if (item.action) {
       this.removeAction(item.action);
     }
+    if (item.triggers) {
+      item.triggers.forEach(this.removeTrigger);
+    }
 
-    this.removeStatMap(item.baseStats, item.compoundStats);
+    this.removeStatMap(item.stats);
   }
 
   public addItem = (item: IItem, slot: number) => {
@@ -332,8 +426,11 @@ export class StatModel {
     if (skill.action) {
       this.addAction(skill.action);
     }
+    if (skill.triggers) {
+      skill.triggers.forEach(this.addTrigger);
+    }
 
-    this.addStatMap(skill.baseStats, skill.compoundStats);
+    this.addStatMap(skill.stats);
   }
 
   public subSkill = (skill: ISkill) => {
@@ -344,8 +441,11 @@ export class StatModel {
     if (skill.action) {
       this.removeAction(skill.action);
     }
+    if (skill.triggers) {
+      skill.triggers.forEach(this.removeTrigger);
+    }
 
-    this.removeStatMap(skill.baseStats, skill.compoundStats);
+    this.removeStatMap(skill.stats);
   }
 
   public tryLevelSkill = (skill: ISkill): ISkill => {
@@ -368,5 +468,22 @@ export class StatModel {
     this.addSkill(newSkill);
 
     return newSkill;
+  }
+
+  public addTrigger = (trigger: IEffect) => {
+    this.triggers.push(trigger);
+  }
+
+  public removeTrigger = (trigger: IEffect) => {
+    _.pull(this.triggers, trigger);
+  }
+
+  public getTriggersFor = (event: EffectTrigger, tags?: StatTag[]) => {
+    let m = _.filter(this.triggers, {trigger: event});
+    if (tags && tags.length > 0) {
+      m = _.filter(m, effect => !effect.triggerTags || effect.triggerTags.length === 0 || _.some(effect.triggerTags, tag => _.includes(tags, tag)));
+    }
+
+    return m;
   }
 }

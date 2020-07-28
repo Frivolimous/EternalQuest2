@@ -1,13 +1,11 @@
 import * as _ from 'lodash';
 
 import { ItemSlug, ItemList, IItem, IItemRaw, EnchantSlug, EnchantList, IEnchantRaw } from '../data/ItemData';
-import { ActionManager } from './ActionManager';
 import { Formula } from './Formula';
 import { IAction, ActionSlug, ActionList, IActionRaw } from '../data/ActionData';
 import { EffectList, EffectSlug, IEffect, IEffectRaw } from '../data/EffectData';
 import { BuffSlug, BuffList, IBuff, IBuffRaw } from '../data/BuffData';
-import { AttackStats, AttackStat } from '../data/StatData';
-import { ISkillPage } from '../components/skill/SkillPage';
+import { AttackStat } from '../data/StatData';
 import { ISkill, ISkillRaw, SkillSlug, SkillList } from '../data/SkillData';
 import { EnemySlug, IEnemyRaw, IEnemy, EnemyList } from '../data/EnemyData';
 import { ItemManager } from './ItemManager';
@@ -27,17 +25,18 @@ export const DataConverter = {
       slug,
       level,
       tags: _.clone(raw.tags),
+      cost: raw.cost,
     };
 
-    if (raw.baseStats) {
-      m.baseStats = Formula.statLevelMapToStatMap(raw.baseStats, level);
-    }
-    if (raw.compoundStats) {
-      m.compoundStats = Formula.compoundLevelMapToStatMap(raw.compoundStats, level);
+    if (raw.stats) {
+      m.stats = Formula.statLevelMapToStatMap(raw.stats, level);
     }
     if (raw.action) {
       m.action = DataConverter.getAction(raw.action, level);
       m.action.source = m;
+    }
+    if (raw.triggers) {
+      m.triggers = _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, level));
     }
 
     if (enchantSlug) {
@@ -65,17 +64,16 @@ export const DataConverter = {
       slug,
       level,
       cosmetics: raw.cosmetics,
-      triggers: raw.triggers,
     };
 
-    if (raw.baseStats) {
-      m.baseStats = Formula.statLevelMapToStatMap(raw.baseStats, level);
-    }
-    if (raw.compoundStats) {
-      m.compoundStats = Formula.compoundLevelMapToStatMap(raw.compoundStats, level);
+    if (raw.stats) {
+      m.stats = Formula.statLevelMapToStatMap(raw.stats, level);
     }
     if (raw.actions) {
       m.actions = _.map(raw.actions, action => DataConverter.getAction(action, level));
+    }
+    if (raw.triggers) {
+      m.triggers = _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, level));
     }
 
     if (raw.equipment) {
@@ -100,14 +98,14 @@ export const DataConverter = {
       level,
     };
 
-    if (raw.baseStats) {
-      m.baseStats = Formula.statLevelMapToStatMap(raw.baseStats, level);
-    }
-    if (raw.compoundStats) {
-      m.compoundStats = Formula.compoundLevelMapToStatMap(raw.compoundStats, level);
+    if (raw.stats) {
+      m.stats = Formula.statLevelMapToStatMap(raw.stats, level);
     }
     if (raw.action) {
       m.action = DataConverter.getAction(raw.action, level);
+    }
+    if (raw.triggers) {
+      m.triggers = _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, level));
     }
 
     return m;
@@ -128,30 +126,19 @@ export const DataConverter = {
       item.tags = _.concat(item.tags, raw.tags);
     }
 
-    if (raw.baseStats) {
-      let baseStats = Formula.statLevelMapToStatMap(raw.baseStats, item.level);
-      baseStats.forEach(stat => {
-        let existing = _.find(item.baseStats, stat2 => stat2.stat === stat.stat && stat2.tag === stat.tag);
+    if (raw.stats) {
+      let stats = Formula.statLevelMapToStatMap(raw.stats, item.level);
+      stats.forEach(stat => {
+        let existing = _.find(item.stats, stat2 => stat2.stat === stat.stat && stat2.tag === stat.tag);
         if (existing) {
           existing.value += stat.value;
         } else {
-          item.baseStats.push(stat);
-        }
-      });
-    }
-    if (raw.compoundStats) {
-      let compoundStats = Formula.compoundLevelMapToStatMap(raw.compoundStats, item.level);
-      compoundStats.forEach(stat => {
-        let existing = _.find(item.compoundStats, stat2 => stat2.stat === stat.stat);
-        if (existing) {
-          existing.value += stat.value;
-        } else {
-          item.compoundStats.push(stat);
+          item.stats.push(stat);
         }
       });
     }
     if (raw.triggers) {
-
+      item.triggers = _.concat(item.triggers, _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, item.level)));
     }
 
     if (raw.action) {
@@ -194,10 +181,15 @@ export const DataConverter = {
       slug: raw.slug,
       level,
       type: raw.type,
+      double: raw.double,
       tags: _.clone(raw.tags),
       distance: _.clone(raw.distance),
       costs: _.mapValues(raw.costs, value => Formula.statLevelToStat(value, level)),
     };
+
+    if (raw.userate) {
+      m.userate = Formula.statLevelToStat(raw.userate, level);
+    }
 
     if (raw.effects) {
       m.effects = _.map(raw.effects, effect => DataConverter.getEffect(effect, level));
@@ -229,11 +221,8 @@ export const DataConverter = {
       m.duration = Formula.statLevelToStat(raw.duration, level);
     }
 
-    if (raw.baseStats) {
-      m.baseStats = Formula.statLevelMapToStatMap(raw.baseStats, level);
-    }
-    if (raw.compoundStats) {
-      m.compoundStats = Formula.compoundLevelMapToStatMap(raw.compoundStats, level);
+    if (raw.stats) {
+      m.stats = Formula.statLevelMapToStatMap(raw.stats, level);
     }
 
     if (raw.action) {
@@ -242,6 +231,10 @@ export const DataConverter = {
 
     if (raw.damage) {
       m.damage = { value: Formula.statLevelToStat(raw.damage.value, level), tags: _.clone(raw.damage.tags)};
+    }
+
+    if (raw.triggers) {
+      m.triggers = _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, level));
     }
 
     return m;
@@ -260,8 +253,13 @@ export const DataConverter = {
       type: raw.type,
       trigger: raw.trigger,
       level,
-      userate: Formula.statLevelToStat(raw.userate, level),
+      target: raw.target,
+      damageTags: raw.damageTags,
     };
+
+    if (raw.userate || raw.userate === 0) {
+      m.userate = Formula.statLevelToStat(raw.userate, level);
+    }
 
     if (raw.value) {
       m.value = Formula.statLevelToStat(raw.value, level);
@@ -269,6 +267,14 @@ export const DataConverter = {
 
     if (raw.buff) {
       m.buff = DataConverter.getBuff(raw.buff, level);
+    }
+
+    if (raw.triggerTags) {
+      m.triggerTags = _.clone(raw.triggerTags);
+    }
+
+    if (raw.buffRemoved) {
+      m.buffRemoved = raw.buffRemoved;
     }
 
     return m;

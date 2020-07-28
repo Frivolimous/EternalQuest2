@@ -14,7 +14,11 @@ export const ItemManager = {
   },
   saveItem: (item: IItem): IItemSave => {
     if (!item) return null;
-    return {slug: item.slug, level: item.level};
+    let save: IItemSave = {slug: item.slug, level: item.level};
+    if (item.enchantSlug) {
+      save.enchant = item.enchantSlug;
+    }
+    return save;
   },
 
   loadSkill: (skillSave: ISkillSave): ISkill => {

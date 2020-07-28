@@ -6,6 +6,7 @@ export const Colors = {
     Holy: 0xffff00,
     Dark: 0x770077,
     Spirit:  0xffff00,
+    None: 0xffffff,
   },
   HealColor: 0x00ffff,
   DefendColor: 0x22dd22,

@@ -45,7 +45,6 @@ export class SkillPanel extends BasePanel {
     if (sprite instanceof SpriteModel) {
       sprite = sprite.stats;
     }
-    console.log('panel update');
     this.skillpoints.text = 'Skillpoints: ' + sprite.skillpoints;
   }
 }

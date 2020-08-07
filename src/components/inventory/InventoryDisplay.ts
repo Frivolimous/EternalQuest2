@@ -75,11 +75,17 @@ ItemDragEvent.addListener((e: IItemDragEvent) => {
     }
     oldItem.currentInventory.returnItem(oldItem);
     e.callback({allow: false});
+  } else {
+    let display = e.item.currentInventory;
+    if (display.selectable && (e.item.source.action || e.item.source.tags.indexOf('Unarmed') >= 0)) {
+      e.callback({allow: true});
+      display.onItemSelect && display.onItemSelect(e.item.source, e.type);
+    }
   }
 });
 
 export interface IItemDragEvent {
-  type: 'start' | 'end' | 'sell';
+  type: 'start' | 'end' | 'sell' | 'select' | 'double' | 'unselect';
   item: InventoryItem;
   callback: (result: IItemDragResult) => void;
 }
@@ -109,6 +115,7 @@ const dInventoryDisplay: IInventoryDisplay = {
 interface IInventoryRequirements {
   tags?: StatTag[];
   never?: boolean;
+  relic?: boolean;
 }
 
 export class InventoryDisplay extends PIXI.Container {
@@ -117,14 +124,18 @@ export class InventoryDisplay extends PIXI.Container {
   public onItemAdded: (item: IItem, slot: number) => void;
   public onItemRemoved: (item: IItem, slot: number) => void;
   public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
+  public onItemSelect: (item: IItem, type: 'select' | 'unselect' | 'double') => void;
 
   public slot0Index: number = 0;
+  public selectable: boolean;
 
   private background = new PIXI.Graphics();
-  private items: InventoryItem[] = [];
+  private foreground = new PIXI.Graphics();
   private length: number;
 
+  private items: InventoryItem[] = [];
   private requirements: IInventoryRequirements[] = [];
+  private disabled: boolean[] = [];
 
   private priorityButtons: StateButton[] = [];
 
@@ -133,45 +144,24 @@ export class InventoryDisplay extends PIXI.Container {
     this.settings = _.defaults(settings, dInventoryDisplay);
 
     this.length = this.settings.across * this.settings.down;
-    this.addChild(this.background);
+    this.addChild(this.background, this.foreground);
     inventoryDisplays.push(this);
     this.drawSquares();
   }
 
-  public drawSquares() {
-    this.background.clear().beginFill(0x777777).lineStyle(1).drawRoundedRect(-this.settings.padding,
-                                                                             -this.settings.padding - (this.settings.headers ? 20 : 0),
-                                                                             this.settings.width * this.settings.across + this.settings.padding * (this.settings.across + 1),
-                                                                             this.settings.height * this.settings.down + this.settings.padding * (this.settings.down + 1) + (this.settings.headers ? 20 : 0) + (this.settings.hasButtons ? 20 : 0),
-                                                                             2);
+  public disableSlot(i: number) {
+    this.disabled[i] = true;
+    this.drawForeground();
+  }
 
-    if (this.settings.headers) {
-      this.background.beginFill(0xcccccc).lineStyle(1);
-      let x = 0;
-      this.settings.headers.forEach((header) => {
-        this.background.drawRect(x * (this.settings.width + this.settings.padding), (-this.settings.padding - 17), this.settings.width * header.length + this.settings.padding * (header.length - 1), 18);
-        let label = new PIXI.Text(header.label, {fontSize: 12, fontFamily: Fonts.UI});
-        this.addChild(label);
-        label.position.set(x * (this.settings.width + this.settings.padding) + (this.settings.width * header.length + this.settings.padding * (header.length - 1) - label.width) / 2, -20);
-        x += header.length;
-      });
-    }
+  public enableSlot(i: number) {
+    this.disabled[i] = false;
+    this.drawForeground();
+  }
 
-    this.background.beginFill(0xaaaaaa).lineStyle(1);
-    for (let y = 0; y < this.settings.down; y++) {
-      for (let x = 0; x < this.settings.across; x++) {
-        this.background.drawRoundedRect(x * (this.settings.width + this.settings.padding), y * (this.settings.height + this.settings.padding), this.settings.width, this.settings.height, 3);
-      }
-    }
-
-    if (this.settings.hasButtons) {
-      for (let i = 0; i < this.settings.across; i++) {
-        let button = new StateButton([], {width: this.settings.width, onToggle: () => {}});
-        this.priorityButtons.push(button);
-        button.position.set(i * (this.settings.width + this.settings.padding),  this.settings.height);
-        this.addChild(button);
-      }
-    }
+  public enableAllSlots() {
+    this.disabled = [];
+    this.drawForeground();
   }
 
   public clear() {
@@ -270,6 +260,17 @@ export class InventoryDisplay extends PIXI.Container {
     }
   }
 
+  public removeItemByModel = (model: IItem, andDestroy: boolean = true): boolean => {
+    let item = this.getItemByModel(model);
+    if (item) {
+      item.destroy();
+      this.removeItem(item);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   public sellItem = (item: InventoryItem, callback: () => void) => {
     if (this.onItemSell) {
       let index = this.getItemIndex(item);
@@ -313,6 +314,10 @@ export class InventoryDisplay extends PIXI.Container {
     return this.items.indexOf(item);
   }
 
+  public getItemByModel(item: IItem) {
+    return this.items.find(item2 => (item2 && item2.source === item));
+  }
+
   public getIndexByItemLoc(item: InventoryItem): number {
     let loc = this.toLocal(item.position, item.parent);
     return this.getIndexByLoc(loc);
@@ -324,14 +329,24 @@ export class InventoryDisplay extends PIXI.Container {
       index = this.getIndexByLoc(loc);
     }
     if (index >= 0 && index < this.length) {
+      if (this.disabled[index]) {
+        return false;
+      }
       if (this.requirements[index]) {
         if (this.requirements[index].never) {
           return false;
         }
-        if (_.intersection(this.requirements[index].tags, item.source.tags).length === this.requirements[index].tags.length) {
-          return true;
-        } else {
+        if (this.requirements[index].relic) {
+          if (item.source.tags.indexOf('Relic') >= 0) {
+            if (this.items.filter(item2 => (item2 && item2.source.tags.indexOf('Relic') >= 0)).length > 0) {
+              return false;
+            }
+          }
+        }
+        if (this.requirements[index].tags.some(rtag => !item.source.tags.includes(rtag))) {
           return false;
+        } else {
+          return true;
         }
       } else {
         return true;
@@ -341,6 +356,66 @@ export class InventoryDisplay extends PIXI.Container {
 
   public hasItem(item: InventoryItem) {
     return _.includes(this.items, item);
+  }
+
+  public unselectAll = (except?: IItem) => {
+    this.items.forEach(item => {
+      if (item && (!except || item.source !== except)) {
+        item.setSelect(false);
+      }
+    });
+  }
+
+  private drawSquares() {
+    this.background.clear().beginFill(0x777777).lineStyle(1).drawRoundedRect(-this.settings.padding,
+                                                                             -this.settings.padding - (this.settings.headers ? 20 : 0),
+                                                                             this.settings.width * this.settings.across + this.settings.padding * (this.settings.across + 1),
+                                                                             this.settings.height * this.settings.down + this.settings.padding * (this.settings.down + 1) + (this.settings.headers ? 20 : 0) + (this.settings.hasButtons ? 20 : 0),
+                                                                             2);
+
+    if (this.settings.headers) {
+      this.background.beginFill(0xcccccc).lineStyle(1);
+      let x = 0;
+      this.settings.headers.forEach((header) => {
+        this.background.drawRect(x * (this.settings.width + this.settings.padding), (-this.settings.padding - 17), this.settings.width * header.length + this.settings.padding * (header.length - 1), 18);
+        let label = new PIXI.Text(header.label, {fontSize: 12, fontFamily: Fonts.UI});
+        this.addChild(label);
+        label.position.set(x * (this.settings.width + this.settings.padding) + (this.settings.width * header.length + this.settings.padding * (header.length - 1) - label.width) / 2, -20);
+        x += header.length;
+      });
+    }
+
+    this.background.beginFill(0xaaaaaa).lineStyle(1);
+    for (let y = 0; y < this.settings.down; y++) {
+      for (let x = 0; x < this.settings.across; x++) {
+        this.background.drawRoundedRect(x * (this.settings.width + this.settings.padding), y * (this.settings.height + this.settings.padding), this.settings.width, this.settings.height, 3);
+      }
+    }
+
+    if (this.settings.hasButtons) {
+      for (let i = 0; i < this.settings.across; i++) {
+        let button = new StateButton([], {width: this.settings.width, onToggle: () => {}});
+        this.priorityButtons.push(button);
+        button.position.set(i * (this.settings.width + this.settings.padding),  this.settings.height);
+        this.addChild(button);
+      }
+    }
+  }
+
+  private drawForeground() {
+    this.foreground.clear();
+    this.foreground.lineStyle(3, 0xffcc00);
+    for (let i = 0; i < this.disabled.length; i++) {
+      if (this.disabled[i]) {
+        let x = (i % this.settings.across) * (this.settings.width + this.settings.padding);
+        let y = Math.floor(i / this.settings.across) * (this.settings.height + this.settings.padding);
+        this.foreground
+          .moveTo(x + 3, y + 3)
+          .lineTo(x + this.settings.width - 3, y + this.settings.height - 3)
+          .moveTo(x + this.settings.width - 3, y + 3)
+          .lineTo(x + 3, y + this.settings.height - 3);
+      }
+    }
   }
 
   private getIndexByLoc(loc: {x: number, y: number}): number {

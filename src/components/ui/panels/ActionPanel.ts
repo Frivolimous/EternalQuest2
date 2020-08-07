@@ -82,7 +82,7 @@ export class ActionPanel extends BasePanel {
   }
 
   public selectAction = (i: number) => {
-    this.statText.text = Descriptions.makeActionDescription(this.actions[i]);
+    this.statText.text = Descriptions.makeProcessedActionDescription(this.actions[i], this.temp || this.source);
   }
 
   public update = () => {

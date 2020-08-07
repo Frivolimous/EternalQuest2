@@ -47,8 +47,8 @@ export class SpriteView extends PIXI.Container {
     }
   }
 
-  public proclaim(s: string, fill: number = 0xffffff) {
-    new FlyingText(s, {fill}, -10, -100, this);
+  public proclaim(s: string, fill: number = 0xffffff, xOff: number = 0) {
+    new FlyingText(s, {fill}, -10 + xOff, -100, this);
   }
 
   public tempWalk = (trigger: () => void) => {

@@ -1,11 +1,9 @@
 import * as PIXI from 'pixi.js';
 
 import { BasePanel } from './_BasePanel';
-import { Button } from '../Button';
 import { InventoryDisplay } from '../../inventory/InventoryDisplay';
 import { InventoryItem } from '../../inventory/InventoryItem';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
-import { ItemManager } from '../../../services/ItemManager';
 import { IItem } from '../../../data/ItemData';
 import { StatModel } from '../../../engine/stats/StatModel';
 
@@ -14,6 +12,9 @@ export class InventoryPanelMenu extends BasePanel {
   private equip: InventoryDisplay;
   private belt: InventoryDisplay;
   private inventory: InventoryDisplay;
+
+  private sprite: StatModel;
+
   constructor(bounds: PIXI.Rectangle = new PIXI.Rectangle(0, 0, 300, 500), color: number = 0xf1f1f1) {
     super(bounds, color);
 
@@ -31,17 +32,23 @@ export class InventoryPanelMenu extends BasePanel {
     this.equip.addRequirement(3, {tags: ['Equipment', 'Spell']});
     this.equip.addRequirement(4, {tags: ['Equipment', 'Spell']});
 
-    this.belt.addRequirement('all', {tags: ['Belt']});
+    this.belt.addRequirement('all', {tags: ['Belt'], relic: true});
+    this.belt.slot0Index = 5;
 
     this.equip.position.set(10, 30);
     this.belt.position.set(10, 140);
     this.inventory.position.set(10, 230);
+
+    this.equip.onItemSell = this.sellItem;
+    this.belt.onItemSell = this.sellItem;
+    this.inventory.onItemSell = this.sellItem;
   }
 
   public addPlayer = (sprite: SpriteModel | StatModel) => {
     if (sprite instanceof SpriteModel) {
       sprite = sprite.stats;
     }
+    this.sprite = sprite;
     // create items in the inventory
     this.equip.clear();
     this.belt.clear();
@@ -66,13 +73,28 @@ export class InventoryPanelMenu extends BasePanel {
     this.equip.onItemRemoved = sprite.unequipItem;
     this.belt.onItemAdded = sprite.equipItem;
     this.belt.onItemRemoved = sprite.unequipItem;
-    this.belt.slot0Index = 5;
     this.inventory.onItemAdded = sprite.addItem;
     this.inventory.onItemRemoved = sprite.removeItem;
+    this.updateSlots();
+  }
 
-    this.equip.onItemSell = this.sellItem;
-    this.belt.onItemSell = this.sellItem;
-    this.inventory.onItemSell = this.sellItem;
+  public updateSlots = () => {
+    let magicSlots = this.sprite.getStat('magicSlots');
+    let beltSlots = this.sprite.getStat('beltSlots');
+
+    this.equip.enableAllSlots();
+    this.belt.enableAllSlots();
+    for (let i = 1; i <= 3; i++) {
+      if (magicSlots < i) {
+        this.equip.disableSlot(i + 1);
+      }
+    }
+
+    for (let i = 1; i <= 5; i++) {
+      if (beltSlots < i) {
+        this.belt.disableSlot(i - 1);
+      }
+    }
   }
 
   public sellItem = (item: IItem, slot: number, callback: () => void) => {

@@ -61,12 +61,13 @@ export class InventoryPanelStash extends BasePanel {
   }
 
   public addItem = (item: IItem, slot: number) => {
+    let save = ItemManager.saveItem(item);
     if (this.current === 'personal') {
-      SaveManager.getExtrinsic().playerStash[this.save.__id][slot] = item;
+      SaveManager.getExtrinsic().playerStash[this.save.__id][slot] = save;
     } else if (this.current === 'overflow') {
-      SaveManager.getExtrinsic().overflowStash[slot] = item;
+      SaveManager.getExtrinsic().overflowStash[slot] = save;
     } else {
-      SaveManager.getExtrinsic().sharedStash[this.current][slot] = item;
+      SaveManager.getExtrinsic().sharedStash[this.current][slot] = save;
     }
   }
 

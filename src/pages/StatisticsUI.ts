@@ -16,6 +16,11 @@ import { InventoryPanelStash } from '../components/ui/panels/InventoryPanelStash
 import { ActionPanel } from '../components/ui/panels/ActionPanel';
 import { OptionModal } from '../components/ui/modals/OptionModal';
 import { IItem } from '../data/ItemData';
+import { CurrencyPanel } from '../components/ui/panels/CurrencyPanel';
+import { JMTicker } from '../JMGE/events/JMTicker';
+import { StoreManager, IPurchaseResult } from '../services/StoreManager';
+import { BaseModal } from '../components/ui/modals/_BaseModal';
+import { SimpleModal } from '../components/ui/modals/SimpleModal';
 
 export class StatisticsUI extends BaseUI {
   public selectLeft: SelectList;
@@ -35,6 +40,7 @@ export class StatisticsUI extends BaseUI {
 
   private inventoryPanel: InventoryPanelMenu;
   private skillPanel: SkillPanel;
+  private currencyPanel: CurrencyPanel;
 
   constructor() {
     super({bgColor: 0x777777});
@@ -42,7 +48,9 @@ export class StatisticsUI extends BaseUI {
     this.backB = new Button({ width: 100, height: 30, label: 'Menu', onClick: this.navMenu });
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
-    this.addChild(this.title, this.leftPanel, this.rightPanel, this.backB);
+    this.currencyPanel = new CurrencyPanel();
+    JMTicker.add(this.updateCurrency); // make this a listener instead?
+    this.addChild(this.title, this.leftPanel, this.rightPanel, this.backB, this.currencyPanel);
 
     this.selectLeft = new SelectList({ width: 90, height: 30}, this.switchLeft);
     this.selectRight = new SelectList({ width: 90, height: 30}, this.switchRight);
@@ -71,6 +79,7 @@ export class StatisticsUI extends BaseUI {
     this.inventoryPanel = new InventoryPanelMenu(new PIXI.Rectangle(0, 0, 300, 500));
     this.rightPanel.addChild(this.inventoryPanel);
     this.skillPanel = new SkillPanel(new PIXI.Rectangle(0, 0, 300, 500));
+    this.skillPanel.addRespec(this.attemptRespec);
     this.rightPanel.addChild(this.skillPanel);
 
     this.selectLeft.selectButton(0);
@@ -88,6 +97,8 @@ export class StatisticsUI extends BaseUI {
     this.stashPanel.destroy();
     this.inventoryPanel.destroy();
     this.skillPanel.destroy();
+    this.currencyPanel.destroy();
+    this.model.onUpdate.removeListener(this.updateStats);
   }
 
   public getPlayer() {
@@ -98,6 +109,12 @@ export class StatisticsUI extends BaseUI {
     this.inventoryPanel.addPlayer(this.model);
     this.stashPanel.addPlayer(this.save);
     this.skillPanel.addPlayer(this.model);
+
+    this.model.onUpdate.addListener(this.updateStats);
+  }
+
+  public updateStats = (model: StatModel) => {
+    this.inventoryPanel.updateSlots();
   }
 
   public switchLeft = (i: number) => {
@@ -119,6 +136,7 @@ export class StatisticsUI extends BaseUI {
     this.backB.position.set(e.innerBounds.right - 150, e.innerBounds.bottom - 50);
     this.selectLeft.buttons.forEach((button, i) => button.position.set(this.leftPanel.x + 100 * i, this.leftPanel.y - 35));
     this.selectRight.buttons.forEach((button, i) => button.position.set(this.rightPanel.x + 100 * i, this.rightPanel.y - 35));
+    this.currencyPanel.position.set(e.innerBounds.right - this.currencyPanel.getWidth(), 0);
   }
 
   public navOut = () => {
@@ -142,5 +160,22 @@ export class StatisticsUI extends BaseUI {
       SaveManager.getExtrinsic().currency.gold += item.cost;
       callback();
     // }
+  }
+
+  private updateCurrency = () => {
+    this.currencyPanel.update(SaveManager.getExtrinsic());
+  }
+
+  private attemptRespec = (value: number, onSuccess: () => void) => {
+    StoreManager.goldPurchaseAttempt(value, (result: IPurchaseResult) => {
+      if (result.success) {
+        onSuccess();
+      } else if (result.confirmation) {
+        console.log('a');
+        this.addDialogueWindow(new OptionModal(result.message || 'Proceed with purchase?', [{ label: 'Yes', onClick: onSuccess, color: 0x66ff66}, { label: 'No', color: 0xff6666 }]));
+      } else {
+        this.addDialogueWindow(new SimpleModal(result.message || 'Not enough gold'));
+      }
+    });
   }
 }

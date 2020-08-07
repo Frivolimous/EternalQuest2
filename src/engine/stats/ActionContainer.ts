@@ -46,6 +46,10 @@ export class ActionContainer {
     }
   }
 
+  public getStrikeActions = () => {
+    return this.list.filter(action => (action.slug === 'strike' || action.slug === 'approach' || action.slug === 'leap'));
+  }
+
   private sortActions() {
     this.list = _.sortBy(this.list, action => {
       let val = 0;
@@ -53,7 +57,7 @@ export class ActionContainer {
         return 10;
       } else if (action.slug === 'gotown') {
         return 0;
-      } else if (action.slug === 'withdraw') {
+      } else if (action.slug === 'withdraw' || action.slug === 'Confused' || action.slug === 'Afraid') {
         return 1;
       } else if (action.type === 'walk') {
         return 9;

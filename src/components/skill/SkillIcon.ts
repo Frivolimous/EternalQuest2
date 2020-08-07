@@ -17,6 +17,7 @@ const dSkillIcon: ISkillIcon = {
 };
 
 export class SkillIcon extends PIXI.Container {
+  public maxLevel: number = 10;
   private text: PIXI.Text;
   private numbers: PIXI.Text;
   private background = new PIXI.Graphics();
@@ -56,7 +57,7 @@ export class SkillIcon extends PIXI.Container {
       if (!this.overlay.visible) {
         this.darken();
       }
-    } else if (this.source.level >= 10) {
+    } else if (this.source.level >= this.maxLevel) {
       this.overlay.tint = 0xffffff;
       this.overlay.visible = true;
       this.overlay.alpha = 0.3;
@@ -97,10 +98,14 @@ export class SkillIcon extends PIXI.Container {
     return this.settings.height;
   }
 
+  public updateSource = (source: ISkill) => {
+    this.source = source;
+    this.redraw();
+  }
+
   private pointerDown = (e: PIXI.interaction.InteractionEvent) => {
     if (this.callback) {
-      this.source = this.callback(this.source);
-      this.redraw();
+      this.updateSource(this.callback(this.source));
     }
   }
 }

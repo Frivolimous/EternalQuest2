@@ -67,6 +67,11 @@ export class SpriteModel {
     if (cXp >= tXp) {
       this.stats.level += 1;
       this.stats.skillpoints += 1;
+      if (this.stats.talent.slug === 'Noble') {
+        if (this.stats.level % 12 === 0) {
+          this.stats.skillpoints += 1;
+        }
+      }
       cXp -= tXp;
       tXp = Formula.experienceByLevel(this.stats.level);
       this.onLevelUp.publish(this);

@@ -10,6 +10,9 @@ import { SaveManager } from '../services/SaveManager';
 import { IPlayerSave, dPlayerSave, dPlayerLevelSave } from '../data/SaveData';
 import { RandomSeed } from '../services/RandomSeed';
 import { InputText } from '../components/ui/InputText';
+import { SelectList } from '../components/ui/SelectButton';
+import { TalentSlug, TalentList } from '../data/SkillData';
+import { EquipmentSets } from '../data/ItemData';
 
 export class NewCharacterUI extends BaseUI {
   private title: PIXI.Text;
@@ -18,6 +21,8 @@ export class NewCharacterUI extends BaseUI {
   private backB: Button;
   private confirmB: Button;
   private input: InputText;
+  private talentList: SelectList;
+  private currentTalent: TalentSlug;
 
   private save: IPlayerSave;
 
@@ -35,7 +40,20 @@ export class NewCharacterUI extends BaseUI {
     this.confirmB.position.set(100, 450);
     this.leftPanel.addChild(name, this.input, this.confirmB);
     this.addChild(this.title, this.leftPanel, this.rightPanel, this.backB);
+
+    this.talentList = new SelectList({width: 100, height: 30}, this.selectTalent);
+    TalentList.forEach((slug, i) => {
+      let button = this.talentList.makeButton(slug);
+      this.leftPanel.addChild(button);
+      button.position.set(40 + 110 * Math.floor(i / 5), 100 + (i % 5) * 40);
+    });
+    this.talentList.selectButton(0);
+
     this.setupCharacter();
+  }
+
+  public selectTalent = (i: number) => {
+    this.currentTalent = TalentList[i];
   }
 
   public destroy() {
@@ -60,6 +78,11 @@ export class NewCharacterUI extends BaseUI {
 
   private navConfirm = () => {
     this.save.name = this.input.text;
+    this.save.talent = this.currentTalent;
+    this.save.title = this.currentTalent;
+    let equip = _.cloneDeep(EquipmentSets[this.currentTalent]);
+    this.save.equipment = equip.splice(0, 10);
+    this.save.inventory = equip;
     SaveManager.getExtrinsic().lastCharacter = this.save.__id;
     SaveManager.savePlayer(this.save, this.save.__id, true, _.cloneDeep(dPlayerLevelSave)).then(() => this.navBack());
   }

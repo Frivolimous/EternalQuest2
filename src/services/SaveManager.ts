@@ -9,7 +9,7 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
   extrinsic: {
     lastCharacter: 'aewfinwgo',
     playerStash: {
-      aewfinwgo: [{ slug: 'Greatsword', level: 5, enchant: 'Mystic' }, { slug: 'Armet', level: 5 }],
+      aewfinwgo: [{ slug: 'Greatsword', level: 5, enchant: ['Mystic'] }, { slug: 'Armet', level: 5 }],
     },
     sharedStash: [
       [{ slug: 'Greatsword', level: 10 }, { slug: 'Cap', level: 10 }],
@@ -27,8 +27,8 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
       level: 1,
       experience: 0,
       cosmetics: [],
-      talent: 0,
-      equipment: [{ slug: 'Greatsword', level: 0, enchant: 'Master' }, { slug: 'Armet', level: 0 }, null, null, null],
+      talent: 'Deft',
+      equipment: [{ slug: 'Greatsword', level: 0, enchant: ['Master'] }, { slug: 'Armet', level: 0 }, null, null, null],
       artifacts: [],
       skills: [],
       skillTrees: ['Warrior', 'Ranger', 'Mage'],
@@ -41,8 +41,8 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
       level: 1,
       experience: 0,
       cosmetics: [],
-      talent: 0,
-      equipment: [{ slug: 'Greatsword', level: 0, enchant: 'Master' }, { slug: 'Armet', level: 0 }, null, null, null],
+      talent: 'Powerful',
+      equipment: [{ slug: 'Greatsword', level: 0, enchant: ['Master'] }, { slug: 'Armet', level: 0 }, null, null, null],
       artifacts: [],
       skills: [{ slug: 'Fitness', level: 5}],
       skillTrees: ['Warrior', 'Ranger'],

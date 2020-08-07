@@ -7,8 +7,8 @@ import { EffectSlug, IEffectRaw, IEffect } from './EffectData';
 export type EnemySlug = 'Goblin' | 'Vine' | 'Brute' | 'Goblin Boss';
 
 export const EnemyList: IEnemyRaw[] = [
-  {slug: 'Goblin', stats: [{stat: 'strength', value: { base: 50, inc: 5}}, {stat: 'health', tag: 'Base', value: { base: 100, inc: 5}}]},
-  {slug: 'Goblin Boss', stats: [{stat: 'strength', value: { base: 50, inc: 5}}, {stat: 'health', tag: 'Base', value: { base: 500, inc: 5}}]},
+  {slug: 'Goblin', equipment: [{slug: 'Greatsword', level: 0}], stats: [{stat: 'strength', value: { base: 0, inc: 5}}, {stat: 'health', tag: 'Base', value: { base: 100, inc: 5}}]},
+  {slug: 'Goblin Boss', equipment: [{slug: 'Greatsword', level: 0}], stats: [{stat: 'strength', value: { base: 0, inc: 5}}, {stat: 'health', tag: 'Base', value: { base: 500, inc: 5}}]},
 ];
 
 export interface IEnemyRaw {

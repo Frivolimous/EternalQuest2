@@ -17,10 +17,11 @@ const padding: number = 5;
 
 export class SkillPage extends PIXI.Container {
   private icons: SkillIcon[] = [];
+  private passiveIcon: SkillIcon;
   private background = new PIXI.Graphics();
   private title: PIXI.Text;
 
-  constructor(sources: ISkill[], pageSettings: ISkillPageMap, private settings: ISkillPage, private callback?: (skill: ISkill) => ISkill) {
+  constructor(sources: ISkill[], pageSettings: ISkillPageMap, private settings: ISkillPage, private callback?: (skill: ISkill, passive?: boolean) => ISkill) {
     super();
 
     this.icons = _.map(pageSettings.skills, set => new SkillIcon(_.find(sources, {slug: set.slug}) || DataConverter.getSkill(set.slug, 0), { position: set.position }, (skill => {
@@ -34,8 +35,14 @@ export class SkillPage extends PIXI.Container {
           }
         });
       }
+      if (skill.level > 0) {
+        let passiveSkill = callback(this.passiveIcon.source, true);
+        this.passiveIcon.updateSource(passiveSkill);
+      }
+
       return skill;
     })));
+    this.passiveIcon = new SkillIcon(_.find(sources, {slug: pageSettings.passive}) || DataConverter.getSkill(pageSettings.passive, 0), { position: -9 });
     this.addChild(this.background);
 
     this.background.beginFill(settings. bgColor).drawRoundedRect(0, 0, settings.width, settings.height, 4);
@@ -43,6 +50,8 @@ export class SkillPage extends PIXI.Container {
       this.addChild(icon);
       this.positionSkill(icon);
     });
+    this.addChild(this.passiveIcon);
+    this.positionSkill(this.passiveIcon);
 
     pageSettings.skills.forEach(set => {
       let pre = _.find(SkillPrerequisiteMap, v => v[0] === set.slug);
@@ -61,11 +70,15 @@ export class SkillPage extends PIXI.Container {
     this.title.position.set((settings.width - this.title.width) / 2, -this.title.height - 2);
   }
 
+  public setMaxLevel(n: number) {
+    this.icons.forEach(icon => icon.maxLevel = n);
+  }
+
   private positionSkill(skill: SkillIcon) {
     let position = skill.getPosition();
     let tWidth = (this.settings.width - skill.getWidth() - padding * 2) / (across - 1);
     let tHeight = (this.settings.height - skill.getHeight() - padding * 2) / (across - 1);
-    let x = padding + (position % across) * tWidth;
+    let x = padding + Math.abs(position % across) * tWidth;
     let y = padding + Math.floor(position / across) * tHeight;
     skill.position.set(x, y);
   }

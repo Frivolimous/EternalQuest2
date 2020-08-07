@@ -1,5 +1,5 @@
 import { IItemSave } from './ItemData';
-import { ISkillSave, SkillTreeSlug } from './SkillData';
+import { ISkillSave, SkillTreeSlug, TalentSlug } from './SkillData';
 
 export interface IExtrinsicModel {
   achievements?: boolean[];
@@ -39,7 +39,7 @@ export interface IPlayerSave {
   title?: string;
   level?: number;
   cosmetics?: number[];
-  talent?: number;
+  talent?: TalentSlug;
   equipment?: IItemSave[];
   artifacts?: number[];
   skills?: ISkillSave[];
@@ -68,8 +68,8 @@ export const dPlayerSave: IPlayerSave = {
   level: 1,
   experience: 0,
   cosmetics: [],
-  talent: 0,
-  equipment: [{ slug: 'Greatsword', level: 0, enchant: 'Master' }, { slug: 'Cap', level: 0 }],
+  talent: 'Ordinary',
+  equipment: [{ slug: 'Greatsword', level: 0, enchant: ['Master'] }, { slug: 'Cap', level: 0 }],
   artifacts: [],
   skills: [],
   skillTrees: ['Warrior', 'Mage', 'Ranger'],

@@ -4,30 +4,30 @@ import { Button } from '../Button';
 import { JMTween, JMEasing } from '../../../JMGE/JMTween';
 import { Fonts } from '../../../data/Fonts';
 
-export interface IOptionModal {
-  colorBack: number;
-  colorFront: number;
-}
+const COLOR_BACK = 0x333333;
+const COLOR_FRONT = 0x666666;
+const HEIGHT = 300;
+const WIDTH = 400;
 
 export class OptionModal extends BaseModal {
   private scoreText: PIXI.Text;
   private buttons: Button[];
 
-  constructor(message: string, private config: IOptionModal, width: number, height: number, options: {label: string, color?: number, onClick?: () => void}[]) {
+  constructor(message: string, options: {label: string, color?: number, onClick?: () => void}[]) {
     super();
 
-    this.pivot.set(width / 2, height / 2);
+    this.pivot.set(WIDTH / 2, HEIGHT / 2);
 
     let shadow = new PIXI.Graphics();
-    shadow.beginFill(0, 0.4).drawRoundedRect(5, 5, width + 10, height + 10, 10);
+    shadow.beginFill(0, 0.4).drawRoundedRect(5, 5, WIDTH + 10, HEIGHT + 10, 10);
     this.addChild(shadow);
     let background = new PIXI.Graphics();
-    background.lineStyle(3, this.config.colorFront).beginFill(this.config.colorBack).drawRoundedRect(0, 0, width, height, 10);
+    background.lineStyle(3, COLOR_FRONT).beginFill(COLOR_BACK).drawRoundedRect(0, 0, WIDTH, HEIGHT, 10);
     this.addChild(background);
 
-    this.scoreText = new PIXI.Text(message, { fontSize: 33, fontFamily: Fonts.UI, fill: this.config.colorFront, wordWrap: true, wordWrapWidth: width - 100 });
+    this.scoreText = new PIXI.Text(message, { fontSize: 25, fontFamily: Fonts.UI, fill: COLOR_FRONT, wordWrap: true, wordWrapWidth: WIDTH - 100 });
     this.addChild(this.scoreText);
-    this.scoreText.height = Math.min(this.scoreText.height, height * 6 / 8);
+    this.scoreText.width = Math.min(this.scoreText.height, HEIGHT * 6 / 8);
     this.scoreText.scale.x = this.scoreText.scale.y;
 
     this.scoreText.position.set(50, 50);
@@ -35,17 +35,17 @@ export class OptionModal extends BaseModal {
     options.forEach((option, i) => {
       let button = new Button({
         label: option.label,
-        width: width / 4,
-        height: height / 8,
+        width: WIDTH / 4,
+        height: HEIGHT / 8,
         onClick: () => this.closeModal(option.onClick),
-        color: option.color || this.config.colorFront,
-        labelStyle: {fill: this.config.colorBack},
+        color: option.color || COLOR_FRONT,
+        labelStyle: {fill: COLOR_BACK},
       });
 
       this.addChild(button);
 
-      button.y = height - button.height - 20;
-      button.x = (7 + 4 * i - 2 * options.length) * width * 3 / 40;
+      button.y = HEIGHT - button.height - 20;
+      button.x = (7 + 4 * i - 2 * options.length) * WIDTH * 3 / 40;
     });
   }
 

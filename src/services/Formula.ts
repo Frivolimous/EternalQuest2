@@ -13,11 +13,19 @@ export const Formula = {
   },
 
   monstersByZone(zone: number): number {
-    return zone + 8;
+    return Math.round(7 + 100 * (1 - (100 / (100 + zone))));
   },
 
   experienceByLevel(level: number): number {
-    return level * 2;
+    return level * level * 2;
+  },
+
+  experiencePerMonster(zone: number): number {
+    return Math.floor(Math.pow(zone, 0.77));
+  },
+
+  getRespecValue(skills: number) {
+    return skills * skills * 7;
   },
 
   statLevelMapToStatMap(map: StatMapLevel, level: number): StatMap {
@@ -35,5 +43,5 @@ export const Formula = {
   getDamageTag(tags: StatTag[]) {
     let m = _.intersection(tags, DamageTags);
     return m[0] as DamageTag;
-  }
+  },
 };

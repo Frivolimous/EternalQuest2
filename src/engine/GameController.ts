@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-import { GameEvents, IAnimateAction } from '../services/GameEvents';
+import { GameEvents, IAnimateAction, IItemUpdate } from '../services/GameEvents';
 import { SpriteModel } from './sprites/SpriteModel';
 import { SaveManager } from '../services/SaveManager';
 import { StatModel } from './stats/StatModel';
@@ -12,9 +12,9 @@ import { Vitals } from './stats/Vitals';
 import { IBuffResult, ActionController, IActionResult } from './ActionController';
 import { DataConverter } from '../services/DataConverter';
 import { ItemManager } from '../services/ItemManager';
-import { IItem } from '../data/ItemData';
 import { Formula } from '../services/Formula';
 import { EffectTrigger } from '../data/EffectData';
+import { IItem } from '../data/ItemData';
 
 export class GameController {
   public onPlayerAdded = new JMEventListener<SpriteModel>();
@@ -29,8 +29,8 @@ export class GameController {
   public onFightStart = new JMEventListener<null>();
   public onAction = new JMEventListener<IActionResult>();
   public onBuffEffect = new JMEventListener<IBuffResult>();
+  public onItemUpdate = new JMEventListener<IItemUpdate>();
   public onNavTown = new JMEventListener<null>();
-  public onLoot = new JMEventListener<IItem>();
   public onLevelComplete = new JMEventListener<null>();
 
   private levelData: IPlayerLevelSave;
@@ -44,9 +44,11 @@ export class GameController {
 
   private levelComplete = false;
 
-  private actionC = new ActionController(this.onBuffEffect.publish);
+  private actionC: ActionController;
 
   constructor() {
+    this.actionC = new ActionController(this.onBuffEffect.publish, this.updateItem, this.unselectItem);
+
     GameEvents.ticker.add(this.onTick);
 
     this.levelData = SaveManager.getCurrentPlayerLevel();
@@ -86,6 +88,8 @@ export class GameController {
     this.fighting = false;
     this.processing = false;
     this.spawnCount = 4;
+    this.actionC.selectedItem = null;
+    this.actionC.doubleSelected = false;
 
     // this.player.resetVitals();
     this.importPlayer();
@@ -138,14 +142,14 @@ export class GameController {
 
     let item = ItemManager.getLootFor(this.player, this.levelData, sprite);
     if (item) {
-      this.onLoot.publish(item);
+      this.onItemUpdate.publish({item, type: 'loot'});
     }
 
     if (!_.some(this.spriteModels, {player: false})) {
       this.endFight();
     }
 
-    this.onEnemyDead.publishSync(sprite);
+    this.onEnemyDead.publish(sprite);
   }
 
   public endFight = () => {
@@ -228,6 +232,15 @@ export class GameController {
 
   public proceed = () => {
     this.processing = false;
+  }
+
+  public selectItem = (item: IItem, type: 'unselect' | 'select' | 'double') => {
+    this.actionC.selectedItem = item;
+    this.actionC.doubleSelected = type === 'double';
+  }
+
+  public unselectItem = (item: IItem) => {
+    this.onItemUpdate.publish({item, type: 'clearSelect'});
   }
 
   public startFight = () => {
@@ -313,5 +326,13 @@ export class GameController {
     let save = this.player.stats.getSave();
 
     return save;
+  }
+
+  private updateItem = (item: IItem) => {
+    if (item.charges === 0 && !item.enchantSlug && item.tags.includes('Premium') && item.tags.includes('Scroll')) {
+      this.onItemUpdate.publish({item, type: 'remove'});
+    } else {
+      this.onItemUpdate.publish({item, type: 'update'});
+    }
   }
 }

@@ -4,48 +4,48 @@ import { Button } from '../Button';
 import { JMTween, JMEasing } from '../../../JMGE/JMTween';
 import { Fonts } from '../../../data/Fonts';
 
-export interface ISimpleModal {
-  colorBack: number;
-  colorFront: number;
-  closeText?: string;
-}
+const COLOR_BACK = 0x333333;
+const COLOR_FRONT = 0x666666;
+const CLOSE_TEXT = 'Close';
+const HEIGHT = 300;
+const WIDTH = 400;
 
 export class SimpleModal extends BaseModal {
   private scoreText: PIXI.Text;
   private closeButton: Button;
 
-  constructor(message: string, private config: ISimpleModal, width: number, height: number, private onClose?: () => void) {
+  constructor(message: string, private onClose?: () => void) {
     super();
 
-    this.pivot.set(width / 2, height / 2);
+    this.pivot.set(WIDTH / 2, HEIGHT / 2);
 
     let shadow = new PIXI.Graphics();
-    shadow.beginFill(0, 0.4).drawRoundedRect(5, 5, width + 10, height + 10, 10);
+    shadow.beginFill(0, 0.4).drawRoundedRect(5, 5, WIDTH + 10, HEIGHT + 10, 10);
     this.addChild(shadow);
     let background = new PIXI.Graphics();
-    background.lineStyle(3, this.config.colorFront).beginFill(this.config.colorBack).drawRoundedRect(0, 0, width, height, 10);
+    background.lineStyle(3, COLOR_FRONT).beginFill(COLOR_BACK).drawRoundedRect(0, 0, WIDTH, HEIGHT, 10);
     this.addChild(background);
 
-    this.scoreText = new PIXI.Text(message, { fontSize: 33, fontFamily: Fonts.UI, fill: this.config.colorFront, wordWrap: true, wordWrapWidth: width - 100 });
+    this.scoreText = new PIXI.Text(message, { fontSize: 25, fontFamily: Fonts.UI, fill: COLOR_FRONT, wordWrap: true, wordWrapWidth: WIDTH - 100 });
     this.addChild(this.scoreText);
-    this.scoreText.height = Math.min(this.scoreText.height, height * 5 / 8);
+    this.scoreText.height = Math.min(this.scoreText.height, HEIGHT * 5 / 8);
     this.scoreText.scale.x = this.scoreText.scale.y;
 
     this.scoreText.position.set(50, 50);
     if (onClose !== null) {
       this.closeButton = new Button({
-        label: this.config.closeText || 'Close',
-        width: width / 4,
-        height: width / 8,
+        label: CLOSE_TEXT,
+        width: WIDTH / 4,
+        height: WIDTH / 8,
         onClick: this.closeModal,
-        color: this.config.colorFront,
-        labelStyle: {fill: this.config.colorBack},
+        color: COLOR_FRONT,
+        labelStyle: {fill: COLOR_BACK},
       });
 
       this.addChild(this.closeButton);
 
-      this.closeButton.y = height - this.closeButton.height - 20;
-      this.closeButton.x = width / 20 * 2 + width / 4;
+      this.closeButton.y = HEIGHT - this.closeButton.height - 20;
+      this.closeButton.x = WIDTH / 20 * 2 + WIDTH / 4;
     }
   }
 

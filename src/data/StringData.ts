@@ -7,6 +7,7 @@ import { StatDisplay, BaseStat } from './StatData';
 import { IEffect } from './EffectData';
 import { IBuff } from './BuffData';
 import { Formula } from '../services/Formula';
+import { StatModel } from '../engine/stats/StatModel';
 
 export const StringData = {
   GAME_TITLE: 'Eternal Quest',
@@ -30,9 +31,16 @@ export const Descriptions = {
     str += 'Level ' + item.level + '\n';
     item.tags.forEach(tag => str += tag + ' ');
     str += '\n\n';
-    item.stats && item.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + stat.value + '\n');
+    if (item.stats) {
+      item.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + (StatDisplay[stat.stat] === 'percent' ? (Math.round(stat.value * 100) + '%') : Math.round(stat.value)) + '\n');
+    }
     if (item.action) {
       str += Descriptions.makeActionDescription(item.action) + '\n';
+    }
+    if (item.triggers) {
+      item.triggers.forEach(trigger => {
+        str += Descriptions.makeEffectDescription(trigger) + '\n';
+      });
     }
 
     return str;
@@ -41,7 +49,9 @@ export const Descriptions = {
     let str = '';
     str += 'Level ' + skill.level + '\n';
     str += '\n\n';
-    skill.stats && skill.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + stat.value + '\n');
+    if (skill.stats) {
+      skill.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + (StatDisplay[stat.stat] === 'percent' ? (Math.round(stat.value * 100) + '%') : Math.round(stat.value)) + '\n');
+    }
     if (skill.action) {
       str += Descriptions.makeActionDescription(skill.action) + '\n';
     }
@@ -77,7 +87,60 @@ export const Descriptions = {
 
     return str;
   },
+  makeProcessedActionDescription: (action: IAction, origin: StatModel): string => {
+    let str = '';
+    if (action.userate) {
+      str += Math.round(action.userate * 100) + '% ';
+    }
+    str += action.slug;
 
+    let tags = action.tags.concat(action.source ? action.source.tags : []);
+
+    if (tags && tags.length > 0) {
+      str += '\n';
+      tags.forEach(tag => str += tag + ' ');
+      str += '\n\n';
+      str += 'Cost: ';
+      if (action.costs.action) {
+        str += 'action: ' + action.costs.action * (1 - origin.getStat('efficiency', tags)) + ', ';
+      }
+      if (action.costs.mana) {
+        str += 'mana: ' + action.costs.action * (1 - origin.getStat('manacost', tags)) + ', ';
+      }
+      if (action.costs.health) {
+        str += 'health: ' + action.costs.action * (1 - origin.getStat('manacost', tags)) + ', ';
+      }
+    }
+    if (action.stats) {
+      str += '\n\n';
+      let damage = origin.getStat('baseDamage', tags, action.stats.baseDamage) * origin.getPower(tags);
+      let critRate = origin.getStat('critRate', tags, action.stats.critRate);
+      let critMult = origin.getStat('critMult', tags, action.stats.critMult);
+      let hit = origin.getStat('hit', tags, action.stats.hit);
+      let penetration = origin.getStat('penetration', tags, action.stats.penetration);
+      if (hit) {
+        str += 'hit: ' + Math.round(hit) + '\n';
+      }
+      if (damage) {
+        str += 'damage: ' + Math.round(damage) + '\n';
+      }
+      if (critRate) {
+        str += 'crit: ' + Math.round(critRate * 100) + '% x' + critMult + '\n';
+      }
+      if (penetration) {
+        str += 'penetration: ' + Math.round(penetration * 100) + '%\n';
+      }
+    }
+
+    let effects = (action.effects || []).concat(origin.getTriggersFor(['action', 'hit', 'crit', 'miss'], tags));
+
+    if (effects && effects.length > 0) {
+      str += '\n\n';
+      effects.forEach(effect => str += '\n' + Descriptions.makeEffectDescription(effect));
+    }
+
+    return str;
+  },
   makeEffectDescription: (effect: IEffect): string => {
     let str = '';
 
@@ -90,7 +153,7 @@ export const Descriptions = {
     } else {
       if (effect.type === 'damage') {
         str += effect.name + ': ';
-        str += Math.round(effect.value) + ' ' + Formula.getDamageTag(effect.damageTags).substr(0, 1).toUpperCase();
+        str += Math.round(effect.damage.value) + ' ' + Formula.getDamageTag(effect.damage.tags).substr(0, 1).toUpperCase();
       } else if (effect.type === 'clearBuff') {
         str += 'clears ' + effect.buffRemoved;
       } else if (effect.type === 'special') {
@@ -115,9 +178,9 @@ export const Descriptions = {
       str += ': ';
       str += Math.round(buff.damage.value) + Formula.getDamageTag(buff.damage.tags).substr(0, 1).toUpperCase();
     } else if (buff.type === 'stat') {
-      if (buff.stats && buff.stats.length > 0) {
-        str += '\n';
-        buff.stats && buff.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + stat.value + '\n');
+      str += '\n';
+      if (buff.stats) {
+        buff.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + (StatDisplay[stat.stat] === 'percent' ? (Math.round(stat.value * 100) + '%') : Math.round(stat.value)) + '\n');
       }
     } else if (buff.type === 'trigger') {
       buff.triggers.forEach(trigger => {

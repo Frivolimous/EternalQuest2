@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { SpriteModel } from './sprites/SpriteModel';
-import { StatTag, AttackStats, DamageTag, StatMap, DamageTags } from '../data/StatData';
+import { StatTag, AttackStats, DamageTag, StatMap, DamageTags, ActionTag } from '../data/StatData';
 import { RandomSeed } from '../services/RandomSeed';
 import { StatModel } from './stats/StatModel';
 import { IAction, ActionType } from '../data/ActionData';
@@ -9,9 +9,13 @@ import { VitalType } from './stats/Vitals';
 import { IBuff, BuffSlug, BuffType } from '../data/BuffData';
 import { IActiveBuff } from './sprites/BuffContainer';
 import { Formula } from '../services/Formula';
+import { IItem } from '../data/ItemData';
 
 export class ActionController {
-  constructor(private onBuffUpdate: (result: IBuffResult) => void) {}
+  public selectedItem: IItem;
+  public doubleSelected: boolean;
+
+  constructor(private onBuffUpdate: (result: IBuffResult) => void, private onChargesUpdate: (item: IItem) => void, private onItemUnselect: (item: IItem) => void) {}
 
   public chooseAction = (origin: SpriteModel, sprites: SpriteModel[], fighting: boolean): IActionResult => {
     let target: SpriteModel;
@@ -21,49 +25,116 @@ export class ActionController {
       target = this.chooseTarget(origin, sprites, null);
       let distance = Math.abs(origin.tile - target.tile);
       actions = origin.stats.getActionList(distance);
-      if (origin.buffs.hasBuff('rushed')) {
-        actions = _.filter(actions, data => (data.slug === 'strike' || data.slug === 'idle'));
-      } else if (origin.buffs.hasBuff('aim')) {
-        actions = _.filter(actions, data => (data.type !== 'walk' || data.slug === 'idle'));
-      }
     } else {
-      target = null;
       actions = origin.stats.getActionList('b');
     }
 
-    actions = _.filter(actions, data => {
-      if (data.costs) {
-        if (data.costs.health > 0 && data.costs.health > origin.vitals.getVital('health')) {
-          return false;
+    if (origin.player && this.selectedItem) {
+      if (this.selectedItem.action && this.canUse(this.selectedItem.action, origin, target, sprites, fighting)) {
+        let item = this.selectedItem;
+        if (!this.doubleSelected) {
+          this.selectedItem = null;
+          this.onItemUnselect(item);
         }
-        if (data.costs.mana > 0 && data.costs.mana > origin.vitals.getVital('mana')) {
-          return false;
+        return this.processAction(item.action, origin, target, sprites);
+      } else if ((!this.selectedItem.action && _.includes(this.selectedItem.tags, 'Unarmed')) || this.selectedItem.action.slug === 'strike') {
+        let strikes = origin.stats.getStrikeActions();
+        let strike = strikes.find(data => (this.canUse(data, origin, target, sprites, fighting) && this.wantUse(data, origin, target, sprites, fighting)));
+        if (strike) {
+          return this.processAction(strike, origin, target, sprites);
         }
-
-        return true;
-      }
-    });
-    let action: IAction;
-    while (true) {
-      action = actions.shift();
-      if (action.slug === 'withdraw') {
-        let actions2 = origin.stats.getActionList(Math.abs(origin.tile - target.tile) + 1);
-        console.log('withdraw?', actions2);
-        if (_.some(actions2, data => data.type !== 'walk')) {
-          break;
-        }
-      } else if (action.userate || action.userate === 0) {
-        if (RandomSeed.general.getRaw() > action.userate) {
-          action = actions.shift();
-        } else {
-          break;
-        }
-      } else {
-        break;
       }
     }
 
+    let action = _.find(actions, data => (this.canUse(data, origin, target, sprites, fighting) && this.wantUse(data, origin, target, sprites, fighting)));
     return this.processAction(action, origin, target, sprites);
+  }
+
+  public canUse(action: IAction, origin: SpriteModel, target: SpriteModel, others: SpriteModel[], fighting: boolean): boolean {
+    if (fighting) {
+      let distance = Math.abs(origin.tile - target.tile);
+      if (!_.includes(action.distance, distance)) {
+        return false;
+      }
+    } else {
+      if (!_.includes(action.distance, 'b')) {
+        return false;
+      }
+    }
+    if (origin.buffs.hasBuff('rushed')) {
+      if (action.slug !== 'strike' && action.slug !== 'idle') {
+        return false;
+      }
+    }
+    if (origin.buffs.hasBuff('aim')) {
+      if (action.type === 'walk' && action.slug !== 'idle') {
+        return false;
+      }
+    }
+    if (origin.buffs.hasBuff('berserk')) {
+      if (action.slug !== 'strike' && action.slug !== 'approach' && action.slug !== 'leap' && action.slug !== 'idle') {
+        return false;
+      }
+    }
+
+    if (action.costs) {
+      if (action.costs.health > 0 && action.costs.health > origin.vitals.getVital('health')) {
+        return false;
+      }
+      if (action.costs.mana > 0 && action.costs.mana > origin.vitals.getVital('mana')) {
+        return false;
+      }
+    }
+
+    if (action.source && (action.source.charges === 0)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  public wantUse(action: IAction, origin: SpriteModel, target: SpriteModel, others: SpriteModel[], fighting: boolean): boolean {
+    if (action.slug === 'withdraw') {
+      let actions2 = origin.stats.getActionList(Math.abs(origin.tile - target.tile) + 1);
+      if (!_.some(actions2, data => data.type !== 'walk')) {
+        return false;
+      }
+    }
+
+    if (action.userate || action.userate === 0) {
+      if (RandomSeed.general.getRaw() > action.userate) {
+        return false;
+      }
+    }
+
+    if (action.type === 'heal') {
+      if (action.heals.health) {
+        let current = origin.vitals.getVital('health');
+        let total = origin.vitals.getTotal('health');
+        if ((action.heals.health > total - current) && (current / total > 0.5)) {
+          return false;
+        }
+      }
+      if (action.heals.mana) {
+        let current = origin.vitals.getVital('mana');
+        let total = origin.vitals.getTotal('mana');
+        if ((action.heals.mana > total - current) && (current / total > 0.5)) {
+          return false;
+        }
+      }
+    } else if (action.type === 'buff') {
+      let buffType = action.effects[0].buff.name;
+      if (origin.buffs.hasBuff(buffType)) {
+        return false;
+      }
+    } else if (action.type === 'curse') {
+      let buffType = action.effects[0].buff.name;
+      if (target.buffs.hasBuff(buffType)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   public chooseTarget = (origin: SpriteModel, sprites: SpriteModel[], action?: any) => {
@@ -84,7 +155,7 @@ export class ActionController {
           buff.timer = existing.timer;
           existing.onRemove && existing.onRemove();
           data.sprite.buffs.removeBuff(buff);
-          console.log('remove!');
+          // console.log('remove!');
         }
         data.sprite.buffs.addBuff(buff);
         buff.onAdd && buff.onAdd();
@@ -100,6 +171,12 @@ export class ActionController {
           this.processTriggers(data.sprite, null, others, 'damaged');
         }
       });
+    }
+    if (result.chargesChange) {
+      if (result.source && result.source.source) {
+        result.source.source.charges += result.chargesChange;
+        this.onChargesUpdate(result.source.source as IItem);
+      }
     }
     if (result.positionChange) {
       result.positionChange.forEach(data => {
@@ -121,7 +198,6 @@ export class ActionController {
       result = {
         name: '',
         type: 'instant',
-        costs: {},
         source: null,
         origin,
         target,
@@ -219,7 +295,7 @@ export class ActionController {
   }
 
   private applyEffect = (effect: IEffect, action: IAction, result: IActionResult, origin: SpriteModel, target: SpriteModel, others: SpriteModel[]) => {
-    if ((effect.userate || effect.userate === 0) && effect.userate < 1 && RandomSeed.general.getRaw() < effect.userate) {
+    if ((effect.userate || effect.userate === 0) && effect.userate < 1 && RandomSeed.general.getRaw() > effect.userate) {
       return;
     }
 
@@ -243,9 +319,8 @@ export class ActionController {
 
       result.addBuff.push({ sprite, buff: this.makeBuff(buff, action, result, sprite, others), source: effect });
     } else if (effect.type === 'damage') {
-      let power = origin.stats.getPower(effect.damageTags);
-      result.vitalChange.push({source: effect, value: effect.value * power, sprite, vital: 'health', tag: Formula.getDamageTag(effect.damageTags)});
-      // fill in
+      let power = origin.stats.getPower(effect.damage.tags);
+      result.vitalChange.push({source: effect, value: effect.damage.value * power, sprite, vital: 'health', tag: Formula.getDamageTag(effect.damage.tags)});
     } else if (effect.type === 'special') {
       let mainDamage = _.sumBy(_.filter(result.vitalChange, { source: action }), 'value') || 0;
       switch (effect.name) {
@@ -270,6 +345,16 @@ export class ActionController {
           result.positionChange = result.positionChange ? _.concat(result.positionChange, positionChange) : positionChange;
           break;
         }
+        case 'wild': {
+          let random = 1 - effect.value + RandomSeed.general.getRaw() * effect.value * 2;
+          result.vitalChange.forEach(data => {
+            if (data.vital === 'health') {
+              data.value *= random;
+            }
+          });
+          console.log('wild!', random);
+          break;
+        }
       }
     } else if (effect.type === 'clearBuff') {
       if (!result.removeBuff) {
@@ -283,116 +368,135 @@ export class ActionController {
   private processAction = (action: IAction, origin: SpriteModel, target: SpriteModel, others: SpriteModel[]): IActionResult => {
     let result: IActionResult;
 
-    if (action.type === 'walk' || action.type === 'self') {
-      result = this.makeSelfResult(action, origin, origin, others);
-    } else if (action.type === 'attack') {
-      result = this.makeAttackResult(action, origin, target, others);
-    } else if (action.type === 'heal') {
-      result = this.makeHealResult(action, origin, target, others);
+    let tags: StatTag[];
+    if (action.source) {
+      tags = _.concat(action.tags, action.source.tags);
+    } else {
+      tags = action.tags;
     }
+
+    let func = this.getResultFunction(action);
+
+    result = func(action, tags, origin, target, others);
 
     let actionBuffs = origin.buffs.getActionBuffs();
     if (actionBuffs.length > 0) {
       result.removeBuff = _.map(actionBuffs, data => ({ sprite: origin, buff: data.source.name, source: action }));
     }
 
+    if (action.costs.health) {
+      result.vitalChange.push({ sprite: origin, vital: 'health', value: action.costs.health * (1 - origin.stats.getStat('manacost', tags)), tag: 'None', source: null});
+    }
+    if (action.costs.mana) {
+      result.vitalChange.push({ sprite: origin, vital: 'mana', value: action.costs.mana * (1 - origin.stats.getStat('manacost', tags)), tag: 'None', source: null});
+    }
+    if (action.costs.action) {
+      result.vitalChange.push({ sprite: origin, vital: 'action', value: action.costs.action * (1 - origin.stats.getStat('efficiency', tags)), tag: 'None', source: null});
+    }
+
+    if (action.source && action.source.charges > 0) {
+      result.chargesChange = -1;
+    }
+
     return result;
   }
 
-  private makeSelfResult(action: IAction, origin: SpriteModel, target: SpriteModel, others: SpriteModel[]): IActionResult {
-    let tags: StatTag[];
-    if (action.source) {
-      tags = _.concat(action.tags, action.source.tags);
-    } else {
-      tags = action.tags;
-    }
+  // === RESULT FUNCTIONS === \\
 
+  private getResultFunction(action: IAction) {
+    if (action.type === 'walk' || action.type === 'self' || action.type === 'buff') {
+      return this.makeSelfResult;
+    } else if (action.type === 'attack') {
+      return this.makeAttackResult;
+    } else if (action.type === 'curse') {
+      return this.makeCurseResult;
+    } else if (action.type === 'heal') {
+      return this.makeHealResult;
+    }
+  }
+
+  private makeSelfResult = (action: IAction, tags: StatTag[], origin: SpriteModel, target: SpriteModel, others: SpriteModel[]): IActionResult => {
     let result: IActionResult = {
       name: action.slug,
       type: action.type,
       source: action,
       origin,
       target,
-      costs: {},
       vitalChange: [],
     };
 
     let effects = action.effects;
     effects && effects.forEach(effect => this.applyEffect(effect, action, result, origin, null, others));
-
-    if (action.costs.health) {
-      result.vitalChange.push({ sprite: origin, vital: 'health', value: action.costs.health * (1 - origin.stats.getStat('manacost', tags)), tag: 'None', source: null});
-    }
-    if (action.costs.mana) {
-      result.vitalChange.push({ sprite: origin, vital: 'mana', value: action.costs.mana * (1 - origin.stats.getStat('manacost', tags)), tag: 'None', source: null});
-    }
-    if (action.costs.action) {
-      result.vitalChange.push({ sprite: origin, vital: 'action', value: action.costs.action * (1 - origin.stats.getStat('efficiency', tags)), tag: 'None', source: null});
-    }
+    origin.stats.getTriggersFor('action', tags).forEach(effect => this.applyEffect(effect, action, result, origin, target, others));
 
     return result;
   }
 
-  private makeHealResult(action: IAction, origin: SpriteModel, target: SpriteModel, others: SpriteModel[]): IActionResult {
-    let tags: StatTag[];
-    if (action.source) {
-      tags = _.concat(action.tags, action.source.tags);
-    } else {
-      tags = action.tags;
-    }
-
+  private makeHealResult = (action: IAction, tags: StatTag[], origin: SpriteModel, target: SpriteModel, others: SpriteModel[]): IActionResult => {
     let preEffects = _.concat(origin.stats.getTriggersFor('actionStart', tags), _.filter(action.effects, {trigger: 'actionStart'}));
     preEffects.forEach(effect => {
-      if (effect.userate >= 1 || RandomSeed.general.getRaw() < effect.userate) {
+      if (!effect.userate || effect.userate >= 1 || RandomSeed.general.getRaw() < effect.userate) {
         switch (effect.name) {
         }
       }
     });
 
     let result: IActionResult;
-
-    let heal = action.stats.baseDamage * origin.stats.getPower(tags);
+    let power = origin.stats.getPower(tags);
+    let damageTag = Formula.getDamageTag(tags);
+    let critical = _.includes(tags, 'Critical');
 
     result = {
       name: action.slug,
       type: action.type,
-      costs: action.costs,
       source: action,
       origin,
       target,
-      vitalChange: [{ sprite: origin, vital: 'health', value: -heal, source: action, tag: Formula.getDamageTag(tags), critical: _.includes(tags, 'Critical') }],
+      vitalChange: [],
     };
 
-    action.effects && action.effects.forEach(effect => this.applyEffect(effect, action, result, origin, target, others));
+    for (let key of Object.keys(action.heals)) {
+      result.vitalChange.push({ sprite: origin, vital: key as 'health' | 'mana' | 'action', value: -action.heals[key as 'health' | 'mana' | 'action'] * power, source: action, tag: damageTag, critical });
+    }
 
-    if (action.costs.health) {
-      result.vitalChange.push({ sprite: origin, vital: 'health', value: action.costs.health * (1 - origin.stats.getStat('manacost', tags)), tag: 'None', source: null});
-    }
-    if (action.costs.mana) {
-      result.vitalChange.push({ sprite: origin, vital: 'mana', value: action.costs.mana * (1 - origin.stats.getStat('manacost', tags)), tag: 'None', source: null});
-    }
-    if (action.costs.action) {
-      result.vitalChange.push({ sprite: origin, vital: 'action', value: action.costs.action * (1 - origin.stats.getStat('efficiency', tags)), tag: 'None', source: null});
-    }
+    action.effects && action.effects.forEach(effect => this.applyEffect(effect, action, result, origin, target, others));
+    origin.stats.getTriggersFor('action', tags).forEach(effect => this.applyEffect(effect, action, result, origin, target, others));
+    return result;
+  }
+
+  private makeCurseResult = (action: IAction, tags: StatTag[], origin: SpriteModel, target: SpriteModel, others: SpriteModel[]): IActionResult => {
+    let result: IActionResult = {
+      name: action.slug,
+      type: action.type,
+      source: action,
+      origin,
+      target,
+      vitalChange: [],
+    };
+
+    let effects = action.effects;
+    effects && effects.forEach(effect => this.applyEffect(effect, action, result, origin, target, others));
+    origin.stats.getTriggersFor('action', tags).forEach(effect => this.applyEffect(effect, action, result, origin, target, others));
 
     return result;
   }
 
-  private makeAttackResult(action: IAction, origin: SpriteModel, target: SpriteModel, others: SpriteModel[]): IActionResult {
-    let tags: StatTag[];
-    if (action.source) {
-      tags = _.concat(action.tags, action.source.tags);
-    } else {
-      tags = action.tags;
-    }
-
-    let count = action.double ? 2 : 1;
+  private makeAttackResult = (action: IAction, tags: StatTag[], origin: SpriteModel, target: SpriteModel, others: SpriteModel[]): IActionResult => {
+    let count = (_.includes(action.tags, 'Double') || _.includes(action.tags, 'Unarmed')) ? 2 : 1;
     let preEffects = _.concat(origin.stats.getTriggersFor('actionStart', tags), _.filter(action.effects, {trigger: 'actionStart'}));
     preEffects.forEach(effect => {
-      if (effect.userate >= 1 || RandomSeed.general.getRaw() < effect.userate) {
+      if (!effect.userate || effect.userate >= 1 || RandomSeed.general.getRaw() < effect.userate) {
         switch (effect.name) {
           case 'doubleshot':
             count += effect.value;
+            break;
+          case 'holy':
+            let dmgTag = Formula.getDamageTag(tags);
+            tags[tags.indexOf(dmgTag)] = 'Holy';
+            if (!tags.includes('Spirit')) {
+              tags.push('Spirit');
+            }
+            break;
         }
       }
     });
@@ -407,12 +511,11 @@ export class ActionController {
 
       if (RandomSeed.general.getRaw() > (hit - avoid)) {
         effects = _.filter(action.effects, effect => (effect.trigger === 'miss' || effect.trigger === 'action'));
-        effects = _.concat(effects, origin.stats.getTriggersFor('miss', tags));
+        effects = _.concat(effects, origin.stats.getTriggersFor(['miss', 'action'], tags));
         result = {
           name: action.slug + ' - Miss!',
           type: action.type,
           source: action,
-          costs: action.costs,
           origin,
           target,
           defended: [{ sprite: target, source: action, type: 'Dodge' }],
@@ -421,16 +524,16 @@ export class ActionController {
 
         this.processTriggers(target, origin, others, 'avoided', result);
       } else {
-        let damage = this.getAttackDamage(origin.stats, target.stats, tags, action.stats);
+        let damage = this.getAttackDamage(origin, target, tags, action.stats);
         effects = _.filter(action.effects, effect => (effect.trigger === 'hit' || effect.trigger === 'action'));
-        effects = _.concat(effects, origin.stats.getTriggersFor('hit', tags));
+        effects = _.concat(effects, origin.stats.getTriggersFor(['hit', 'action'], tags));
         if (_.includes(tags, 'Critical')) {
-          effects = _.concat(effects, origin.stats.getTriggersFor('crit', tags));
+          console.log('is crit!');
+          effects = _.concat(effects, origin.stats.getTriggersFor('crit', tags), _.filter(action.effects, effect => effect.trigger === 'crit'));
         }
         result = {
           name: action.slug,
           type: action.type,
-          costs: action.costs,
           source: action,
           origin,
           target,
@@ -456,43 +559,33 @@ export class ActionController {
       count--;
     }
 
-    if (action.costs.health) {
-      mResult.vitalChange.push({ sprite: origin, vital: 'health', value: action.costs.health * (1 - origin.stats.getStat('manacost', tags)), tag: 'None', source: null});
-    }
-    if (action.costs.mana) {
-      mResult.vitalChange.push({ sprite: origin, vital: 'mana', value: action.costs.mana * (1 - origin.stats.getStat('manacost', tags)), tag: 'None', source: null});
-    }
-    if (action.costs.action) {
-      mResult.vitalChange.push({ sprite: origin, vital: 'action', value: action.costs.action * (1 - origin.stats.getStat('efficiency', tags)), tag: 'None', source: null});
-    }
-
     return mResult;
   }
 
-  private getAttackDamage(origin: StatModel, target: StatModel, tags: StatTag[], actionStats: Partial<AttackStats>): number {
+  private getAttackDamage(origin: SpriteModel, target: SpriteModel, tags: StatTag[], actionStats: Partial<AttackStats>): number {
     if (!actionStats) return 0;
 
-    let crit = origin.getStat('critRate', tags, actionStats.critRate);
-    let critD = target.getStat('devaluation', ['Critical']);
+    let crit = origin.stats.getStat('critRate', tags, actionStats.critRate);
+    let critD = target.stats.getStat('devaluation', ['Critical']);
 
-    let baseDamage = origin.getStat('baseDamage', tags, actionStats.baseDamage);
-    let power = origin.getPower(tags, actionStats.power);
-    let pen = origin.getStat('penetration', tags, actionStats.penetration);
-    let resist = target.getStat('resist', tags);
+    let baseDamage = origin.stats.getStat('baseDamage', tags, actionStats.baseDamage);
+    let power = origin.stats.getPower(tags, actionStats.power, Math.abs(target.tile - origin.tile));
+    let pen = origin.stats.getStat('penetration', tags, actionStats.penetration);
+    let resist = target.stats.getStat('resist', tags);
 
     let critical = false;
     let criticalMult = 0;
     if (RandomSeed.general.getRaw() <= crit - critD) {
-      let critMult = origin.getStat('critMult', tags, actionStats.critMult);
-      let critPen = origin.getStat('penetration', ['Critical']);
-      let critR = target.getStat('resist', ['Critical']);
+      let critMult = origin.stats.getStat('critMult', tags, actionStats.critMult);
+      let critPen = origin.stats.getStat('penetration', ['Critical']);
+      let critR = target.stats.getStat('resist', ['Critical']);
 
       critical = true;
       criticalMult = critMult * (1 + critPen - critR);
       tags.push('Critical');
     }
 
-    console.log('damage!', crit, baseDamage, power, pen, resist, criticalMult);
+    // console.log('damage!', crit, baseDamage, power, pen, resist, criticalMult);
 
     return baseDamage * power * (1 + pen - resist) * (critical ? criticalMult : 1);
   }
@@ -505,9 +598,9 @@ export interface IActionResult {
 
   origin: SpriteModel;
   target: SpriteModel;
-  costs: { mana?: number, action?: number, health?: number };
   defended?: { sprite: SpriteModel, type: string, source: IEffect | IAction }[];
   vitalChange?: { sprite: SpriteModel, vital: VitalType, tag: DamageTag, value: number, source: IEffect | IAction, critical?: boolean }[];
+  chargesChange?: number;
   addBuff?: { sprite: SpriteModel, buff: IActiveBuff, source: IEffect }[];
   removeBuff?: { sprite: SpriteModel, buff: BuffSlug, source: IEffect | IAction }[];
   positionChange?: { sprite: SpriteModel, value: number, source: IEffect }[];

@@ -74,9 +74,9 @@ export class LoadCharacterUI extends BaseUI {
 
   private startDeleteCharacter = (i: number) => {
     if (this.players.length <= 1) {
-      this.addDialogueWindow(new SimpleModal('You cannot delete your last character', { colorBack: 0x333333, colorFront: 0x666666, closeText: 'Close' }, 300, 200));
+      this.addDialogueWindow(new SimpleModal('You cannot delete your last character'));
     } else {
-      this.addDialogueWindow(new OptionModal('Delete this character?', { colorBack: 0x333333, colorFront: 0x666666}, 300, 200, [
+      this.addDialogueWindow(new OptionModal('Delete this character?', [
         {label: 'Cancel', color: 0xcc0000, onClick: () => {}},
         {label: 'Confirm', onClick: () => {
           SaveManager.deletePlayer(this.players[i].__id).then(this.loadCharacters);

@@ -10,14 +10,26 @@ export const ItemManager = {
   loadItem: (itemSave: IItemSave): IItem => {
     if (!itemSave) return null;
 
-    return DataConverter.getItem(itemSave.slug, itemSave.level, itemSave.enchant);
+    return DataConverter.getItem(itemSave.slug, itemSave.level, itemSave.enchant, itemSave.charges, itemSave.scrollOf);
   },
   saveItem: (item: IItem): IItemSave => {
     if (!item) return null;
-    let save: IItemSave = {slug: item.slug, level: item.level};
-    if (item.enchantSlug) {
-      save.enchant = item.enchantSlug;
+    let save: IItemSave;
+    if (item.scrollOf) {
+      save = {slug: 'Scroll', level: item.level, scrollOf: item.scrollOf, charges: item.charges};
+      if (item.enchantSlug) {
+        save.enchant = item.enchantSlug;
+      }
+    } else {
+      save = {slug: item.slug, level: item.level};
+      if (item.enchantSlug) {
+        save.enchant = item.enchantSlug;
+      }
+      if (item.charges || item.charges === 0) {
+        save.charges = item.charges;
+      }
     }
+
     return save;
   },
 

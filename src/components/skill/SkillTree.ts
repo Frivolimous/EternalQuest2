@@ -41,7 +41,7 @@ export class SkillTree extends PIXI.Container {
     rightArrow.position.set(160, 240);
   }
 
-  public loadPages(skills: ISkill[], pages: ISkillPageMap[], callback: (skill: ISkill) => ISkill) {
+  public loadPages(skills: ISkill[], pages: ISkillPageMap[], callback: (skill: ISkill, passive?: boolean) => ISkill) {
     this.pages.forEach(page => page.destroy());
     this.pages = [];
 
@@ -54,6 +54,10 @@ export class SkillTree extends PIXI.Container {
     });
     this.addChild(this.pages[0]);
     this.currentPage = 0;
+  }
+
+  public setMaxLevel(n: number) {
+    this.pages.forEach(page => page.setMaxLevel(n));
   }
 
   public getWidth() {
@@ -75,74 +79,3 @@ export class SkillTree extends PIXI.Container {
     return button;
   }
 }
-
-// const DSkillWindow: JMBUI.GraphicOptions = { width: 400, height: 400, fill: 0xff9933, bgColor: 0xffffff, alpha: 0.9 };
-
-// export class SkillWindow extends JMBUI.BasicElement {
-//   icons: Array<SkillIcon>;
-
-//   constructor(private blocks: Array<SkillBlock>, private callback: (data: SkillIcon) => any, private skillpoints: number, options: JMBUI.GraphicOptions = {}, private iconOptions: JMBUI.GraphicOptions = {}) {
-//     super(JMBL.utils.default(options, DSkillWindow));
-//     this.iconOptions.downFunction = ((callback: Function) => function () { callback(this) })(this.iconCallback);
-
-//     this.update();
-//   }
-
-//   update = () => {
-//     let innerHor: number = this.graphics.width * 0.08;
-//     let innerVer: number = this.graphics.height * 0.08;
-//     let innerX: number = this.graphics.width * 0.1;
-//     let innerY: number = this.graphics.height * 0.1;
-
-//     this.icons = [];
-//     this.graphics.lineStyle(2, 0xf1f1f1); //options.borderColor
-
-//     for (var i = 0; i < this.blocks.length; i += 1) {
-//       this.icons[i] = new SkillIcon(this.blocks[i], this.iconOptions);
-//       this.icons[i].x = (this.icons[i].data.position % 10) * innerHor + innerX - this.icons[i].getWidth() / 2;
-//       this.icons[i].y = Math.floor(this.icons[i].data.position * .1) * innerVer + innerY - this.icons[i].getHeight() / 2;
-//       if (this.skillpoints >= 1) {
-//         if (this.canLevel(this.icons[i])) {
-//           this.icons[i].selected = true;
-//         }
-//       }
-//       this.addChild(this.icons[i]);
-
-//       if (this.icons[i].data.prerequisite) {
-//         let prereq: SkillIcon = JMBL.utils.find(this.icons, (icon: SkillIcon) => (icon.data.index === this.icons[i].data.prerequisite));
-//         if (this.icons[i].data.level === 0 && prereq.data.level === 0) {
-//           this.icons[i].setDisplayState(JMBUI.DisplayState.BLACKENED);
-//         }
-
-//         let x1 = (this.icons[i].data.position % 10) * innerHor + innerX;
-//         let y1 = Math.floor(this.icons[i].data.position * 0.1) * innerVer + innerY;
-//         let x2 = (prereq.data.position % 10) * innerHor + innerX;
-//         let y2 = Math.floor(prereq.data.position * 0.1) * innerVer + innerY;
-//         this.graphics.moveTo(x1, y1);
-//         this.graphics.lineTo(x2, y2);
-//       }
-//     }
-//   }
-
-//   canLevel = (icon: SkillIcon): boolean => {
-//     return (this.skillpoints > 0 &&
-//       icon.data.level < icon.data.maxLevel &&
-//       (!icon.data.prerequisite || JMBL.utils.find(this.icons, (e: SkillIcon) => (e.data.index === icon.data.prerequisite)).data.level > 0));
-//   }
-
-//   iconCallback = (icon: SkillIcon) => {
-//     if (this.canLevel(icon)) {
-//       this.callback(icon);
-//       this.refresh();
-//     } else {
-//       icon.errorFlash();
-//     }
-//   }
-
-//   refresh = () => {
-//     while (this.icons.length > 0) {
-//       this.icons.shift().destroy();
-//     }
-//     this.update();
-//   }
-// }

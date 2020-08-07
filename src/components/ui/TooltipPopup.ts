@@ -29,7 +29,16 @@ export class TooltipPopup extends PIXI.Container {
   }
 
   public reposition(target: PIXI.Rectangle, borders: PIXI.Rectangle) {
-    this.x = target.x;
-    this.y = target.y + target.height;
+    let rect = new PIXI.Rectangle(0, 0, this.background.width, this.background.height);
+    if (target.y + target.height + rect.height > borders.bottom) {
+      this.y = target.y - rect.height;
+    } else {
+      this.y = target.y + target.height;
+    }
+    if (target.x + rect.width > borders.right) {
+      this.x = target.x + target.width - rect.width;
+    } else {
+      this.x = target.x;
+    }
   }
 }

@@ -1,10 +1,11 @@
 export type AnyStat = BaseStat | CompoundStat;
 
-export type BaseStat = AttackStat | VitalStat | DefenseStat;
+export type BaseStat = AttackStat | VitalStat | DefenseStat | SpecialStat;
 
 export type AttackStat = 'baseDamage' | 'power' | 'critRate' | 'critMult' | 'hit' | 'penetration' | 'rate';
 export type VitalStat = 'health' | 'mana' | 'hregen' | 'mregen' | 'speed' | 'initiative' | 'efficiency' | 'manacost';
 export type DefenseStat = 'resist' | 'avoid' | 'devaluation';
+export type SpecialStat = 'iloot' | 'magicSlots' | 'beltSlots';
 
 export type CompoundStat = 'strength' | 'dexterity' | 'intellect' | 'magic' | 'accuracy' |
   'parry' | 'block' | 'dodge' | 'turn' | 'tenacity' | 'fortification';
@@ -14,8 +15,8 @@ export function isCompoundStat(stat: BaseStat | CompoundStat): stat is CompoundS
 }
 
 export type StatTag = SpecTag | ItemTag | ActionTag | EffectTag;
-export type SpecTag = 'Base' | 'Neg' | 'Mult' | 'Map';
-export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell' | 'Thrown' | 'Incanted';
+export type SpecTag = 'Base' | 'Neg' | 'Mult' | 'Map' | 'Far' | 'Near';
+export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell' | 'Thrown' | 'Incanted' | 'Premium' | 'Double' | 'Charm' | 'Relic' | 'Trade' | 'Scroll';
 export type ActionTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Melee' | 'Ranged' | 'Grenade' | 'Potion' | 'Cryptic' | 'Mystic' | 'Agile';
 export type EffectTag = 'Healing' | 'Force' | 'Buff' | 'Curse' | 'Fire' | 'Electric' | 'Ice' | 'Toxic' | 'Gadget' | 'Projectile' | 'Control' | 'Critical' | 'OverTime' | DamageTag;
 export type DamageTag = 'Physical' | 'Magical' | 'Chemical' | 'Holy' | 'Dark' | 'Spirit' | 'None';
@@ -128,6 +129,10 @@ export const StatDisplay: { [key in AnyStat]: StatDisplayType } = {
   devaluation: 'percent',
   efficiency: 'percent',
   manacost: 'percent',
+
+  iloot: 'percent',
+  magicSlots: 'numeric',
+  beltSlots: 'numeric',
 };
 
 export type StatProgression = 'linear' | 'diminish';
@@ -163,6 +168,10 @@ export const StatProgression: { [key in AnyStat]: StatProgression } = {
   devaluation: 'diminish',
   efficiency: 'diminish',
   manacost: 'diminish',
+
+  iloot: 'diminish',
+  magicSlots: 'linear',
+  beltSlots: 'linear',
 };
 
 export const dStatBlock: StatBlock = {
@@ -184,7 +193,7 @@ export const dStatBlock: StatBlock = {
   hregen: { base: 0, mult: 0, tags: {} },
   mregen: { base: 0.03, mult: 0, tags: {} },
   initiative: { base: 0, mult: 0, tags: {} },
-  baseDamage: { base: 0, mult: 0, tags: { Unarmed: { base: 10, mult: 0 } } },
+  baseDamage: { base: 0, mult: 0, tags: {} },
   power: { base: 100, mult: 0, tags: {} },
   critRate: { base: 0, mult: 0, neg: 0, tags: { Weapon: { base: 0.15, mult: 0, neg: 0 } } },
   critMult: { base: 1.5, mult: 0, tags: {} },
@@ -196,6 +205,10 @@ export const dStatBlock: StatBlock = {
   devaluation: { base: 0, mult: 0, neg: 0, tags: {} },
   efficiency: { base: 0, mult: 0, neg: 0, tags: {} },
   manacost: { base: 0, mult: 0, neg: 0, tags: {} },
+
+  iloot: { base: 0.15, mult: 0, neg: 0, tags: {}},
+  magicSlots: { base: 1, mult: 0, tags: {}},
+  beltSlots: { base: 5, mult: 0, tags: {}},
 };
 
 export type StatBlock = {

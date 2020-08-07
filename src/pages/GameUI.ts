@@ -2,7 +2,6 @@ import * as PIXI from 'pixi.js';
 import * as _ from 'lodash';
 
 import { BaseUI, IBaseUI } from './_BaseUI';
-import { BasePanel } from '../components/ui/panels/_BasePanel';
 import { Button } from '../components/ui/Button';
 import { GameView } from '../components/game/GameView';
 import { GameController } from '../engine/GameController';
@@ -11,7 +10,7 @@ import { VitalsPanel } from '../components/ui/panels/VitalsPanel';
 import { ZonePanel } from '../components/ui/panels/ZonePanel';
 import { StatsPanel } from '../components/ui/panels/StatsPanel';
 import { CurrencyPanel } from '../components/ui/panels/CurrencyPanel';
-import { IResizeEvent } from '../services/GameEvents';
+import { IResizeEvent, IItemUpdate } from '../services/GameEvents';
 import { InventoryPanel } from '../components/ui/panels/InventoryPanel';
 import { SkillPanel } from '../components/ui/panels/SkillPanel';
 import { SaveManager } from '../services/SaveManager';
@@ -69,6 +68,7 @@ export class GameUI extends BaseUI {
     this.controller.onPlayerLevel.addListener(this.vitals.addPlayer);
     this.controller.onEnemyDead.addListener(this.stats.removeTemp);
     this.controller.onEnemyDead.addListener(this.saveGame);
+    this.controller.onItemUpdate.addListener(this.updateItem); // ESSENTIAL FOR COLLECTING LOOT and removing items - - need to offload logic to StatModel
 
     this.controller.onSpriteAdded.addListener(this.display.spriteAdded);
     this.controller.onSpriteRemoved.addListener(this.display.spriteRemoved);
@@ -80,12 +80,18 @@ export class GameUI extends BaseUI {
     this.display.onSpriteClicked.addListener(this.stats.addTemp);
     this.controller.onLevelComplete.addListener(this.levelComplete);
 
-    this.controller.onLoot.addListener(this.inventory.addItem); // ESSENTIAL FOR COLLECTING LOOT - - need to offload logic to StatModel
     this.display.onQueueEmpty.addListener(this.controller.proceed); // ESSENTIAL FOR ANIMATION TIMING - - replace this when headless
     this.controller.onNavTown.addListener(this.finishNavTown); // ESSENTIAL FOR LEAVING THE GAME - - alternate method needed for headless
     this.controller.onPlayerDead.addListener(this.playerDead); // Shows the end screen with essential controls
     JMTicker.add(this.updateCurrency); // make this a listener instead?
     this.inventory.onItemSell = this.sellItem; // very deep callback, goes through like 5 layers
+    this.inventory.onItemSelect = this.controller.selectItem; // select item to override priority
+
+    this.controller.onPlayerAdded.addListener(model => model.stats.onUpdate.addListener(this.updateStats));
+  }
+
+  public updateStats = () => {
+    this.inventory.updateSlots();
   }
 
   public destroy() {
@@ -130,7 +136,8 @@ export class GameUI extends BaseUI {
 
   private playerDead = () => {
     this.saveGame();
-    this.addDialogueWindow(new SimpleModal('You have died!', { colorBack: 0x333333, colorFront: 0x666666, closeText: 'Close' }, 300, 300, () => {
+    // this.display.clearQueue();
+    this.addDialogueWindow(new SimpleModal('You have died!', () => {
       this.controller.restartLevel();
     }));
   }
@@ -154,7 +161,7 @@ export class GameUI extends BaseUI {
   }
 
   private levelComplete = () => {
-    this.addDialogueWindow(new OptionModal('You finished the level!', { colorBack: 0x333333, colorFront: 0x666666}, 300, 300, [{label: 'To Town', onClick: this.finishNavTown}, {label: 'Continue', onClick: this.nextLevel}]));
+    this.addDialogueWindow(new OptionModal('You finished the level!', [{label: 'To Town', onClick: this.finishNavTown}, {label: 'Continue', onClick: this.nextLevel}]));
   }
 
   private sellItem = (item: IItem, slot: number, callback: () => void) => {
@@ -170,6 +177,18 @@ export class GameUI extends BaseUI {
       SaveManager.getExtrinsic().currency.gold += item.cost;
       callback();
     // }
+  }
+
+  private updateItem = (data: IItemUpdate) => {
+    if (data.type === 'update') {
+      this.inventory.updateItem(data.item);
+    } else if (data.type === 'loot') {
+      this.inventory.addItem(data.item);
+    } else if (data.type === 'remove') {
+      this.inventory.removeItem(data.item);
+    } else if (data.type === 'clearSelect') {
+      this.inventory.clearItemSelect(data.item);
+    }
   }
 
   private updateCurrency = () => {

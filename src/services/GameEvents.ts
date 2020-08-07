@@ -2,6 +2,7 @@ import { JMTicker } from '../JMGE/events/JMTicker';
 import { JMRect } from '../JMGE/others/JMRect';
 import { JMEventListener } from '../JMGE/events/JMEventListener';
 import { IActionResult } from '../engine/ActionController';
+import { IItem } from '../data/ItemData';
 
 export const GameEvents = {
   ticker: JMTicker,
@@ -41,4 +42,9 @@ export interface IFightState {
 export interface IAnimateAction {
   result: IActionResult;
   trigger: () => void;
+}
+
+export interface IItemUpdate {
+  item: IItem;
+  type: 'update' | 'remove' | 'loot' | 'clearSelect';
 }

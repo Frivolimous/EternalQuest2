@@ -90,12 +90,17 @@ export class GameView extends PIXI.Container {
   public fightStarted = () => {
     this.playerView.proclaim('FIGHT!', 0x00ff00);
     new JMTween({}, 0).wait(1000).start().onWaitComplete(() => {
-      this.onQueueEmpty.publish();
+      this.onQueueEmpty.publishSync();
     });
   }
 
   public playerLevel = (sprite: SpriteModel) => {
     this.playerView.proclaim('Level Up!', 0x00ff00);
+  }
+
+  public clearQueue = () => {
+    this.actionQueue = [];
+    this.noActions = true;
   }
 
   private onTick = () => {
@@ -128,9 +133,9 @@ export class GameView extends PIXI.Container {
     origin.proclaim(action.name);
 
     if (action.type === 'walk') {
-      origin.tempWalk(() => this.onActionComplete.publish(action));
+      origin.tempWalk(() => this.onActionComplete.publishSync(action));
       return;
-    } else if (action.type === 'attack') {
+    } else if (action.type === 'attack' || action.type === 'curse') {
       if (_.includes(action.source.tags, 'Projectile')) {
         let projectile = new PIXI.Graphics();
         projectile.beginFill(0x00ffff).lineStyle(1).drawEllipse(-5, -2.5, 10, 5);
@@ -146,13 +151,13 @@ export class GameView extends PIXI.Container {
       } else {
         origin.animateAttack(() => this.finishAction(action));
       }
-    } else if (action.type === 'instant' || action.type === 'self' || action.type === 'heal') {
+    } else if (action.type === 'instant' || action.type === 'self' || action.type === 'heal' || action.type === 'buff') {
       this.finishAction(action);
     }
   }
 
   private finishAction = (action: IActionResult) => {
-    this.onActionComplete.publish(action);
+    this.onActionComplete.publishSync(action);
     if (action.removeBuff) {
 
     }
@@ -165,11 +170,11 @@ export class GameView extends PIXI.Container {
       });
     }
     if (action.vitalChange) {
-      action.vitalChange.forEach(data => {
+      action.vitalChange.forEach((data, i) => {
         if (data.vital === 'health') {
           let view = this.getSpriteByModel(data.sprite);
           let color = data.value >= 0 ? Colors.DamageColor[data.tag] : Colors.HealColor;
-          view.proclaim(String(Math.abs(Math.round(data.value))) + (data.critical ? '!!!' : ''), color);
+          view.proclaim(String(Math.abs(Math.round(data.value))) + (data.critical ? '!!!' : ''), color, i * 30);
         }
       });
     }
@@ -189,7 +194,7 @@ export class GameView extends PIXI.Container {
       buff.vitalChange.forEach(data => {
         let view = this.getSpriteByModel(data.sprite);
         let color = data.value >= 0 ? Colors.DamageColor[data.tag] : Colors.HealColor;
-        view.proclaim(String(Math.abs(data.value)), color);
+        view.proclaim(String(Math.abs(Math.round(data.value))), color);
       });
     }
     if (buff.positionChange) {
@@ -215,6 +220,8 @@ export class GameView extends PIXI.Container {
       let speed = Number(e.key);
       JMTicker.speedFactor = speed;
       JMTween.speedFactor = speed;
+    } else if (e.key === 'l') {
+      this.playerView.model.earnXp(this.playerView.model.vitals.getTotal('experience'));
     }
   }
 }

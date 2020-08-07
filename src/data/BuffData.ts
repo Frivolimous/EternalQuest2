@@ -5,7 +5,9 @@ import { IAction, ActionSlug, IActionRaw } from './ActionData';
 import { IEffect, EffectSlug, IEffectRaw } from './EffectData';
 
 export type BuffSlug = 'rushed' | 'burning' | 'crippled' | 'town' | 'useless' | 'leapbuff' | 'critInit' | 'blockInit' | 'aim' | 'markInit' |
-  'poisoned' | 'stunned' | 'confused' | 'weakened' | 'vulnerable' | 'empowered' | 'hastened' | 'enchanted';
+  'poisoned' | 'stunned' | 'confused' | 'weakened' | 'vulnerable' | 'empowered' | 'hastened' | 'enchanted' | 'amplified' | 'gassed' | 'blinded' | 'cursed' |
+  'afraid' | 'berserk' |
+  'deft';
 export type BuffType = 'stat' | 'damage' | 'action' | 'special' | 'trigger';
 export type BuffClearType = 'action' | 'time' | 'trigger';
 

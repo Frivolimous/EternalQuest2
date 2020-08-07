@@ -7,14 +7,14 @@ import { ActionContainer } from './ActionContainer';
 import { IItem } from '../../data/ItemData';
 import { ItemManager } from '../../services/ItemManager';
 import { IAction } from '../../data/ActionData';
-import { ISkill, SkillPrerequisiteMap, SkillTreeSlug } from '../../data/SkillData';
+import { ISkill, SkillPrerequisiteMap, SkillTreeSlug, SkillPageMap, TalentSlug, SkillList } from '../../data/SkillData';
 import { DataConverter } from '../../services/DataConverter';
 import { IEnemy } from '../../data/EnemyData';
 import { IEffect, EffectTrigger } from '../../data/EffectData';
 
 export class StatModel {
   public static fromSave(save: IPlayerSave): StatModel {
-    let m = new StatModel(save.name, save.title, save.level, save.cosmetics, _.map(save.equipment, ItemManager.loadItem), _.map(save.inventory, ItemManager.loadItem), save.artifacts, _.map(save.skills, ItemManager.loadSkill), save.talent, save.experience);
+    let m = new StatModel(save.name, save.title, save.level, save.cosmetics, _.map(save.equipment, ItemManager.loadItem), _.map(save.inventory, ItemManager.loadItem), save.artifacts, _.map(save.skills, ItemManager.loadSkill), ItemManager.loadSkill({slug: save.talent, level: 0}), save.experience);
     m.skillpoints = save.skillPoints || 0;
     m.skillTrees = save.skillTrees;
     return m;
@@ -35,7 +35,7 @@ export class StatModel {
 
   public skillpoints = 0;
   public skillTrees: SkillTreeSlug[];
-  public onUpdate = new JMEventListener<void>(false, true);
+  public onUpdate = new JMEventListener<StatModel>(false, true);
 
   private stats: StatBlock;
 
@@ -54,7 +54,7 @@ export class StatModel {
     public inventory?: IItem[],
     public artifacts?: any,
     public skills?: ISkill[],
-    public talent?: any,
+    public talent?: ISkill,
     public experience?: number,
   ) {
     this.stats = _.cloneDeep(dStatBlock);
@@ -66,6 +66,10 @@ export class StatModel {
 
     if (this.skills) {
       this.skills.forEach(skill => this.addSkill(skill));
+    }
+
+    if (this.talent) {
+      this.addSkill(talent, true);
     }
   }
 
@@ -138,7 +142,7 @@ export class StatModel {
     }
 
     if (publish) {
-      this.onUpdate.publish();
+      this.onUpdate.publish(this);
     }
   }
 
@@ -212,7 +216,7 @@ export class StatModel {
     }
 
     if (publish) {
-      this.onUpdate.publish();
+      this.onUpdate.publish(this);
     }
   }
 
@@ -255,7 +259,7 @@ export class StatModel {
     return m;
   }
 
-  public getPower(tags?: StatTag[], misc?: number) {
+  public getPower(tags?: StatTag[], misc?: number, distance?: number) {
     let power = this.stats.power;
 
     let itemPower = 100;
@@ -290,12 +294,25 @@ export class StatModel {
       miscPower += misc;
     }
 
+    if (distance) {
+      if (distance === 1) {
+        if (power.tags.Near) {
+          miscPower += power.tags.Near.base;
+          miscMult += power.tags.Near.mult;
+        }
+      } else {
+        if (power.tags.Far) {
+          miscPower += power.tags.Far.base;
+          miscMult += power.tags.Far.mult;
+        }
+      }
+    }
+
     itemPower *= itemMult;
     actionPower *= actionMult;
     effectPower *= effectMult;
     miscPower *= miscMult;
 
-    console.log('power!', itemPower, actionPower, effectPower, miscPower);
     return itemPower * actionPower * effectPower * miscPower / 100000000;
   }
 
@@ -309,7 +326,7 @@ export class StatModel {
       title: this.title,
       level: this.level,
       cosmetics: this.cosmetics,
-      talent: this.talent,
+      talent: this.talent.slug as TalentSlug,
       equipment: _.map(this.equipment, ItemManager.saveItem),
       artifacts: this.artifacts,
       skills: _.map(this.skills, ItemManager.saveSkill),
@@ -343,6 +360,10 @@ export class StatModel {
     return this.actions.getListAtDistance(distance);
   }
 
+  public getStrikeActions() {
+    return this.actions.getStrikeActions();
+  }
+
   public addStatMap(stats: StatMap) {
     if (stats) {
       stats.forEach(stat => {
@@ -361,12 +382,12 @@ export class StatModel {
 
   public addAction = (action: IAction) => {
     this.actions.addAction(action);
-    this.onUpdate.publish();
+    this.onUpdate.publish(this);
   }
 
   public removeAction = (action: IAction) => {
     this.actions.removeAction(action);
-    this.onUpdate.publish();
+    this.onUpdate.publish(this);
   }
 
   public equipItem = (item: IItem, slot: number) => {
@@ -411,16 +432,18 @@ export class StatModel {
     this.inventory[slot] = null;
   }
 
-  public addSkill = (skill: ISkill) => {
+  public addSkill = (skill: ISkill, unsaved?: boolean) => {
     if (!skill) return;
 
-    let index = _.findIndex(this.skills, {slug: skill.slug});
-    if (index > -1) {
-      if (this.skills[index] !== skill) {
-        this.skills[index] = skill;
+    if (!unsaved) {
+      let index = _.findIndex(this.skills, {slug: skill.slug});
+      if (index > -1) {
+        if (this.skills[index] !== skill) {
+          this.skills[index] = skill;
+        }
+      } else {
+        this.skills.push(skill);
       }
-    } else {
-      this.skills.push(skill);
     }
 
     if (skill.action) {
@@ -450,7 +473,8 @@ export class StatModel {
 
   public tryLevelSkill = (skill: ISkill): ISkill => {
     if (this.skillpoints <= 0) return skill;
-    if (skill.level >= 10) return skill;
+    let maxLevel = (this.talent.slug === 'Noble' ? 7 : 10);
+    if (skill.level >= maxLevel) return skill;
 
     let prereq = _.find(SkillPrerequisiteMap, pre => pre[0] === skill.slug);
     if (prereq && !_.some(this.skills, {slug: prereq[1]})) {
@@ -467,7 +491,42 @@ export class StatModel {
     }
     this.addSkill(newSkill);
 
+    let tree = SkillPageMap.find(data => data.skills.map(data2 => data2.slug).includes(skill.slug));
+    let passiveSlug = tree.passive;
+
+    let passive = this.skills.find(data => data.slug === passiveSlug);
+    if (passive) {
+      let newPassive = DataConverter.getSkill(passiveSlug, passive.level + 1);
+      this.subSkill(passive);
+      this.addSkill(newPassive);
+    } else {
+      this.addSkill(DataConverter.getSkill(passiveSlug, 1));
+    }
+
     return newSkill;
+  }
+
+  public respecSkills = () => {
+    while (this.skills.length > 0) {
+      let skill = this.skills[0];
+      this.subSkill(skill);
+      let raw = SkillList.find(data => data.slug === skill.slug);
+      if (!raw.passive && !raw.talent) {
+        this.skillpoints += skill.level;
+      }
+    }
+  }
+
+  public getTotalSkillLevel = () => {
+    let levels = 0;
+    this.skills.forEach(skill => {
+      let raw = SkillList.find(data => data.slug === skill.slug);
+      if (!raw.passive && !raw.talent) {
+        levels += skill.level;
+      }
+    });
+
+    return levels;
   }
 
   public addTrigger = (trigger: IEffect) => {
@@ -478,11 +537,27 @@ export class StatModel {
     _.pull(this.triggers, trigger);
   }
 
-  public getTriggersFor = (event: EffectTrigger, tags?: StatTag[]) => {
-    let m = _.filter(this.triggers, {trigger: event});
-    if (tags && tags.length > 0) {
-      m = _.filter(m, effect => !effect.triggerTags || effect.triggerTags.length === 0 || _.some(effect.triggerTags, tag => _.includes(tags, tag)));
+  public getTriggersFor = (event: EffectTrigger | EffectTrigger[], tags?: StatTag[]) => {
+    let m: IEffect[];
+    if (Array.isArray(event)) {
+      m = this.triggers.filter(effect => event.includes(effect.trigger));
+    } else {
+      m = this.triggers.filter(effect => effect.trigger === event);
     }
+
+    m = m.filter(effect => {
+      if (!effect.triggerTags || effect.triggerTags.length === 0) {
+        return true;
+      }
+      if (tags && tags.length > 0) {
+        for (let i = 0; i < tags.length; i++) {
+          if (effect.triggerTags.includes(tags[i])) {
+            return true;
+          }
+        }
+      }
+      return false;
+    });
 
     return m;
   }

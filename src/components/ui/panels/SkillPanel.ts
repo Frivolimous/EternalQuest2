@@ -27,11 +27,11 @@ export class SkillPanel extends BasePanel {
     this.tree = new SkillTree();
     this.addChild(this.tree);
 
-    this.skillpoints = new PIXI.Text('Skillpoints: ', {fontSize: 12, fontFamily: Fonts.UI});
+    this.skillpoints = new PIXI.Text('Skillpoints: ', {fontSize: 15, fontFamily: Fonts.UI});
     this.addChild(this.skillpoints);
 
     this.tree.position.set((this.getWidth() - this.tree.getWidth()) / 2, 50);
-    this.skillpoints.position.set(100, 303);
+    this.skillpoints.position.set(130, 295);
   }
 
   public addRespec(onRespec: (value: number, onSuccess: () => void) => void) {
@@ -40,8 +40,8 @@ export class SkillPanel extends BasePanel {
     this.respecT = new PIXI.Text('1000g', {fontFamily: Fonts.UI, fontSize: 18});
     this.addChild(this.respecB, this.respecT);
 
-    this.respecB.position.set(100, 330);
-    this.respecT.position.set(170, 330);
+    this.respecB.position.set(130, 330);
+    this.respecT.position.set(190, 330);
   }
 
   public addPlayer = (sprite: SpriteModel | StatModel) => {

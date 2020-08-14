@@ -21,6 +21,7 @@ export class Debug {
     virtualSave.Players.aewfinwgo.inventory.push({slug: 'Statue', level: 5, enchant: ['Vampiric']});
     virtualSave.Players.aewfinwgo.inventory.push({slug: 'Greatsword', level: 5, enchant: ['Vampiric']});
     virtualSave.Players.aewfinwgo.inventory.push({slug: 'Magic Bolt', level: 5});
+    virtualSave.Players.aewfinwgo.inventory.push({slug: 'Darts', level: 5, charges: 5});
     // for (let i = 0; i < 5; i++) {
     //   virtualSave.Players.aewfinwgo.inventory.push({slug: 'Trophy', level: i});
     // }

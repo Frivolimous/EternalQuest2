@@ -6,6 +6,7 @@ import { StatTag } from '../../data/StatData';
 import { IItem } from '../../data/ItemData';
 import { StateButton } from '../ui/StateButton';
 import { Fonts } from '../../data/Fonts';
+import { ItemManager } from '../../services/ItemManager';
 
 export const ItemDragEvent = new JMEventListener<IItemDragEvent>();
 const inventoryDisplays: InventoryDisplay[] = [];
@@ -19,35 +20,46 @@ ItemDragEvent.addListener((e: IItemDragEvent) => {
       }
     }
   } else if (e.type === 'start') {
-    for (let i = 0; i < inventoryDisplays.length; i++) {
-      if (inventoryDisplays[i].allowedRemove(e.item)) {
-        e.callback({allow: true});
-        return;
-      }
-    }
-    e.callback({allow: false});
+    e.callback({allow: true});
     return;
   } else if (e.type === 'end') {
     let oldItem = e.item;
     for (let i = 0; i < inventoryDisplays.length; i++) {
+      if (inventoryDisplays[i].hasItem(e.item) && !inventoryDisplays[i].allowedRemove(e.item)) {
+        if (inventoryDisplays[i].hasItem(e.item)) {
+          inventoryDisplays[i].returnItem(e.item);
+        }
+        e.callback({allow: false});
+        return;
+      }
+    }
+    for (let i = 0; i < inventoryDisplays.length; i++) {
       let newDisplay = inventoryDisplays[i];
+      if (!newDisplay.visible || !newDisplay.parent.visible) {
+        continue;
+      }
 
       if (newDisplay.itemLocOverThis(oldItem)) {
         let newIndex = newDisplay.getIndexByItemLoc(oldItem);
-        if (newDisplay.allowedAdd(oldItem, newIndex)) {
+        if (newDisplay.allowedAdd(oldItem, newIndex, false)) {
           let newItem = newDisplay.getItemAt(newIndex);
           if (newItem) {
             let oldDisplay = oldItem.currentInventory;
             let oldIndex = oldDisplay.getItemIndex(oldItem);
-            if (oldDisplay.allowedAdd(newItem, oldIndex)) {
+            if (oldDisplay.allowedAdd(newItem, oldIndex, true)) {
               newDisplay.removeItem(newItem);
               oldDisplay.removeItem(oldItem);
               newDisplay.addItemAt(oldItem, newIndex);
               oldDisplay.addItemAt(newItem, oldIndex);
               e.callback({allow: true});
               return;
+            } else if (newDisplay.roomToAdd()) {
+              newDisplay.removeItem(newItem);
+              oldDisplay.removeItem(oldItem);
+              newDisplay.addItemAt(oldItem, newIndex);
+              newDisplay.addItem(newItem);
             } else {
-              let overflow = oldDisplay.overflow;
+              let overflow = newDisplay.overflow;
               if (overflow && overflow.roomToAdd()) {
                 newDisplay.removeItem(newItem);
                 oldDisplay.removeItem(oldItem);
@@ -126,6 +138,9 @@ export class InventoryDisplay extends PIXI.Container {
   public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
   public onItemSelect: (item: IItem, type: 'select' | 'unselect' | 'double') => void;
 
+  public customAllowedAdd: (item: InventoryItem, slot: number, onReturn: boolean) => boolean;
+  public customAllowedRemove: (item: InventoryItem, slot?: number) => boolean;
+
   public slot0Index: number = 0;
   public selectable: boolean;
 
@@ -147,6 +162,11 @@ export class InventoryDisplay extends PIXI.Container {
     this.addChild(this.background, this.foreground);
     inventoryDisplays.push(this);
     this.drawSquares();
+  }
+
+  public destroy() {
+    _.pull(inventoryDisplays, this);
+    super.destroy();
   }
 
   public disableSlot(i: number) {
@@ -171,11 +191,6 @@ export class InventoryDisplay extends PIXI.Container {
         this.items[i] = null;
       }
     }
-  }
-
-  public destroy() {
-    _.pull(inventoryDisplays, this);
-    super.destroy();
   }
 
   public addRequirement(index: number | 'all', req: IInventoryRequirements) {
@@ -203,14 +218,25 @@ export class InventoryDisplay extends PIXI.Container {
         break;
       }
     }
-    let loc = this.getLocByIndex(i);
-    this.items[i] = item;
-    item.currentInventory = this;
-    item.position.set(loc.x, loc.y);
-    item.width = this.settings.width;
-    item.height = this.settings.height;
-    if (this.onItemAdded) {
-      this.onItemAdded(item.source, this.slot0Index + i);
+
+    if (i >= this.length && this.items.length >= this.length) {
+      if (this.overflow) {
+        if (this.overflow === this) {
+          ItemManager.addOverflow(item.source);
+        } else {
+          this.overflow.addItem(item);
+        }
+      }
+    } else {
+      let loc = this.getLocByIndex(i);
+      this.items[i] = item;
+      item.currentInventory = this;
+      item.position.set(loc.x, loc.y);
+      item.width = this.settings.width;
+      item.height = this.settings.height;
+      if (this.onItemAdded) {
+        this.onItemAdded(item.source, this.slot0Index + i);
+      }
     }
   }
 
@@ -244,10 +270,12 @@ export class InventoryDisplay extends PIXI.Container {
   }
 
   public returnItem = (item: InventoryItem) => {
-    this.addChild(item);
-    let index = _.indexOf(this.items, item);
-    let loc = this.getLocByIndex(index);
-    item.position.set(loc.x, loc.y);
+    if (item && item.parent) {
+      this.addChild(item);
+      let index = _.indexOf(this.items, item);
+      let loc = this.getLocByIndex(index);
+      item.position.set(loc.x, loc.y);
+    }
   }
 
   public removeItem = (item: InventoryItem) => {
@@ -287,9 +315,41 @@ export class InventoryDisplay extends PIXI.Container {
     return this.settings.height * this.settings.down + this.settings.padding * (this.settings.down - 1);
   }
 
+  public allowedAdd = (item: InventoryItem, index: number, onReturn: boolean) => {
+    if (!index && index !== 0) {
+      let loc = this.toLocal(item.position, item.parent);
+      index = this.getIndexByLoc(loc);
+    }
+    if (index < 0 || index >= this.length) {
+      return false;
+    }
+
+    if (this.disabled[index]) {
+      return false;
+    }
+
+    if (this.requirements[index]) {
+      if (this.requirements[index].never) {
+        return false;
+      }
+      if (this.requirements[index].relic) {
+        if (item.source.tags.indexOf('Relic') >= 0) {
+          if (this.items.filter(item2 => (item2 && item2.source.tags.indexOf('Relic') >= 0)).length > 0) {
+            return false;
+          }
+        }
+      }
+      if (this.requirements[index].tags.some(rtag => !item.source.tags.includes(rtag))) {
+        return false;
+      }
+    }
+
+    return !this.customAllowedAdd || this.customAllowedAdd(item, index, onReturn);
+  }
+
   public allowedRemove = (item: InventoryItem) => {
     if (_.includes(this.items, item)) {
-      return true;
+      return !this.customAllowedRemove || this.customAllowedRemove(item);
     } else {
       return false;
     }
@@ -323,39 +383,12 @@ export class InventoryDisplay extends PIXI.Container {
     return this.getIndexByLoc(loc);
   }
 
-  public allowedAdd = (item: InventoryItem, index?: number) => {
-    let loc = this.toLocal(item.position, item.parent);
-    if (!index && index !== 0) {
-      index = this.getIndexByLoc(loc);
-    }
-    if (index >= 0 && index < this.length) {
-      if (this.disabled[index]) {
-        return false;
-      }
-      if (this.requirements[index]) {
-        if (this.requirements[index].never) {
-          return false;
-        }
-        if (this.requirements[index].relic) {
-          if (item.source.tags.indexOf('Relic') >= 0) {
-            if (this.items.filter(item2 => (item2 && item2.source.tags.indexOf('Relic') >= 0)).length > 0) {
-              return false;
-            }
-          }
-        }
-        if (this.requirements[index].tags.some(rtag => !item.source.tags.includes(rtag))) {
-          return false;
-        } else {
-          return true;
-        }
-      } else {
-        return true;
-      }
-    }
-  }
-
   public hasItem(item: InventoryItem) {
     return _.includes(this.items, item);
+  }
+
+  public getFillableItems() {
+    return this.items.filter(item => (item && item.source.maxCharges && item.source.charges < item.source.maxCharges));
   }
 
   public unselectAll = (except?: IItem) => {

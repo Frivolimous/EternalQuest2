@@ -1,15 +1,15 @@
-import { IItemSave } from './ItemData';
+import { IItemSave, ItemSlug } from './ItemData';
 import { ISkillSave, SkillTreeSlug, TalentSlug } from './SkillData';
+import { EnemySetId, ZoneId } from './EnemyData';
+
+export type CurrencySlug = 'gold' | 'tokens' | 'refresh' | 'suns' | 'souls';
 
 export interface IExtrinsicModel {
   achievements?: boolean[];
   flags?: boolean[];
   scores?: number[];
 
-  currency: {
-    gold: number;
-    tokens: number;
-  };
+  currency: {[key in CurrencySlug]?: number};
 
   firstVersion?: number;
   logins?: number;
@@ -23,6 +23,10 @@ export interface IExtrinsicModel {
   sharedStash?: IItemSave[][];
   overflowStash?: IItemSave[];
 
+  storeItems: {
+    gamble?: ItemSlug[];
+  };
+
   skillTrees?: number[];
 }
 
@@ -31,7 +35,11 @@ export const dExtrinsicModel: IExtrinsicModel = {
   currency: {
     gold: 0,
     tokens: 0,
+    refresh: 0,
+    suns: 0,
+    souls: 0,
   },
+  storeItems: {},
 };
 
 export interface IPlayerSave {
@@ -53,8 +61,8 @@ export interface IPlayerSave {
 export interface IPlayerLevelSave {
   ascendedZone?: number;
   zone?: number;
-  zoneType?: number;
-  monsterType?: number;
+  zoneType?: ZoneId;
+  monsterType?: EnemySetId;
   enemyCount?: number;
   highestChallenge?: number[];
   flags?: boolean[];

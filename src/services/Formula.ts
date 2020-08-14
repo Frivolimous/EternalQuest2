@@ -1,5 +1,7 @@
 import * as _ from 'lodash';
 import { StatMapLevel, StatMap, LevelValue, StatTag, DamageTags, DamageTag } from '../data/StatData';
+import { RandomSeed } from './RandomSeed';
+import { IItem } from '../data/ItemData';
 
 export const Formula = {
   diminish(a: number, level: number): number {
@@ -22,6 +24,45 @@ export const Formula = {
 
   experiencePerMonster(zone: number): number {
     return Math.floor(Math.pow(zone, 0.77));
+  },
+
+  itemLevelByZone(zone: number, trade?: boolean): number {
+    let m = zone / 10 - 0.3 + RandomSeed.general.getRaw() * 0.6;
+
+    if (trade) {
+      if (m > 15) {
+        m = Math.round(15 + (m - 15) * 0.3);
+      }
+    } else {
+      m = Math.max(Math.min(Math.round(m), 15), 1);
+    }
+
+    return m;
+  },
+
+  costToFill(item: IItem) {
+    return 5 * (item.maxCharges - item.charges);
+  },
+
+  costToUpgrade(item: IItem) {
+    let value = item.cost * (item.level + 1) * 3.5;
+    if (item.level > 15) value *= (item.level - 15);
+
+    return value;
+  },
+
+  costToGamble(item: IItem, level: number) {
+    let value = (item.cost * (1 + level / 5) + 100) * level * 4;
+
+    // if (item.maxCharges) {
+    //   value *= 5;
+    // }
+
+    return value;
+  },
+
+  incrementRefreshes(current: number) {
+    return Math.min(current + 0.3, 5);
   },
 
   getRespecValue(skills: number) {

@@ -45,13 +45,14 @@ export class SkillPage extends PIXI.Container {
     this.passiveIcon = new SkillIcon(_.find(sources, {slug: pageSettings.passive}) || DataConverter.getSkill(pageSettings.passive, 0), { position: -9 });
     this.addChild(this.background);
 
-    this.background.beginFill(settings. bgColor).drawRoundedRect(0, 0, settings.width, settings.height, 4);
+    this.background.beginFill(settings. bgColor).drawRoundedRect(-padding, -padding, settings.width + padding * 2, settings.height + padding * 2, 4);
     this.icons.forEach(icon => {
       this.addChild(icon);
       this.positionSkill(icon);
     });
     this.addChild(this.passiveIcon);
-    this.positionSkill(this.passiveIcon);
+    this.passiveIcon.position.set(0, this.settings.height + 10);
+    // this.positionSkill(this.passiveIcon);
 
     pageSettings.skills.forEach(set => {
       let pre = _.find(SkillPrerequisiteMap, v => v[0] === set.slug);
@@ -67,7 +68,7 @@ export class SkillPage extends PIXI.Container {
 
     this.title = new PIXI.Text(pageSettings.slug, {fontSize: 20, fontFamily: Fonts.UI});
     this.addChild(this.title);
-    this.title.position.set((settings.width - this.title.width) / 2, -this.title.height - 2);
+    this.title.position.set((settings.width - this.title.width) / 2, -this.title.height - padding * 2);
   }
 
   public setMaxLevel(n: number) {

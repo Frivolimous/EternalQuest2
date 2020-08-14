@@ -5,24 +5,24 @@ import { BaseUI } from './_BaseUI';
 import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { Button } from '../components/ui/Button';
-import { IPlayerSave } from '../data/SaveData';
+import { IPlayerSave, CurrencySlug } from '../data/SaveData';
 import { SaveManager } from '../services/SaveManager';
 import { SelectList } from '../components/ui/SelectButton';
-import { StatsPanel } from '../components/ui/panels/StatsPanel';
 import { StatModel } from '../engine/stats/StatModel';
 import { InventoryPanelMenu } from '../components/ui/panels/InventoryPanelMenu';
-import { SkillPanel } from '../components/ui/panels/SkillPanel';
-import { InventoryPanelStash } from '../components/ui/panels/InventoryPanelStash';
-import { ActionPanel } from '../components/ui/panels/ActionPanel';
+import { InventoryPanelStore } from '../components/ui/panels/InventoryPanelStore';
 import { OptionModal } from '../components/ui/modals/OptionModal';
-import { IItem } from '../data/ItemData';
+import { IItem, BasicStore } from '../data/ItemData';
 import { CurrencyPanel } from '../components/ui/panels/CurrencyPanel';
 import { JMTicker } from '../JMGE/events/JMTicker';
 import { StoreManager, IPurchaseResult } from '../services/StoreManager';
-import { BaseModal } from '../components/ui/modals/_BaseModal';
 import { SimpleModal } from '../components/ui/modals/SimpleModal';
+import { Formula } from '../services/Formula';
+import { InventoryPanelBlack } from '../components/ui/panels/InventoryPanelBlack';
+import { InventoryPanelStash } from '../components/ui/panels/InventoryPanelStash';
+import { ItemManager } from '../services/ItemManager';
 
-export class StatisticsUI extends BaseUI {
+export class StoreUI extends BaseUI {
   public selectLeft: SelectList;
   public selectRight: SelectList;
 
@@ -34,17 +34,20 @@ export class StatisticsUI extends BaseUI {
   private save: IPlayerSave;
   private model: StatModel;
 
-  private statsPanel: StatsPanel;
-  private stashPanel: InventoryPanelStash;
-  private actionPanel: ActionPanel;
+  private storePanel: InventoryPanelStore;
+  private blackPanel: InventoryPanelBlack;
+  // private actionPanel: ActionPanel;
 
   private inventoryPanel: InventoryPanelMenu;
-  private skillPanel: SkillPanel;
+  private stashPanel: InventoryPanelStash;
+  // private skillPanel: SkillPanel;
   private currencyPanel: CurrencyPanel;
+
+  private refreshTokenUsed: boolean;
 
   constructor() {
     super({bgColor: 0x777777});
-    this.title = new PIXI.Text('Statistics', { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
+    this.title = new PIXI.Text('Store', { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
     this.backB = new Button({ width: 100, height: 30, label: 'Back', onClick: this.navMenu });
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
@@ -56,59 +59,111 @@ export class StatisticsUI extends BaseUI {
     this.selectRight = new SelectList({ width: 90, height: 30}, this.switchRight);
 
     let button: Button;
-    button = this.selectLeft.makeButton('Stats');
+    button = this.selectLeft.makeButton('Gold Store');
     this.addChild(button);
-    button = this.selectLeft.makeButton('Actions');
+    button = this.selectLeft.makeButton('Black Market');
     this.addChild(button);
-    button = this.selectLeft.makeButton('Stash');
-    this.addChild(button);
+    // button = this.selectLeft.makeButton('Actions');
+    // this.addChild(button);
     button = this.selectRight.makeButton('Inventory');
     this.addChild(button);
-    button = this.selectRight.makeButton('Skills');
+    button = this.selectRight.makeButton('Stash');
     this.addChild(button);
-    button = this.selectRight.makeButton('Cosmetics');
-    this.addChild(button);
+    // button = this.selectRight.makeButton('Cosmetics');
+    // this.addChild(button);
 
-    this.statsPanel = new StatsPanel(new PIXI.Rectangle(0, 0, 300, 500));
-    this.leftPanel.addChild(this.statsPanel);
-    this.stashPanel = new InventoryPanelStash(new PIXI.Rectangle(0, 0, 300, 500));
-    this.leftPanel.addChild(this.stashPanel);
-    this.actionPanel = new ActionPanel(new PIXI.Rectangle(0, 0, 300, 500));
-    this.leftPanel.addChild(this.actionPanel);
+    this.storePanel = new InventoryPanelStore(new PIXI.Rectangle(0, 0, 300, 500));
+    this.leftPanel.addChild(this.storePanel);
+    this.blackPanel = new InventoryPanelBlack(new PIXI.Rectangle(0, 0, 300, 500));
+    this.leftPanel.addChild(this.blackPanel);
+    // this.actionPanel = new ActionPanel(new PIXI.Rectangle(0, 0, 300, 500));
+    // this.leftPanel.addChild(this.actionPanel);
 
     this.inventoryPanel = new InventoryPanelMenu(new PIXI.Rectangle(0, 0, 300, 500));
     this.rightPanel.addChild(this.inventoryPanel);
-    this.skillPanel = new SkillPanel(new PIXI.Rectangle(0, 0, 300, 500));
-    this.skillPanel.addRespec(this.attemptRespec);
-    this.rightPanel.addChild(this.skillPanel);
+    this.stashPanel = new InventoryPanelStash(new PIXI.Rectangle(0, 0, 300, 500));
+    this.rightPanel.addChild(this.stashPanel);
+    // this.skillPanel = new SkillPanel(new PIXI.Rectangle(0, 0, 300, 500));
+    // this.skillPanel.addRespec(this.attemptRespec);
 
     this.selectLeft.selectButton(0);
     this.selectRight.selectButton(0);
 
-    this.getPlayer();
-
-    this.stashPanel.onItemSell = this.sellItem; // very deep callback, goes through like 5 layers
     this.inventoryPanel.onItemSell = this.sellItem; // very deep callback, goes through like 5 layers
+    this.stashPanel.onItemSell = this.sellItem;
+    this.storePanel.onItemSell = this.sellItem;
+
+    this.storePanel.addToInventory = this.inventoryPanel.addInventoryItem;
+    this.blackPanel.addToInventory = this.inventoryPanel.addInventoryItem;
+
+    this.storePanel.canAfford = this.canAfford;
+    this.blackPanel.canAfford = this.canAfford;
+
+    this.storePanel.addSlugArray(BasicStore, Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
+    this.storePanel.fillAllItems = this.fillAllItems;
+
+    let blackArray = SaveManager.getExtrinsic().storeItems.gamble;
+    if (blackArray) {
+      this.blackPanel.addSlugArray(blackArray,  Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
+      this.setRefreshText();
+    } else {
+      this.finishRefreshGamble();
+    }
+
+    this.blackPanel.removeGamble = this.removeGamble;
+    this.blackPanel.refreshGamble = this.refreshGamble;
+
+    this.getPlayer();
   }
 
   public destroy() {
     super.destroy();
-    this.statsPanel.destroy();
-    this.stashPanel.destroy();
+    this.storePanel.destroy();
+    this.blackPanel.destroy();
     this.inventoryPanel.destroy();
-    this.skillPanel.destroy();
+    // this.skillPanel.destroy();
     this.currencyPanel.destroy();
+    this.stashPanel.destroy();
     this.model.onUpdate.removeListener(this.updateStats);
+  }
+
+  public removeGamble = (item: IItem, slot: number) => {
+    SaveManager.getExtrinsic().storeItems.gamble[slot] = null;
+  }
+
+  public refreshGamble = () => {
+    if (SaveManager.getExtrinsic().currency.refresh >= 1) {
+      SaveManager.getExtrinsic().currency.refresh--;
+      this.finishRefreshGamble();
+    } else {
+      if (!this.refreshTokenUsed) {
+        this.addDialogueWindow(new OptionModal('Use 1 Power Token to refresh the store slots?', [{ label: 'Yes', onClick: () => (this.refreshTokenUsed = true, this.refreshGamble()), color: 0x66ff66}, { label: 'No', color: 0xff6666 }]));
+      } else {
+        this.canAfford(1, this.finishRefreshGamble, 'tokens');
+      }
+    }
+  }
+
+  public finishRefreshGamble = () => {
+    let blackArray = ItemManager.makeGambleArray();
+    SaveManager.getExtrinsic().storeItems.gamble = blackArray;
+    this.blackPanel.addSlugArray(blackArray,  Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
+    this.setRefreshText();
+  }
+
+  public setRefreshText() {
+    let refreshes = SaveManager.getExtrinsic().currency.refresh;
+    this.blackPanel.setRefreshText(refreshes);
   }
 
   public getPlayer() {
     this.save = SaveManager.getCurrentPlayer();
     this.model = StatModel.fromSave(this.save);
-    this.statsPanel.changeSource(this.model);
-    this.actionPanel.changeSource(this.model);
+    // this.storeP.changeSource(this.model);
+    // this.actionPanel.changeSource(this.model);
     this.inventoryPanel.addPlayer(this.model);
     this.stashPanel.addPlayer(this.save);
-    this.skillPanel.addPlayer(this.model);
+    // this.skillPanel.addPlayer(this.model);
 
     this.model.onUpdate.addListener(this.updateStats);
   }
@@ -118,14 +173,15 @@ export class StatisticsUI extends BaseUI {
   }
 
   public switchLeft = (i: number) => {
-    this.statsPanel.visible = i === 0;
-    this.actionPanel.visible = i === 1;
-    this.stashPanel.visible = i === 2;
+    this.storePanel.visible = i === 0;
+    this.blackPanel.visible = i === 1;
+    // this.stashPanel.visible = i === 2;
   }
 
   public switchRight = (i: number) => {
     this.inventoryPanel.visible = i === 0;
-    this.skillPanel.visible = i === 1;
+    this.stashPanel.visible = i === 1;
+    // this.skillPanel.visible = i === 1;
   }
 
   public positionElements = (e: IResizeEvent) => {
@@ -164,16 +220,25 @@ export class StatisticsUI extends BaseUI {
 
   private updateCurrency = () => {
     this.currencyPanel.update(SaveManager.getExtrinsic());
+    this.storePanel.setFillAmount(this.inventoryPanel.getFillableCost());
   }
 
-  private attemptRespec = (value: number, onSuccess: () => void) => {
-    StoreManager.purchaseAttempt(value, 'gold', (result: IPurchaseResult) => {
+  private fillAllItems = () => {
+    let value = this.inventoryPanel.getFillableCost();
+
+    this.canAfford(value, () => {
+      this.inventoryPanel.fillAllItems();
+    });
+  }
+
+  private canAfford = (value: number, onSuccess: () => void, currency: CurrencySlug = 'gold') => {
+    StoreManager.purchaseAttempt(value, currency, (result: IPurchaseResult) => {
       if (result.success) {
         onSuccess();
       } else if (result.confirmation) {
         this.addDialogueWindow(new OptionModal(result.message || 'Proceed with purchase?', [{ label: 'Yes', onClick: result.confirmation, color: 0x66ff66}, { label: 'No', color: 0xff6666 }]));
       } else {
-        this.addDialogueWindow(new SimpleModal(result.message || 'Not enough gold'));
+        this.addDialogueWindow(new SimpleModal(result.message || 'Not enough ' + currency));
       }
     });
   }

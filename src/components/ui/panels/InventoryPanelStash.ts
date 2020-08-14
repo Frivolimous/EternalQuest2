@@ -13,6 +13,7 @@ import { IPlayerSave } from '../../../data/SaveData';
 import { SaveManager } from '../../../services/SaveManager';
 import { Button } from '../Button';
 import { SelectList } from '../SelectButton';
+import { Fonts } from '../../../data/Fonts';
 
 export class InventoryPanelStash extends BasePanel {
   public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
@@ -20,39 +21,61 @@ export class InventoryPanelStash extends BasePanel {
 
   private save: IPlayerSave;
   private list: SelectList;
-  private current: number | 'personal' | 'overflow';
+  private current: number | 'p' | 'o';
+  private title: PIXI.Text;
 
   constructor(bounds: PIXI.Rectangle = new PIXI.Rectangle(0, 0, 300, 500), color: number = 0xf1f1f1) {
     super(bounds, color);
 
+    this.title = new PIXI.Text('Personal', {fontFamily: Fonts.UI, fontSize: 16});
+
     this.inventory = new InventoryDisplay({ width: 50, height: 50, across: 5, down: 6, padding: 5 });
     this.inventory.overflow = this.inventory;
     this.addChild(this.inventory);
-    this.inventory.position.set(10, 10);
     this.inventory.onItemAdded = this.addItem;
     this.inventory.onItemRemoved = this.removeItem;
 
     this.list = new SelectList({width: 50, height: 30}, this.switchPage);
 
-    this.addChild(this.list.makeButton('Personal', {width: 100}));
-    this.addChild(this.list.makeButton('1'));
-    this.addChild(this.list.makeButton('2'));
-    this.addChild(this.list.makeButton('3'));
-    this.addChild(this.list.makeButton('4'));
-    this.addChild(this.list.makeButton('5'));
-    this.addChild(this.list.makeButton('Overflow', {width: 100}));
+    this.addChild(this.title,
+      this.list.makeButton('Personal', {width: 100}),
+      this.list.makeButton('1'),
+      this.list.makeButton('2'),
+      this.list.makeButton('3'),
+      this.list.makeButton('4'),
+      this.list.makeButton('5'),
+      this.list.makeButton('6'),
+      this.list.makeButton('7'),
+      this.list.makeButton('8'),
+      this.list.makeButton('9'),
+      this.list.makeButton('10'),
+      this.list.makeButton('Overflow', {width: 100}),
+    );
 
-    this.list.buttons[0].position.set(10, 350);
-    this.list.buttons[1].position.set(10, 390);
-    this.list.buttons[2].position.set(65, 390);
-    this.list.buttons[3].position.set(120, 390);
-    this.list.buttons[4].position.set(175, 390);
-    this.list.buttons[5].position.set(230, 390);
-    this.list.buttons[6].position.set(180, 350);
+    this.title.position.set(30, 7);
+    this.inventory.position.set(10, 40);
+    this.list.buttons[0].position.set(10, 380);
+    this.list.buttons[11].position.set(180, 380);
+
+    this.list.buttons[1].position.set(10, 420);
+    this.list.buttons[2].position.set(65, 420);
+    this.list.buttons[3].position.set(120, 420);
+    this.list.buttons[4].position.set(175, 420);
+    this.list.buttons[5].position.set(230, 420);
+    this.list.buttons[6].position.set(10, 460);
+    this.list.buttons[7].position.set(65, 460);
+    this.list.buttons[8].position.set(120, 460);
+    this.list.buttons[9].position.set(175, 460);
+    this.list.buttons[10].position.set(230, 460);
 
     this.list.selectButton(0);
 
     this.inventory.onItemSell = this.sellItem;
+  }
+
+  public destroy() {
+    this.inventory.destroy();
+    super.destroy();
   }
 
   public addPlayer = (sprite: IPlayerSave) => {
@@ -62,9 +85,9 @@ export class InventoryPanelStash extends BasePanel {
 
   public addItem = (item: IItem, slot: number) => {
     let save = ItemManager.saveItem(item);
-    if (this.current === 'personal') {
+    if (this.current === 'p') {
       SaveManager.getExtrinsic().playerStash[this.save.__id][slot] = save;
-    } else if (this.current === 'overflow') {
+    } else if (this.current === 'o') {
       SaveManager.getExtrinsic().overflowStash[slot] = save;
     } else {
       SaveManager.getExtrinsic().sharedStash[this.current][slot] = save;
@@ -72,9 +95,9 @@ export class InventoryPanelStash extends BasePanel {
   }
 
   public removeItem = (item: IItem, slot: number) => {
-    if (this.current === 'personal') {
+    if (this.current === 'p') {
       SaveManager.getExtrinsic().playerStash[this.save.__id][slot] = null;
-    } else if (this.current === 'overflow') {
+    } else if (this.current === 'o') {
       SaveManager.getExtrinsic().overflowStash[slot] = null;
     } else {
       SaveManager.getExtrinsic().sharedStash[this.current][slot] = null;
@@ -87,20 +110,23 @@ export class InventoryPanelStash extends BasePanel {
     this.inventory.clearRequirements();
 
     if (index === 0) {
-      this.current = 'personal';
+      this.current = 'p';
       if (this.save) {
         array = extrinsic.playerStash[this.save.__id];
       }
-    } else if (index === 6) {
-      this.current = 'overflow';
+      this.title.text = 'Personal';
+    } else if (index === 11) {
+      this.current = 'o';
       array = extrinsic.overflowStash;
       this.inventory.addRequirement('all', {never: true});
+      this.title.text = 'Overflow';
     } else {
       this.current = index - 1;
       array = extrinsic.sharedStash[this.current];
       if (!array) {
         extrinsic.sharedStash[this.current] = array = [];
       }
+      this.title.text = 'Shared Stash ' + String(index);
     }
 
     this.addSaveArray(array);
@@ -110,7 +136,7 @@ export class InventoryPanelStash extends BasePanel {
     let items = _.map(saves, save => ItemManager.loadItem(save));
 
     this.inventory.clear();
-    let n = Math.min(60, items.length);
+    let n = Math.min(30, items.length);
     for (let i = 0; i < n; i++) {
       if (items[i]) {
         this.inventory.addItemAt(new InventoryItem(items[i]), i);

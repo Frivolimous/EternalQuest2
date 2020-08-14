@@ -8,6 +8,7 @@ import { Button } from '../ui/Button';
 export class SkillTree extends PIXI.Container {
   private pages: SkillPage[] = [];
   private currentPage: number;
+  private indicators: PIXI.Graphics[] = [];
 
   constructor() {
     super();
@@ -24,6 +25,7 @@ export class SkillTree extends PIXI.Container {
       this.removeChild(this.pages[this.currentPage]);
       this.currentPage = (this.currentPage + 1) % this.pages.length;
       this.addChild(this.pages[this.currentPage]);
+      this.indicators.forEach((g, i) => g.tint = (i === this.currentPage ? 0x333333 : 0xffffff));
     }, false);
 
     let leftArrow = this.makeArrowButton(() => {
@@ -33,17 +35,21 @@ export class SkillTree extends PIXI.Container {
         this.currentPage += this.pages.length;
       }
       this.addChild(this.pages[this.currentPage]);
+      this.indicators.forEach((g, i) => g.tint = (i === this.currentPage ? 0x333333 : 0xffffff));
     }, true);
 
     this.addChild(leftArrow, rightArrow);
 
-    leftArrow.position.set(0, 240);
-    rightArrow.position.set(160, 240);
+    leftArrow.position.set(0, 0);
+    rightArrow.position.set(180, 0);
   }
 
   public loadPages(skills: ISkill[], pages: ISkillPageMap[], callback: (skill: ISkill, passive?: boolean) => ISkill) {
     this.pages.forEach(page => page.destroy());
     this.pages = [];
+    while (this.indicators.length > 0) {
+      this.indicators.shift().destroy();
+    }
 
     let pageSettings = { width: 200, height: 200, bgColor: 0x333333, lineColor: 0xffffff };
 
@@ -54,6 +60,15 @@ export class SkillTree extends PIXI.Container {
     });
     this.addChild(this.pages[0]);
     this.currentPage = 0;
+    for (let i = 0; i < this.pages.length; i++) {
+      let indicator = this.makeIndicatorIcon();
+      this.addChild(indicator);
+      indicator.position.set(100 + 5 - (15 * this.pages.length / 2) + i * 15, -10);
+      this.indicators.push(indicator);
+    }
+    if (this.indicators.length > 0) {
+      this.indicators[0].tint = 0x333333;
+    }
   }
 
   public setMaxLevel(n: number) {
@@ -69,13 +84,20 @@ export class SkillTree extends PIXI.Container {
   }
 
   public makeArrowButton(callback: () => void, left?: boolean) {
-    let button = new Button({ width: 40, height: 40, onClick: callback, color: 0x333399 });
+    let size = 20;
+    let button = new Button({ width: size, height: size, onClick: callback, color: 0x333399 });
     if (left) {
-      button.startCustomDraw().moveTo(40, 0).lineTo(0, 20).lineTo(40, 40).lineTo(40, 0);
+      button.startCustomDraw().moveTo(size, 0).lineTo(0, size / 2).lineTo(size, size).lineTo(size, 0);
     } else {
-      button.startCustomDraw().moveTo(0, 0).lineTo(40, 20).lineTo(0, 40).lineTo(0, 0);
+      button.startCustomDraw().moveTo(0, 0).lineTo(size, size / 2).lineTo(0, size).lineTo(0, 0);
     }
 
     return button;
+  }
+
+  public makeIndicatorIcon() {
+    let graphic = new PIXI.Graphics();
+    graphic.beginFill(0xf1f1f1).lineStyle(2, 0x333333).drawCircle(0, 0, 5);
+    return graphic;
   }
 }

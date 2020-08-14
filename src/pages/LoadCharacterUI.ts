@@ -25,7 +25,7 @@ export class LoadCharacterUI extends BaseUI {
     super({bgColor: 0x777777});
     this.loadSelection = new SelectList({ width: 250, height: 60 }, this.selectCharacter, this.startDeleteCharacter);
     this.title = new PIXI.Text('Load Character', { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
-    this.backB = new Button({ width: 100, height: 30, label: 'Menu', onClick: this.navMenu });
+    this.backB = new Button({ width: 100, height: 30, label: 'Back', onClick: this.navMenu });
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel = new CharacterPanel(new PIXI.Rectangle(0, 0, 300, 500));
     this.addChild(this.title, this.leftPanel, this.rightPanel, this.backB);
@@ -77,10 +77,10 @@ export class LoadCharacterUI extends BaseUI {
       this.addDialogueWindow(new SimpleModal('You cannot delete your last character'));
     } else {
       this.addDialogueWindow(new OptionModal('Delete this character?', [
-        {label: 'Cancel', color: 0xcc0000, onClick: () => {}},
-        {label: 'Confirm', onClick: () => {
+        {label: 'Confirm', color: 0x55ff55, onClick: () => {
           SaveManager.deletePlayer(this.players[i].__id).then(this.loadCharacters);
         }},
+        {label: 'Cancel', color: 0xff5555},
       ]));
     }
   }

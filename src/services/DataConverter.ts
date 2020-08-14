@@ -9,6 +9,7 @@ import { AttackStat } from '../data/StatData';
 import { ISkill, ISkillRaw, SkillSlug, SkillList } from '../data/SkillData';
 import { EnemySlug, IEnemyRaw, IEnemy, EnemyList } from '../data/EnemyData';
 import { ItemManager } from './ItemManager';
+import { StringData } from '../data/StringData';
 
 export const DataConverter = {
   getItem: (slug: ItemSlug | IItemRaw, level: number, enchantSlug?: EnchantSlug | EnchantSlug[], charges?: number, scrollOf?: ItemSlug): IItem => {
@@ -71,40 +72,51 @@ export const DataConverter = {
       slug = raw.slug;
     }
 
-    if (!scrollOf) {
-      scrollOf = _.sample(ItemScrollSlugs);
-    }
-
-    let src = DataConverter.getItem(_.find(ItemList, {slug: scrollOf}), Math.floor(level * 1.25));
-
-    let m: IItem = {
-      name: src.slug + ' Scroll',
-      slug,
-      level,
-      tags: _.clone(raw.tags).concat(src.tags.filter(tag => tag !== 'Equipment')),
-      cost: src.cost * 0.5,
-      stats: src.stats,
-      action: src.action,
-      triggers: src.triggers,
-      maxCharges: raw.charges,
-      charges: raw.charges,
-    };
-
-    if (m.action) {
-      m.action.source = m;
-      m.action.costs.mana *= 0.5;
-    }
-
-    if (enchantSlug) {
-      if (_.isArray(enchantSlug)) {
-        enchantSlug.forEach(es => DataConverter.applyEnchantment(m, es));
-      } else {
-        DataConverter.applyEnchantment(m, enchantSlug);
+    let m: IItem;
+    if (level === -1) {
+      m = {
+        name: slug,
+        slug,
+        level,
+        tags: _.clone(raw.tags),
+        cost: raw.cost,
+      };
+    } else {
+      if (!scrollOf) {
+        scrollOf = _.sample(ItemScrollSlugs);
       }
-    }
 
-    if (charges || charges === 0) {
-      m.charges = charges;
+      let src = DataConverter.getItem(_.find(ItemList, {slug: scrollOf}), Math.floor(level * 1.25));
+
+      m = {
+        name: src.slug + ' Scroll',
+        slug,
+        level,
+        tags: _.clone(raw.tags).concat(src.tags.filter(tag => tag !== 'Equipment')),
+        cost: src.cost * 0.5,
+        stats: src.stats,
+        action: src.action,
+        triggers: src.triggers,
+        maxCharges: raw.charges,
+        charges: raw.charges,
+      };
+
+      if (m.action) {
+        m.action.source = m;
+        m.action.costs.mana *= 0.5;
+      }
+
+      if (enchantSlug) {
+        if (_.isArray(enchantSlug)) {
+          enchantSlug.forEach(es => DataConverter.applyEnchantment(m, es));
+        } else {
+          DataConverter.applyEnchantment(m, enchantSlug);
+        }
+      }
+
+      if (charges || charges === 0) {
+        m.charges = charges;
+      }
     }
     return m;
   },
@@ -261,7 +273,7 @@ export const DataConverter = {
 
   getEnemy: (slug: EnemySlug | IEnemyRaw, level: number): IEnemy => {
     let raw: IEnemyRaw;
-    if (_.isString(slug)) {
+    if (_.isNumber(slug)) {
       raw = _.find(EnemyList, {slug});
     } else {
       raw = slug;
@@ -269,7 +281,7 @@ export const DataConverter = {
     }
 
     let m: IEnemy = {
-      name: slug,
+      name: StringData.ENEMY_NAME[slug],
       slug,
       level,
       cosmetics: raw.cosmetics,

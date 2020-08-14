@@ -12,6 +12,7 @@ import { LoadCharacterUI } from './LoadCharacterUI';
 import { HomeUI } from './HomeUI';
 import { NewCharacterUI } from './NewCharacterUI';
 import { StatisticsUI } from './StatisticsUI';
+import { StoreUI } from './StoreUI';
 
 export class Navbar extends PIXI.Container {
   private background = new PIXI.Graphics();
@@ -32,10 +33,10 @@ export class Navbar extends PIXI.Container {
     this.addContent('► Duel Arena', BlankUI, true);
     this.addContent('► Epic Mode', BlankUI, true);
     this.addContent('► Special Event', BlankUI, true);
-    this.addContent('Main Store', BlankUI, true);
-    this.addContent('► Gold Store', BlankUI, true);
+    this.addContent('Main Store', StoreUI);
+    this.addContent('► Gold Store', StoreUI);
+    this.addContent2('► Black Market', () => { let page = new StoreUI(); page.selectLeft.selectButton(1); page.selectRight.selectButton(0); Facade.setCurrentPage(page); });
     this.addContent('► Premium Store', BlankUI, true);
-    this.addContent('► Black Market', BlankUI, true);
     this.addContent('Library', BlankUI, true);
     this.addContent('Achievements', BlankUI, true);
     this.addContent('Ascension', BlankUI, true);
@@ -55,6 +56,11 @@ export class Navbar extends PIXI.Container {
       let page = new PageConstructor();
       Facade.setCurrentPage(page);
     });
+
+    if (!nowhere) {
+      content.addListener('pointerover', () => content.tint = 0x00ffff);
+      content.addListener('pointerout', () => content.tint = 0xffffff);
+    }
   }
 
   private addContent2(title: string, onDown: () => void, nowhere = false) {
@@ -65,6 +71,8 @@ export class Navbar extends PIXI.Container {
     content.buttonMode = true;
 
     content.addListener('pointerdown', onDown);
+    content.addListener('pointerover', () => content.tint = 0x00ffff);
+    content.addListener('pointerout', () => content.tint = 0xffffff);
   }
 
   private onResize = (e: IResizeEvent) => {

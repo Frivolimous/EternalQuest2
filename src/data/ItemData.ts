@@ -43,7 +43,8 @@ export interface IItemSave {
 export type ItemSlug = 'Greatsword' | 'Battle Axe' | 'Staff' | 'Short Swords' | 'Gloves' | 'Daggers' | 'Sword & Shield' | 'Axe & Shield' | 'Mace & Shield' | 'Shortbow' |
   'Bandana' | 'Cone' | 'Cap' | 'Helmet' | 'Armet' |
   'Magic Bolt' | 'Fireball' | 'Lightning' | 'Searing Light' | 'Poison Bolt' | 'Confusion' | 'Cripple' | 'Vulnerability' | 'Healing' | 'Empower' | 'Haste' | 'Enchant Weapon' |
-  'Healing Potion' | 'Mana Potion' | 'Amplification Potion' | 'Alchemist Fire' | 'Toxic Gas' | 'Holy Water' | 'Throwing Dagger' | 'Throwing Axe' | 'Darts' |
+  'Healing Potion' | 'Mana Potion' | 'Amplification Potion' | 'Recovery Potion' | 'Celerity Potion' | 'Turtle Soup' | 'Purity Potion' |
+  'Alchemist Fire' | 'Toxic Gas' | 'Holy Water' | 'Throwing Dagger' | 'Throwing Axe' | 'Darts' |
   'Statue' | 'Skull' | 'Feather' | 'Beads' | 'Hoof' | 'Diamond' | 'Sapphire' | 'Ruby' | 'Emerald' | 'Amethyst' | 'Scroll' | 'Trophy';
 
 export const ItemList: IItemRaw[] = [
@@ -83,7 +84,12 @@ export const ItemList: IItemRaw[] = [
 
   { slug: 'Healing Potion', cost: 30, tags: ['Belt', 'Potion'], action: { slug: 'Healing', type: 'heal', tags: ['Chemical', 'Healing'], heals: { health: {base: 130, inc: 10.6}}, distance: ['b', 1, 2, 3], costs: { action: 100 } }, charges: 6 },
   { slug: 'Mana Potion', cost: 40, tags: ['Belt', 'Potion'], action: { slug: 'Restore', type: 'heal', tags: ['Chemical', 'Healing'], heals: { mana: {base: 60, inc: 3.15}}, distance: ['b', 1, 2, 3], costs: { action: 100 } }, charges: 6 },
-  { slug: 'Amplification Potion', cost: 40, tags: ['Belt', 'Grenade'], action: { slug: 'Amplify', type: 'buff', tags: ['Chemical', 'Buff'], effects: ['amplified'], distance: ['b', 1, 2, 3], costs: { action: 100 } }, charges: 6 },
+  { slug: 'Recovery Potion', cost: 40, tags: ['Belt', 'Potion'], action: { slug: 'Healing', type: 'heal', tags: ['Chemical', 'Healing'], heals: { health: {base: 95, inc: 7}, mana: {base: 34, inc: 1.35}}, distance: ['b', 1, 2, 3], costs: { action: 100 } }, charges: 6 },
+  { slug: 'Amplification Potion', cost: 40, tags: ['Belt', 'Potion'], action: { slug: 'Amplify', type: 'buff', tags: ['Chemical', 'Buff'], effects: ['amplified'], distance: ['b', 1, 2, 3], costs: { action: 100 } }, charges: 6 },
+  { slug: 'Turtle Soup', cost: 40, tags: ['Belt', 'Potion'], action: { slug: 'Amplify', type: 'buff', tags: ['Chemical', 'Buff'], effects: ['turtle'], distance: ['b', 1, 2, 3], costs: { action: 100 } }, charges: 6 },
+  { slug: 'Celerity Potion', cost: 40, tags: ['Belt', 'Potion'], action: { slug: 'Amplify', type: 'buff', tags: ['Chemical', 'Buff'], effects: ['celerity'], distance: ['b', 1, 2, 3], costs: { action: 100 } }, charges: 6 },
+  { slug: 'Purity Potion', cost: 40, tags: ['Belt', 'Potion'], action: { slug: 'Amplify', type: 'buff', tags: ['Chemical', 'Buff'], effects: ['purity'], distance: ['b', 1, 2, 3], costs: { action: 100 } }, charges: 6 },
+
   { slug: 'Alchemist Fire', cost: 20, tags: ['Belt', 'Grenade'], action: { slug: 'Grenade', type: 'attack', tags: ['Chemical', 'Fire'], distance: ['b', 1, 2, 3], stats: {baseDamage: {base: 75, inc: 4.45}}, costs: { action: 100 } }, charges: 6 },
   { slug: 'Toxic Gas', cost: 20, tags: ['Belt', 'Grenade'], action: { slug: 'Grenade', type: 'curse', tags: ['Chemical', 'Curse', 'Toxic'], distance: ['b', 1, 2, 3], effects: ['gassed'], costs: { action: 100 } }, charges: 6 },
   { slug: 'Holy Water', cost: 20, tags: ['Belt', 'Grenade'], action: { slug: 'Grenade', type: 'attack', tags: ['Holy', 'Spirit'], distance: ['b', 1, 2, 3], stats: {baseDamage: {base: 68, inc: 4.15}}, effects: ['blinded'], costs: { action: 100 } }, charges: 6 },
@@ -178,11 +184,11 @@ export const EnchantList: IEnchantRaw[] = [
   {slug: 'Homing', costMult: 3, action: {stats: {penetration: 0.1}}},
   {slug: 'Plentiful', costMult: 2, chargeMult: 2},
   {slug: 'Unlimited', costMult: 20, chargeMult: Infinity},
-  {slug: 'Ready', costMult: 3, action: {costs: {action: -25}}},
+  {slug: 'Ready', costMult: 3, action: {costs: {action: -10}}},
   // {slug: 'Shadow', costMult: 6},
 ];
 
-export const EnchantMaps: {[key: string]: EnchantSlug[]} = {
+export const EnchantMaps: Partial<{[key in StatTag]: EnchantSlug[]}> = {
   Weapon: ['Master', 'Mystic', 'Guided', 'Keen', 'Grenadier', 'Defender', 'Flaming', 'Brilliant', 'Venomous', 'Explosive', 'Cursing', 'Vampiric', 'Dazzling', 'Reflective'],
   Helmet: ['Superior', 'Wizard', 'Troll', 'Channeling', 'Light', 'Warded', 'Alchemist', 'Virtuous', 'Protective', 'Seeking', 'Cloaking', 'Utility', 'Spikey', 'Berserker', 'Fearsome'],
   Thrown: ['Master', 'Keen', 'Guided', 'Flaming', 'Brilliant', 'Venomous', 'Explosive', 'Cursing', 'Vampiric', 'Dazzling', 'Homing', 'Plentiful', 'Ready'],
@@ -191,6 +197,25 @@ export const EnchantMaps: {[key: string]: EnchantSlug[]} = {
   Spell: [],
   Potion: [],
   Grenade: [],
+};
+
+export const LootMap: Partial<{[key in StatTag]: ItemSlug[]}> = {
+  Weapon: ['Greatsword', 'Battle Axe', 'Staff', 'Short Swords', 'Gloves', 'Daggers', 'Sword & Shield', 'Axe & Shield', 'Mace & Shield', 'Shortbow'],
+  Helmet: ['Bandana', 'Cone', 'Cap', 'Helmet', 'Armet'],
+  Spell: ['Magic Bolt', 'Fireball', 'Lightning', 'Searing Light', 'Poison Bolt', 'Confusion', 'Cripple', 'Vulnerability', 'Healing', 'Empower', 'Haste', 'Enchant Weapon'],
+  Thrown: ['Throwing Dagger', 'Throwing Axe', 'Darts'],
+  Scroll: ['Scroll'],
+  Charm: ['Statue', 'Skull', 'Feather', 'Beads', 'Hoof'],
+  Trade: ['Diamond', 'Sapphire', 'Ruby', 'Emerald', 'Amethyst'],
+  Potion: ['Healing Potion', 'Healing Potion', 'Healing Potion', 'Mana Potion', 'Mana Potion', 'Recovery Potion', 'Amplification Potion', 'Turtle Soup', 'Celerity Potion', 'Alchemist Fire', 'Alchemist Fire', 'Toxic Gas', 'Toxic Gas', 'Holy Water', 'Holy Water'],
+};
+
+export const CharmEnchantMaps: Partial<{[key in ItemSlug]: EnchantSlug[]}> = {
+  Statue: ['Cursing', 'Vampiric', 'Dazzling', 'Spikey', 'Berserker', 'Fearsome'],
+  Skull: ['Guided', 'Keen', 'Flaming', 'Brilliant', 'Venomous', 'Explosive'],
+  Feather: ['Grenadier', 'Superior', 'Troll', 'Light', 'Seeking', 'Utility'],
+  Beads: ['Focal', 'Mystic', 'Reflective', 'Wizard', 'Channeling'],
+  Hoof: ['Defender', 'Warded', 'Alchemist', 'Virtuous', 'Protective', 'Cloaking'],
 };
 
 export const EquipmentSets: {[key in TalentSlug]: IItemSave[]} = {
@@ -215,3 +240,10 @@ export const EquipmentSets: {[key in TalentSlug]: IItemSave[]} = {
   Studious: [{slug: 'Staff', level: 0}, {slug: 'Cone', level: 0}, {slug: 'Cripple', level: 0}, null, null, {slug: 'Healing Potion', level: 0}, {slug: 'Mana Potion', level: 0}, null, null, null,
     {slug: 'Mace & Shield', level: 0}, {slug: 'Toxic Gas', level: 0}],
 };
+
+export const BasicStore: ItemSlug[] = [
+  'Battle Axe', 'Short Swords', 'Daggers', 'Axe & Shield', 'Mace & Shield',
+  'Cap', 'Helmet', 'Shortbow', null, null,
+  'Throwing Dagger', 'Throwing Axe', 'Darts', 'Alchemist Fire', 'Toxic Gas',
+  'Healing Potion', 'Healing Potion', 'Healing Potion', 'Mana Potion', 'Mana Potion',
+];

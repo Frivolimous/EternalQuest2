@@ -15,9 +15,13 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
       [{ slug: 'Greatsword', level: 10 }, { slug: 'Cap', level: 10 }],
     ],
     currency: {
-      gold: 0,
-      tokens: 0,
+      gold: 1000000,
+      tokens: 5,
+      refresh: 3,
+      suns: 0,
+      souls: 0,
     },
+    storeItems: {},
     overflowStash: [],
   },
   Players: {
@@ -54,8 +58,8 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
     aewfinwgo: {
       ascendedZone: 0,
       zone: 0,
-      zoneType: 1,
-      monsterType: 1,
+      monsterType: 0,
+      zoneType: 2,
       enemyCount: 0,
       highestChallenge: [1],
       flags: [],

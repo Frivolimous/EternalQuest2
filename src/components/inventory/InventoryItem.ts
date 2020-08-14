@@ -59,6 +59,23 @@ export class InventoryItem extends PIXI.Container {
     TooltipReader.addTooltip(this, {title: source.name, description: Descriptions.makeItemDescription(source)});
   }
 
+  public updateSource(source: IItem) {
+    this.source = source;
+    this.text.scale.set(1);
+    this.text.text = source.name;
+    this.text.width = this.getWidth() - 10;
+    this.text.scale.y = this.text.scale.x;
+    this.text.position.set(5, (this.getHeight() - this.text.height) / 2);
+    if (this.charges && source.charges) {
+      this.updateCharges(source.charges);
+    } else if (source.charges) {
+      this.charges = new PIXI.Text((source.charges < 10 ? '0' : '') + String(source.charges), { fontFamily: Fonts.UI, fontSize: 10, stroke: 0xcccccc, strokeThickness: 1});
+      this.addChild(this.charges);
+      this.charges.position.set(this.getWidth() - this.charges.width - 1, this.getHeight() - this.charges.height - 1);
+    }
+    TooltipReader.addTooltip(this, {title: source.name, description: Descriptions.makeItemDescription(source)});
+  }
+
   public updateCharges(n: number) {
     this.charges.text = (n < 10 ? '0' : '') + n;
     this.charges.position.set(this.getWidth() - this.charges.width - 1, this.getHeight() - this.charges.height - 1);

@@ -283,13 +283,18 @@ export class GameController {
     }
   }
 
+  public finishLevel = () => {
+    this.levelData.zone++;
+    this.levelData.enemyCount = 0;
+    this.onLevelComplete.publish();
+    this.levelComplete = true;
+    SaveManager.getExtrinsic().currency.refresh = Formula.incrementRefreshes(SaveManager.getExtrinsic().currency.refresh);
+  }
+
   public spawnEnemy = () => {
     let totalMonsters = Formula.monstersByZone(this.levelData.zone);
     if (this.levelData.enemyCount > totalMonsters) {
-      this.levelData.zone++;
-      this.levelData.enemyCount = 0;
-      this.onLevelComplete.publish();
-      this.levelComplete = true;
+      this.finishLevel();
       return;
     }
 

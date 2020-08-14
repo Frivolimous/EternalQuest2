@@ -6,6 +6,7 @@ import { InventoryItem } from '../../inventory/InventoryItem';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
 import { IItem } from '../../../data/ItemData';
 import { StatModel } from '../../../engine/stats/StatModel';
+import { Formula } from '../../../services/Formula';
 
 export class InventoryPanelMenu extends BasePanel {
   public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
@@ -42,6 +43,13 @@ export class InventoryPanelMenu extends BasePanel {
     this.equip.onItemSell = this.sellItem;
     this.belt.onItemSell = this.sellItem;
     this.inventory.onItemSell = this.sellItem;
+  }
+
+  public destroy() {
+    this.equip.destroy();
+    this.belt.destroy();
+    this.inventory.destroy();
+    super.destroy();
   }
 
   public addPlayer = (sprite: SpriteModel | StatModel) => {
@@ -103,5 +111,25 @@ export class InventoryPanelMenu extends BasePanel {
 
   public addItem = (item: IItem) => {
     this.inventory.addItem(new InventoryItem(item));
+  }
+
+  public addInventoryItem = (item: InventoryItem) => {
+    this.inventory.addItem(item);
+  }
+
+  public getFillableItems = () => {
+    return this.equip.getFillableItems().concat(this.belt.getFillableItems(), this.inventory.getFillableItems()) || [];
+  }
+
+  public getFillableCost = () => {
+    return this.getFillableItems().reduce((n, item) => Formula.costToFill(item.source), 0);
+  }
+
+  public fillAllItems = () => {
+    let items = this.getFillableItems();
+    items.forEach(item => {
+      item.source.charges = item.source.maxCharges;
+      item.updateCharges(item.source.charges);
+    });
   }
 }

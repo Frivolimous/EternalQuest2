@@ -8,28 +8,51 @@ import { IEffect } from './EffectData';
 import { IBuff } from './BuffData';
 import { Formula } from '../services/Formula';
 import { StatModel } from '../engine/stats/StatModel';
+import { ZoneId, EnemySetId, EnemySlug } from './EnemyData';
 
 export const StringData = {
   GAME_TITLE: 'Eternal Quest',
 
-  ZONE_NAME: [
-    'Forest',
-    'Desert',
-    'Realm',
-  ],
+  ZONE_NAME: {
+    [ZoneId.FOREST]: 'Forest',
+    [ZoneId.DESERT]: 'Desert',
+    [ZoneId.REALM]: 'Realm',
+  },
 
-  MONSTER_SET_NAME: [
-    'Goblin',
-    'Beast',
-    'Demon',
-  ],
+  MONSTER_SET_NAME: {
+    [EnemySetId.GOBLIN]: 'Goblin',
+    [EnemySetId.BEAST]: 'Beast',
+    [EnemySetId.DEMON]: 'Demonic',
+    [EnemySetId.UNDEAD]: 'Undead',
+    [EnemySetId.DROW]: 'Dark Elf',
+  },
+
+  ENEMY_NAME: {
+    [EnemySlug.G_WARRIOR]: 'Warrior',
+    [EnemySlug.G_BRUTE]: 'Brute',
+    [EnemySlug.G_ALCHEMIST]: 'Alchemist',
+    [EnemySlug.G_SHAMAN]: 'Shaman',
+    [EnemySlug.G_BLOB]: 'Blobling',
+    [EnemySlug.G_BOSS]: 'Chieftain',
+  },
 };
 
 export const Descriptions = {
   makeItemDescription: (item: IItem): string => {
     let str = '';
+
+    if (item.level < 0) {
+      str += 'Level: ?\n';
+      item.tags.forEach(tag => str += tag + ' ');
+      str += '\n';
+      str += 'Cost: ' + item.cost + 'g';
+      return str;
+    }
+
     str += 'Level ' + item.level + '\n';
     item.tags.forEach(tag => str += tag + ' ');
+    str += '\n';
+    str += 'Cost: ' + item.cost + 'g';
     str += '\n\n';
     if (item.stats) {
       item.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + (StatDisplay[stat.stat] === 'percent' ? (Math.round(stat.value * 100) + '%') : Math.round(stat.value)) + '\n');

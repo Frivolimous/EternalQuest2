@@ -273,7 +273,7 @@ export class JMTween<T = any> {
     if (time > this.endTime) {
       this.complete(time);
     } else if (time > this.startTime) {
-      let raw = (time - this.startTime) / this.totalTime;
+      let raw = (time - this.startTime) / (this.endTime - this.startTime);
       let eased: number = this._Easing ? this._Easing(raw) : raw;
 
       this.properties.forEach(property => {

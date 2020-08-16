@@ -3,6 +3,7 @@ import { Vitals } from '../stats/Vitals';
 import { BuffContainer } from './BuffContainer';
 import { Formula } from '../../services/Formula';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
+import { SkillSlug } from '../../data/SkillData';
 
 export class SpriteModel {
   public onLevelUp = new JMEventListener<SpriteModel>();
@@ -15,10 +16,7 @@ export class SpriteModel {
   public dead = false;
   public focusTarget: SpriteModel;
 
-  constructor(public stats?: StatModel) {
-    if (!stats) {
-      this.stats = new StatModel();
-    }
+  constructor(public stats: StatModel) {
 
     this.vitals = new Vitals();
     this.buffs = new BuffContainer();
@@ -67,7 +65,7 @@ export class SpriteModel {
     if (cXp >= tXp) {
       this.stats.level += 1;
       this.stats.skillpoints += 1;
-      if (this.stats.talent.slug === 'Noble') {
+      if (this.stats.talent.slug === SkillSlug.NOBLE) {
         if (this.stats.level % 12 === 0) {
           this.stats.skillpoints += 1;
         }

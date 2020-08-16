@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 import { IAction } from '../../data/ActionData';
 import { DataConverter } from '../../services/DataConverter';
 
@@ -19,7 +17,7 @@ export class ActionContainer {
     if (!action) return;
 
     if (action.slug === 'strike') {
-      let i = _.findIndex(this.list, {slug: 'strike'});
+      let i = this.list.findIndex(data => data.slug === 'strike');
       this.list[i] = action;
     } else {
       this.list.unshift(action);
@@ -34,7 +32,7 @@ export class ActionContainer {
       let i = this.list.indexOf(action);
       this.list[i] = this.unarmed;
     } else {
-      _.pull(this.list, action);
+      this.list.splice(this.list.indexOf(action), 1);
     }
   }
 
@@ -42,7 +40,7 @@ export class ActionContainer {
     if (!distance && distance !== 0) {
       return this.list;
     } else {
-      return _.filter(this.list, action => _.includes(action.distance, distance));
+      return this.list.filter(action => action.distance.includes(distance));
     }
   }
 
@@ -51,23 +49,26 @@ export class ActionContainer {
   }
 
   private sortActions() {
-    this.list = _.sortBy(this.list, action => {
-      let val = 0;
-      if (action.slug === 'idle') {
-        return 10;
-      } else if (action.slug === 'gotown') {
-        return 0;
-      } else if (action.slug === 'withdraw' || action.slug === 'Confused' || action.slug === 'Afraid') {
-        return 1;
-      } else if (action.type === 'walk') {
-        return 9;
-      } else if (action.slug === 'strike') {
-        return 8;
-      } else if (action.type === 'attack') {
-        return 7;
-      } else {
-        return 6;
-      }
+    this.list = this.list.sort((a, b) => {
+      return this.getActionWeight(a) - this.getActionWeight(b);
     });
+  }
+
+  private getActionWeight(action: IAction) {
+    if (action.slug === 'idle') {
+      return 10;
+    } else if (action.slug === 'gotown') {
+      return 0;
+    } else if (action.slug === 'withdraw' || action.slug === 'Confused' || action.slug === 'Afraid') {
+      return 1;
+    } else if (action.type === 'walk') {
+      return 9;
+    } else if (action.slug === 'strike') {
+      return 8;
+    } else if (action.type === 'attack') {
+      return 7;
+    } else {
+      return 6;
+    }
   }
 }

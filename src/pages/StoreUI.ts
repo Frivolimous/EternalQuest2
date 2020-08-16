@@ -99,9 +99,14 @@ export class StoreUI extends BaseUI {
     this.storePanel.canAfford = this.canAfford;
     this.blackPanel.canAfford = this.canAfford;
 
-    this.storePanel.addSlugArray(BasicStore, Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
     this.storePanel.fillAllItems = this.fillAllItems;
 
+    this.blackPanel.removeGamble = this.removeGamble;
+    this.blackPanel.refreshGamble = this.refreshGamble;
+  }
+
+  public navIn = () => {
+    this.storePanel.addSlugArray(BasicStore, Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
     let blackArray = SaveManager.getExtrinsic().storeItems.gamble;
     if (blackArray) {
       this.blackPanel.addSlugArray(blackArray,  Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
@@ -109,9 +114,6 @@ export class StoreUI extends BaseUI {
     } else {
       this.finishRefreshGamble();
     }
-
-    this.blackPanel.removeGamble = this.removeGamble;
-    this.blackPanel.refreshGamble = this.refreshGamble;
 
     this.getPlayer();
   }

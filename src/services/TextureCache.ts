@@ -3,7 +3,7 @@ import { Colors } from '../data/Colors';
 
 type TextureName = 'circle' | 'medal' | 'firework';
 
-export enum TextureUrl {
+export const enum TextureUrl {
   GHOST = 'www.nowhere.com/ghost.png',
 }
 

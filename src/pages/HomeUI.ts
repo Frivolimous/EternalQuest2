@@ -3,7 +3,7 @@ import { BaseUI } from './_BaseUI';
 import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { Button } from '../components/ui/Button';
-import { CharacterPanel } from '../components/character/CharacterPanel';
+import { CharacterPanel } from '../components/ui/panels/CharacterPanel';
 import { SaveManager } from '../services/SaveManager';
 import { LoadCharacterUI } from './LoadCharacterUI';
 import { NewCharacterUI } from './NewCharacterUI';

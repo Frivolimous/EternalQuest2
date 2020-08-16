@@ -18,7 +18,7 @@ export const ItemManager = {
     if (!item) return null;
     let save: IItemSave;
     if (item.scrollOf) {
-      save = {slug: 'Scroll', level: item.level, scrollOf: item.scrollOf, charges: item.charges};
+      save = {slug: ItemSlug.SCROLL, level: item.level, scrollOf: item.scrollOf, charges: item.charges};
       if (item.enchantSlug) {
         save.enchant = item.enchantSlug;
       }
@@ -56,7 +56,7 @@ export const ItemManager = {
         case 2: case 3: slug = _.sample(LootMap.Helmet); break;
         case 4: slug = _.sample(LootMap.Thrown); break;
         case 5: slug = _.sample(LootMap.Charm); break;
-        case 6: slug = 'Scroll'; break;
+        case 6: slug = ItemSlug.SCROLL; break;
       }
 
       m.push(slug);
@@ -69,7 +69,7 @@ export const ItemManager = {
     let slug = item.slug;
     let save: IItemSave = {slug, level};
 
-    if (slug === 'Scroll') {
+    if (slug === ItemSlug.SCROLL) {
       save.scrollOf = _.sample(LootMap.Spell);
     } else if (item.tags.includes('Charm')) {
       save.enchant = [_.sample(CharmEnchantMaps[slug])];
@@ -99,17 +99,17 @@ export const ItemManager = {
       let slug: ItemSlug;
       let charges: number;
       let scrollOf: ItemSlug;
-      let rand = RandomSeed.general.getInt(0, 15);
+      let rand = RandomSeed.general.getInt(0, 14);
       switch (rand) {
         case 0: case 1: case 2:
           slug = _.sample(LootMap.Weapon);
-          if (slug === 'Gloves' || RandomSeed.general.getRaw() < iloot) {
+          if (slug === ItemSlug.GLOVES || RandomSeed.general.getRaw() < iloot) {
             enchantSlug = _.sample(EnchantMaps.Weapon);
           }
           break;
         case 3: case 4:
           slug = _.sample(LootMap.Helmet);
-          if (slug === 'Bandana' || RandomSeed.general.getRaw() < iloot) {
+          if (slug === ItemSlug.BANDANA || RandomSeed.general.getRaw() < iloot) {
             enchantSlug = _.sample(EnchantMaps.Helmet);
           }
           break;
@@ -125,7 +125,7 @@ export const ItemManager = {
           }
           break;
         case 7:
-          slug = 'Scroll';
+          slug = ItemSlug.SCROLL;
           scrollOf = _.sample(LootMap.Spell);
           break;
         case 8:

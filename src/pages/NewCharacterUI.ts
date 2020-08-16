@@ -5,14 +5,15 @@ import { BaseUI } from './_BaseUI';
 import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { Button } from '../components/ui/Button';
-import { CharacterPanel } from '../components/character/CharacterPanel';
+import { CharacterPanel } from '../components/ui/panels/CharacterPanel';
 import { SaveManager } from '../services/SaveManager';
 import { IPlayerSave, dPlayerSave, dPlayerLevelSave } from '../data/SaveData';
 import { RandomSeed } from '../services/RandomSeed';
 import { InputText } from '../components/ui/InputText';
 import { SelectList } from '../components/ui/SelectButton';
-import { TalentSlug, TalentList } from '../data/SkillData';
+import { TalentList, SkillSlug } from '../data/SkillData';
 import { EquipmentSets } from '../data/ItemData';
+import { StringData } from '../data/StringData';
 
 export class NewCharacterUI extends BaseUI {
   private title: PIXI.Text;
@@ -22,7 +23,7 @@ export class NewCharacterUI extends BaseUI {
   private confirmB: Button;
   private input: InputText;
   private talentList: SelectList;
-  private currentTalent: TalentSlug;
+  private currentTalent: SkillSlug;
 
   private save: IPlayerSave;
 
@@ -43,7 +44,7 @@ export class NewCharacterUI extends BaseUI {
 
     this.talentList = new SelectList({width: 100, height: 30}, this.selectTalent);
     TalentList.forEach((slug, i) => {
-      let button = this.talentList.makeButton(slug);
+      let button = this.talentList.makeButton(StringData.SKILL[slug]);
       this.leftPanel.addChild(button);
       button.position.set(40 + 110 * Math.floor(i / 5), 100 + (i % 5) * 40);
     });
@@ -79,7 +80,6 @@ export class NewCharacterUI extends BaseUI {
   private navConfirm = () => {
     this.save.name = this.input.text;
     this.save.talent = this.currentTalent;
-    this.save.title = this.currentTalent;
     let equip = _.cloneDeep(EquipmentSets[this.currentTalent]);
     this.save.equipment = equip.splice(0, 10);
     this.save.inventory = equip;

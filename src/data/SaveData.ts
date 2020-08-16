@@ -1,5 +1,5 @@
 import { IItemSave, ItemSlug } from './ItemData';
-import { ISkillSave, SkillTreeSlug, TalentSlug } from './SkillData';
+import { ISkillSave, SkillTreeSlug, SkillSlug } from './SkillData';
 import { EnemySetId, ZoneId } from './EnemyData';
 
 export type CurrencySlug = 'gold' | 'tokens' | 'refresh' | 'suns' | 'souls';
@@ -28,6 +28,10 @@ export interface IExtrinsicModel {
   };
 
   skillTrees?: number[];
+
+  options: {
+    autoFill: boolean;
+  };
 }
 
 export const dExtrinsicModel: IExtrinsicModel = {
@@ -40,14 +44,17 @@ export const dExtrinsicModel: IExtrinsicModel = {
     souls: 0,
   },
   storeItems: {},
+
+  options: {
+    autoFill: false,
+  },
 };
 
 export interface IPlayerSave {
   name?: string;
-  title?: string;
   level?: number;
   cosmetics?: number[];
-  talent?: TalentSlug;
+  talent?: SkillSlug;
   equipment?: IItemSave[];
   artifacts?: number[];
   skills?: ISkillSave[];
@@ -72,15 +79,14 @@ export interface IPlayerLevelSave {
 
 export const dPlayerSave: IPlayerSave = {
   name: 'Blank',
-  title: 'Ordinary',
   level: 1,
   experience: 0,
   cosmetics: [],
-  talent: 'Ordinary',
-  equipment: [{ slug: 'Greatsword', level: 0, enchant: ['Master'] }, { slug: 'Cap', level: 0 }],
+  talent: SkillSlug.ORDINARY,
+  equipment: [{ slug: ItemSlug.GREATSWORD, level: 0 }, { slug: ItemSlug.CAP, level: 0 }],
   artifacts: [],
   skills: [],
-  skillTrees: ['Warrior', 'Mage', 'Ranger'],
+  skillTrees: [SkillTreeSlug.WARRIOR, SkillTreeSlug.MAGE, SkillTreeSlug.RANGER],
   skillPoints: 0,
   inventory: [],
 };

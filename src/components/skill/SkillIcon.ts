@@ -1,9 +1,9 @@
 import * as PIXI from 'pixi.js';
 import * as _ from 'lodash';
 import { ISkill } from '../../data/SkillData';
-import { Descriptions } from '../../data/StringData';
 import { TooltipReader } from '../../JMGE/TooltipReader';
 import { Fonts } from '../../data/Fonts';
+import { StringManager } from '../../services/StringManager';
 
 export interface ISkillIcon {
   width?: number;
@@ -38,7 +38,7 @@ export class SkillIcon extends PIXI.Container {
 
     this.addListener('pointerdown', this.pointerDown);
 
-    TooltipReader.addTooltip(this, () => ({ title: source.name, description: Descriptions.makeSkillDescription(this.source) }));
+    TooltipReader.addTooltip(this, () => ({ title: source.name, description: StringManager.makeSkillDescription(this.source) }));
 
     this.text = new PIXI.Text(source.name, { fontFamily: Fonts.UI, fontSize: 25, wordWrap: true, wordWrapWidth: 100 });
     this.addChild(this.text);

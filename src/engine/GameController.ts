@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-import { GameEvents, IAnimateAction, IItemUpdate } from '../services/GameEvents';
+import { GameEvents, IItemUpdate } from '../services/GameEvents';
 import { SpriteModel } from './sprites/SpriteModel';
 import { SaveManager } from '../services/SaveManager';
 import { StatModel } from './stats/StatModel';
@@ -15,6 +15,7 @@ import { ItemManager } from '../services/ItemManager';
 import { Formula } from '../services/Formula';
 import { EffectTrigger } from '../data/EffectData';
 import { IItem } from '../data/ItemData';
+import { EnemySetId, ZoneId } from '../data/EnemyData';
 
 export class GameController {
   public onPlayerAdded = new JMEventListener<SpriteModel>();
@@ -40,7 +41,7 @@ export class GameController {
 
   private fighting = false;
   private processing = false;
-  private spawnCount = 4;
+  private spawnCount: number;
 
   private levelComplete = false;
 
@@ -74,6 +75,7 @@ export class GameController {
 
   public startLevel() {
     this.player.tile = 0;
+    this.spawnCount = Formula.genSpawnCount(true);
   }
 
   public destroy() {
@@ -87,7 +89,6 @@ export class GameController {
     }
     this.fighting = false;
     this.processing = false;
-    this.spawnCount = 4;
     this.actionC.selectedItem = null;
     this.actionC.doubleSelected = false;
 
@@ -153,7 +154,7 @@ export class GameController {
   }
 
   public endFight = () => {
-    this.spawnCount = RandomSeed.enemySpawn.getInt(1, 9);
+    this.spawnCount = Formula.genSpawnCount(false);
     this.fighting = false;
     this.processTriggersFor('fightEnd', this.player);
   }
@@ -165,23 +166,15 @@ export class GameController {
   }
 
   public tickFighting = () => {
-    if (this.spriteModels.length <= 1) {
-      return;
-    }
-    let maxVal: number = 0;
-    let maxSprite: SpriteModel;
-    this.spriteModels.forEach(sprite => {
-      sprite.incAction();
-      let action = sprite.vitals.getVital('action');
-      if (action > maxVal) {
-        maxVal = action;
-        maxSprite = sprite;
-      }
-    });
-    if (maxVal >= 100) {
+    if (this.spriteModels.length <= 1) return;
+
+    this.spriteModels.forEach(sprite => sprite.incAction());
+    let activeSprite = Formula.spriteByHighestVital(this.spriteModels, 'action', 100);
+
+    if (activeSprite) {
       this.processing = true;
 
-      let result = this.actionC.chooseAction(maxSprite, this.spriteModels, true);
+      let result = this.actionC.chooseAction(activeSprite, this.spriteModels, true);
       this.onAction.publish(result);
     }
   }
@@ -195,7 +188,7 @@ export class GameController {
       // there is an enemy
       let maxPlayer = 0;
       let minEnemy = Infinity;
-      _.each(this.spriteModels, sprite => {
+      this.spriteModels.forEach(sprite => {
         if (sprite.player) {
           maxPlayer = Math.max(maxPlayer, sprite.tile);
         } else {
@@ -203,7 +196,7 @@ export class GameController {
         }
       });
 
-      if (minEnemy - maxPlayer < 4) {
+      if (minEnemy - maxPlayer < Formula.COMBAT_DISTANCE) {
         this.startFight();
         return;
       }
@@ -247,7 +240,7 @@ export class GameController {
     this.fighting = true;
     this.spriteModels.forEach(sprite => {
       let init = sprite.stats.getStat('initiative');
-      sprite.vitals.setVital('action', init + RandomSeed.general.getRaw() * 100);
+      sprite.vitals.setVital('action', Formula.genStartingAction(init));
       sprite.tile = sprite.player ? 0 : 2;
       this.processTriggersFor('fightStart', sprite);
     });
@@ -286,6 +279,8 @@ export class GameController {
   public finishLevel = () => {
     this.levelData.zone++;
     this.levelData.enemyCount = 0;
+    this.levelData.monsterType = EnemySetId.GOBLIN;
+    this.levelData.zoneType = Math.floor(Math.random() * 3);
     this.onLevelComplete.publish();
     this.levelComplete = true;
     SaveManager.getExtrinsic().currency.refresh = Formula.incrementRefreshes(SaveManager.getExtrinsic().currency.refresh);
@@ -298,10 +293,10 @@ export class GameController {
       return;
     }
 
-    let spawn = SpawnEnemy.makeBasicEnemy(this.levelData.zoneType, this.levelData.monsterType, this.levelData.zone, this.levelData.enemyCount === totalMonsters);
+    let spawn = SpawnEnemy.makeBasicEnemy(this.levelData.zoneType, this.levelData.monsterType, this.levelData.zone, this.levelData.enemyCount === totalMonsters ? 5 : 1);
 
     let enemy = new SpriteModel(StatModel.fromEnemy(spawn));
-    enemy.tile = 9;
+    enemy.tile = Formula.ENEMY_SPAWN_DISTANCE;
     console.log('Enemy: ' + enemy.stats.name);
     this.spriteModels.push(enemy);
     this.onSpriteAdded.publish(enemy);

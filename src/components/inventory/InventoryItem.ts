@@ -4,8 +4,8 @@ import { ItemDragEvent, IItemDragResult, InventoryDisplay } from './InventoryDis
 import { Facade } from '../../index';
 import { IItem } from '../../data/ItemData';
 import { TooltipReader } from '../../JMGE/TooltipReader';
-import { Descriptions } from '../../data/StringData';
 import { Fonts } from '../../data/Fonts';
+import { StringManager } from '../../services/StringManager';
 
 export interface IInventoryItem {
   width: number;
@@ -56,7 +56,7 @@ export class InventoryItem extends PIXI.Container {
       this.charges.position.set(this.getWidth() - this.charges.width - 1, this.getHeight() - this.charges.height - 1);
     }
 
-    TooltipReader.addTooltip(this, {title: source.name, description: Descriptions.makeItemDescription(source)});
+    TooltipReader.addTooltip(this, {title: source.name, description: StringManager.makeItemDescription(source)});
   }
 
   public updateSource(source: IItem) {
@@ -73,7 +73,7 @@ export class InventoryItem extends PIXI.Container {
       this.addChild(this.charges);
       this.charges.position.set(this.getWidth() - this.charges.width - 1, this.getHeight() - this.charges.height - 1);
     }
-    TooltipReader.addTooltip(this, {title: source.name, description: Descriptions.makeItemDescription(source)});
+    TooltipReader.addTooltip(this, {title: source.name, description: StringManager.makeItemDescription(source)});
   }
 
   public updateCharges(n: number) {

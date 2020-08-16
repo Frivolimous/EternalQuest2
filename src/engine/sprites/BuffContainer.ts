@@ -1,16 +1,15 @@
-import * as _ from 'lodash';
 import { IBuff, BuffSlug } from '../../data/BuffData';
 
 export class BuffContainer {
   public buffs: IActiveBuff[] = [];
 
   public hasBuff(slug: BuffSlug) {
-    let buff = _.find(this.buffs, data => data.source.name === slug);
+    let buff = this.buffs.find(data => data.source.name === slug);
     return Boolean(buff);
   }
 
   public getBuff(slug: BuffSlug) {
-    return _.find(this.buffs, data => data.source.name === slug);
+    return this.buffs.find(data => data.source.name === slug);
   }
 
   public addBuff(buff: IActiveBuff) {
@@ -18,16 +17,17 @@ export class BuffContainer {
   }
 
   public removeBuff(buff: IActiveBuff) {
-    _.pull(this.buffs, _.find(this.buffs, buff2 => buff2.source.name === buff.source.name));
+    let index = this.buffs.findIndex(buff2 => buff2.source.name === buff.source.name);
+    this.buffs.splice(index, 1);
   }
 
   public removeBuffCalled(slug: BuffSlug) {
-    let index = _.findIndex(this.buffs, buff => buff.source.name === slug);
+    let index = this.buffs.findIndex(buff => buff.source.name === slug);
     this.buffs.splice(index, 1);
   }
 
   public getActionBuffs() {
-    return _.filter(this.buffs, buff => buff.source.clearType === 'action');
+    return this.buffs.filter(buff => buff.source.clearType === 'action');
   }
 
   public clearBuffs() {

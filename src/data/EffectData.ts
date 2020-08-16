@@ -1,8 +1,7 @@
-import * as _ from 'lodash';
 import { BuffSlug, IBuff, IBuffRaw } from './BuffData';
 import { LevelValue, StatTag } from './StatData';
 
-export type EffectSlug = 'lifesteal' | 'walk' | 'rushed' | 'approach' | 'clearCritInit' | 'clearBlockInit' | 'backwards' |
+export type EffectSlug = 'lifesteal' | 'walk' | 'rushed' | 'approach' | 'clearCritInit' | 'clearBlockInit' | 'backwards' | 'knockback' |
   'doubleshot' | 'magicStrike' | 'proc' | 'dazzled' | 'spikey' |
   'ordinary' | 'deft' | 'holy' | 'noble' | 'wild' |
   BuffSlug |
@@ -25,7 +24,8 @@ export const EffectList: IEffectRaw[] = [
   { slug: 'lifesteal', type: 'special', trigger: 'hit', target: 'origin', value: {base: 0.03, inc: 0.006} },
   { slug: 'walk', type: 'special', trigger: 'action' },
   { slug: 'approach', type: 'special', trigger: 'action' },
-  { slug: 'backwards', type: 'special', trigger: 'action' },
+  { slug: 'backwards', type: 'special', target: 'origin', trigger: 'action' },
+  { slug: 'knockback', type: 'special', target: 'target', trigger: 'action' },
   { slug: 'aim', type: 'buff', trigger: 'action', target: 'origin', buff: 'aim' },
   { slug: 'rushed', type: 'buff', trigger: 'action', target: 'origin', buff: 'rushed' },
   { slug: 'crippled', type: 'buff', trigger: 'hit', target: 'target', buff: { slug: 'crippled', type: 'stat', clearType: 'time', count: {base: 5, inc: 0.2}, duration: 100, stats: [{stat: 'strength', value: {base: -50, inc: -5}}] } },
@@ -49,6 +49,7 @@ export const EffectList: IEffectRaw[] = [
 
   { slug: 'empowered', type: 'buff', trigger: 'hit', target: 'origin', buff: { slug: 'empowered', type: 'stat', clearType: 'time', count: 4, duration: 100, stats: [{stat: 'magic', value: {base: 100, inc: 10}} ] } },
   { slug: 'hastened', type: 'buff', trigger: 'hit', target: 'origin', buff: { slug: 'hastened', type: 'stat', clearType: 'time', count: 5, duration: 100, stats: [{stat: 'speed', value: {base: 1, inc: 0.2}}, {stat: 'dodge', value: {base: 0.15, inc: 0.03}} ] } },
+  { slug: 'strengthen', type: 'buff', trigger: 'hit', target: 'origin', buff: { slug: 'strengthen', type: 'stat', clearType: 'time', count: 5, duration: 100, stats: [{stat: 'strength', value: {base: 20, inc: 5}} ] } },
   { slug: 'enchanted', type: 'buff', trigger: 'hit', target: 'origin', buff: { slug: 'enchanted', type: 'trigger', clearType: 'time', count: 7, duration: 100, triggers: [{ slug: 'magicStrike', type: 'damage', trigger: 'hit', target: 'target', damage: {value: {base: 8, inc: 5}, tags: ['Magical', 'Incanted']}}] } },
 
   { slug: 'amplified', type: 'buff', trigger: 'hit', target: 'origin', buff: { slug: 'amplified', type: 'stat', clearType: 'time', count: 5, duration: 100, stats: [{stat: 'power', value: {base: 15, inc: 5}}, {stat: 'resist', tag: 'Magical', value: {base: 0.1, dim: 0.03}}, {stat: 'resist', tag: 'Chemical', value: {base: 0.1, dim: 0.03}}, {stat: 'resist', tag: 'Spirit', value: {base: 0.1, dim: 0.03}}] } },

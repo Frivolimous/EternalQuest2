@@ -17,6 +17,10 @@ import { SaveManager } from '../services/SaveManager';
 import { OptionModal } from '../components/ui/modals/OptionModal';
 import { JMTicker } from '../JMGE/events/JMTicker';
 import { IItem } from '../data/ItemData';
+import { StoreManager, IPurchaseResult } from '../services/StoreManager';
+import { CurrencySlug } from '../data/SaveData';
+import { MiniShop } from '../components/ui/panels/MiniShop';
+import { TimerOptionModal } from '../components/ui/modals/TimerOptionModal';
 
 export class GameUI extends BaseUI {
   public display: GameView;
@@ -30,6 +34,8 @@ export class GameUI extends BaseUI {
   private skills: SkillPanel;
   // private log: BasePanel;
   private swapPanelButton: Button;
+
+  private minishop: MiniShop;
 
   constructor(config?: IBaseUI) {
     super({bgColor: 0x777777});
@@ -52,6 +58,10 @@ export class GameUI extends BaseUI {
 
   public navIn = () => {
     this.stitchComponents();
+  }
+
+  public navOut = () => {
+    this.saveGame();
   }
 
   public stitchComponents() {
@@ -117,6 +127,7 @@ export class GameUI extends BaseUI {
     this.inventory.position.set(e.innerBounds.x, e.innerBounds.bottom - this.inventory.getHeight());
     this.swapPanelButton.position.set(e.outerBounds.right - this.zone.getWidth() / 2 - this.swapPanelButton.getWidth() / 2, this.stats.y - this.swapPanelButton.getHeight() - 10);
     this.currencyPanel.position.set(this.vitals.x + this.vitals.getWidth() + (this.zone.x - this.vitals.x - this.vitals.getWidth() - this.currencyPanel.getWidth()) / 2, 0);
+    this.minishop && this.minishop.position.set(e.outerBounds.left + e.outerBounds.width / 2, e.outerBounds.top + e.outerBounds.height / 2);
 
     this.display.positionElements(e);
   }
@@ -126,11 +137,13 @@ export class GameUI extends BaseUI {
   }
 
   private finishNavTown = () => {
-    this.saveGame();
     this.navBack();
   }
 
   private nextLevel = () => {
+    if (this.minishop && SaveManager.getExtrinsic().options.autoFill) {
+      this.tryAutoFill();
+    }
     this.navForward(new GameUI());
   }
 
@@ -161,7 +174,8 @@ export class GameUI extends BaseUI {
   }
 
   private levelComplete = () => {
-    this.addDialogueWindow(new OptionModal('You finished the level!', [{label: 'To Town', onClick: this.finishNavTown}, {label: 'Continue', onClick: this.nextLevel}]));
+    this.addDialogueWindow(new TimerOptionModal('You finished the level!', [{label: 'To Town', onClick: this.finishNavTown}, {label: 'Continue', onClick: this.nextLevel, timer: 15}]));
+    this.addMinishop();
   }
 
   private sellItem = (item: IItem, slot: number, callback: () => void) => {
@@ -193,5 +207,46 @@ export class GameUI extends BaseUI {
 
   private updateCurrency = () => {
     this.currencyPanel.update(SaveManager.getExtrinsic());
+    this.minishop && this.minishop.setFillAmount(this.inventory.getFillableCost());
+  }
+
+  private addMinishop = () => {
+    this.minishop = new MiniShop();
+    this.minishop.fillAllItems = this.fillAllItems;
+    this.minishop.onSetAutoFill = b => SaveManager.getExtrinsic().options.autoFill = b;
+    this.minishop.setFillAmount(this.inventory.getFillableCost());
+    this.addChild(this.minishop);
+    this.minishop.position.set(this.previousResize.outerBounds.left + (this.previousResize.outerBounds.width - this.minishop.getWidth()) / 2, this.previousResize.outerBounds.top + (this.previousResize.outerBounds.height - this.minishop.getHeight()) / 2);
+    this.minishop.setAutoFill(SaveManager.getExtrinsic().options.autoFill);
+  }
+
+  private fillAllItems = (noDialogue?: boolean) => {
+    let value = this.inventory.getFillableCost();
+
+    this.canAfford(value, () => {
+      this.inventory.fillAllItems();
+    }, 'gold', noDialogue);
+  }
+
+  private tryAutoFill = () => {
+    this.fillAllItems(true);
+  }
+
+  private canAfford = (value: number, onSuccess: () => void, currency: CurrencySlug = 'gold', noDialogue?: boolean) => {
+    StoreManager.purchaseAttempt(value, currency, (result: IPurchaseResult) => {
+      if (result.success) {
+        onSuccess();
+      } else if (result.confirmation) {
+        if (!noDialogue) {
+          this.addDialogueWindow(new OptionModal(result.message || 'Proceed with purchase?', [{ label: 'Yes', onClick: result.confirmation, color: 0x66ff66}, { label: 'No', color: 0xff6666 }]));
+        } else {
+          result.confirmation();
+        }
+      } else {
+        if (!noDialogue) {
+          this.addDialogueWindow(new SimpleModal(result.message || 'Not enough ' + currency));
+        }
+      }
+    });
   }
 }

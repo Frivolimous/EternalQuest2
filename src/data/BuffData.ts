@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 import { StatMap, StatTag, LevelValue, StatMapLevel } from './StatData';
 import { IAction, ActionSlug, IActionRaw } from './ActionData';
 import { IEffect, EffectSlug, IEffectRaw } from './EffectData';
@@ -7,7 +5,7 @@ import { IEffect, EffectSlug, IEffectRaw } from './EffectData';
 export type BuffSlug = 'rushed' | 'burning' | 'crippled' | 'town' | 'useless' | 'leapbuff' | 'critInit' | 'blockInit' | 'aim' | 'markInit' |
   'poisoned' | 'stunned' | 'confused' | 'weakened' | 'vulnerable' | 'empowered' | 'hastened' | 'enchanted' |
   'amplified' | 'turtle' | 'celerity' | 'purity' | 'gassed' | 'blinded' | 'cursed' |
-  'afraid' | 'berserk' |
+  'afraid' | 'berserk' | 'strengthen' |
   'deft';
 export type BuffType = 'stat' | 'damage' | 'action' | 'special' | 'trigger';
 export type BuffClearType = 'action' | 'time' | 'trigger';

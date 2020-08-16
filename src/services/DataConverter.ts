@@ -1,13 +1,13 @@
 import * as _ from 'lodash';
 
-import { ItemSlug, ItemList, IItem, IItemRaw, EnchantSlug, EnchantList, IEnchantRaw, ItemScrollSlugs } from '../data/ItemData';
+import { ItemSlug, ItemList, IItem, IItemRaw, EnchantSlug, EnchantList, IEnchantRaw, LootMap } from '../data/ItemData';
 import { Formula } from './Formula';
 import { IAction, ActionSlug, ActionList, IActionRaw } from '../data/ActionData';
 import { EffectList, EffectSlug, IEffect, IEffectRaw } from '../data/EffectData';
 import { BuffSlug, BuffList, IBuff, IBuffRaw } from '../data/BuffData';
-import { AttackStat } from '../data/StatData';
+import { AttackStat, StatMapLevel } from '../data/StatData';
 import { ISkill, ISkillRaw, SkillSlug, SkillList } from '../data/SkillData';
-import { EnemySlug, IEnemyRaw, IEnemy, EnemyList } from '../data/EnemyData';
+import { EnemySlug, IEnemyRaw, IEnemy, EnemyWeapon, SampleStats, dStatEnemy } from '../data/EnemyData';
 import { ItemManager } from './ItemManager';
 import { StringData } from '../data/StringData';
 
@@ -15,13 +15,13 @@ export const DataConverter = {
   getItem: (slug: ItemSlug | IItemRaw, level: number, enchantSlug?: EnchantSlug | EnchantSlug[], charges?: number, scrollOf?: ItemSlug): IItem => {
 
     let raw: IItemRaw;
-    if (_.isString(slug)) {
-      if (slug === 'Scroll') {
+    if (_.isNumber(slug)) {
+      if (slug === ItemSlug.SCROLL) {
         return DataConverter.getItemScroll(slug, level, enchantSlug, charges, scrollOf);
       }
       raw = _.find(ItemList, {slug});
     } else {
-      if (slug.slug === 'Scroll') {
+      if (slug.slug === ItemSlug.SCROLL) {
         return DataConverter.getItemScroll(slug, level, enchantSlug, charges, scrollOf);
       }
       raw = slug;
@@ -29,7 +29,7 @@ export const DataConverter = {
     }
 
     let m: IItem = {
-      name: slug,
+      name: StringData.ITEM[slug],
       slug,
       level,
       tags: _.clone(raw.tags),
@@ -65,7 +65,7 @@ export const DataConverter = {
 
   getItemScroll: (slug: ItemSlug | IItemRaw, level: number, enchantSlug?: EnchantSlug | EnchantSlug[], charges?: number, scrollOf?: ItemSlug): IItem => {
     let raw: IItemRaw;
-    if (_.isString(slug)) {
+    if (_.isNumber(slug)) {
       raw = _.find(ItemList, {slug});
     } else {
       raw = slug;
@@ -75,7 +75,7 @@ export const DataConverter = {
     let m: IItem;
     if (level === -1) {
       m = {
-        name: slug,
+        name: StringData.ITEM[slug],
         slug,
         level,
         tags: _.clone(raw.tags),
@@ -83,13 +83,13 @@ export const DataConverter = {
       };
     } else {
       if (!scrollOf) {
-        scrollOf = _.sample(ItemScrollSlugs);
+        scrollOf = _.sample(LootMap.Spell);
       }
 
       let src = DataConverter.getItem(_.find(ItemList, {slug: scrollOf}), Math.floor(level * 1.25));
 
       m = {
-        name: src.slug + ' Scroll',
+        name: src.name + ' ' + StringData.ITEM[slug],
         slug,
         level,
         tags: _.clone(raw.tags).concat(src.tags.filter(tag => tag !== 'Equipment')),
@@ -123,7 +123,7 @@ export const DataConverter = {
 
   applyEnchantment: (item: IItem, enchantSlug: EnchantSlug | IEnchantRaw) => {
     let raw: IEnchantRaw;
-    if (_.isString(enchantSlug)) {
+    if (_.isNumber(enchantSlug)) {
       raw = _.find(EnchantList, {slug: enchantSlug});
     } else {
       raw = enchantSlug;
@@ -136,7 +136,7 @@ export const DataConverter = {
       item.enchantSlug.push(enchantSlug);
     }
 
-    item.name = enchantSlug + ' ' + item.name;
+    item.name = StringData.ENCHANT[enchantSlug] + ' ' + item.name;
 
     item.cost *= raw.costMult;
 
@@ -271,17 +271,12 @@ export const DataConverter = {
     return item;
   },
 
-  getEnemy: (slug: EnemySlug | IEnemyRaw, level: number): IEnemy => {
-    let raw: IEnemyRaw;
-    if (_.isNumber(slug)) {
-      raw = _.find(EnemyList, {slug});
-    } else {
-      raw = slug;
-      slug = raw.slug;
-    }
+  getEnemy: (raw: IEnemyRaw, level: number, others: Partial<IEnemyRaw>[]): IEnemy => {
+    let slug = raw.slug;
 
     let m: IEnemy = {
       name: StringData.ENEMY_NAME[slug],
+      xp: raw.xp * Formula.experiencePerMonster(level),
       slug,
       level,
       cosmetics: raw.cosmetics,
@@ -289,7 +284,20 @@ export const DataConverter = {
 
     if (raw.stats) {
       m.stats = Formula.statLevelMapToStatMap(raw.stats, level);
+    } else {
+      m.stats = [];
     }
+
+    if (raw.baseStats) {
+      let stats2: StatMapLevel = [];
+      for (let key of Object.keys(raw.baseStats)) {
+        stats2.push((SampleStats as any)[key][(raw.baseStats as any)[key]]);
+      }
+      m.stats = m.stats.concat(Formula.statLevelMapToStatMap(stats2, level));
+    }
+
+    m.stats = m.stats.concat(Formula.statLevelMapToStatMap(dStatEnemy, level));
+
     if (raw.actions) {
       m.actions = _.map(raw.actions, action => DataConverter.getAction(action, level));
     }
@@ -298,15 +306,25 @@ export const DataConverter = {
     }
 
     if (raw.equipment) {
-      m.equipment = _.map(raw.equipment, item => ItemManager.loadItem(item));
+      let equipLevel = Math.min(level / 10, 15);
+      m.equipment = _.map(raw.equipment, item => ItemManager.loadItem({slug: item, level: equipLevel}));
+    } else {
+      m.equipment = [];
     }
+
+    let weapon = _.cloneDeep(EnemyWeapon);
+    if (raw.damageTags) {
+      (weapon.action as IActionRaw).tags = _.clone(raw.damageTags);
+    }
+
+    m.equipment.push(DataConverter.getItem(weapon, 0));
 
     return m;
   },
 
   getSkill: (slug: SkillSlug | ISkillRaw, level: number): ISkill => {
     let raw: ISkillRaw;
-    if (_.isString(slug)) {
+    if (_.isNumber(slug)) {
       raw = _.find(SkillList, {slug});
     } else {
       raw = slug;
@@ -314,7 +332,7 @@ export const DataConverter = {
     }
 
     let m: ISkill = {
-      name: slug,
+      name: StringData.SKILL[slug],
       slug,
       level,
     };

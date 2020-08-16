@@ -9,6 +9,10 @@ const defaultConfig: Partial<IStateButton> = { width: 60, height: 20, rounding: 
 
 const defaultLabelStyle: PIXI.TextStyleOptions = { fill: 0, fontFamily: Fonts.UI, fontSize: 12 };
 
+export const neverStateList: IState[] = [{slug: 'Never', color: 0xf1f1aa}];
+
+export const actionStateList: IState[] = [{slug: 'Action', color: 0xffcc55}, {slug: 'Action', color: 0x55ffcc}, {slug: 'Action', color: 0xcc77ff}];
+
 export interface IStateButton {
   width?: number;
   height?: number;

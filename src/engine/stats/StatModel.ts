@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
-import { StatTag, dCompoundMap, StatMap, StatBlock, dStatBlock, AnyStat, StatProgression, StatDisplay, isCompoundStat, getPowerType, CompoundMap, ICompoundMap } from '../../data/StatData';
+
+import { StatTag, dCompoundMap, StatMap, StatBlock, dStatBlock, AnyStat, StatProgression, StatDisplay, isCompoundStat, getPowerType, CompoundMap, ICompoundMap, dStatPlayer } from '../../data/StatData';
 import { Formula } from '../../services/Formula';
 import { IPlayerSave } from '../../data/SaveData';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
@@ -7,22 +8,25 @@ import { ActionContainer } from './ActionContainer';
 import { IItem } from '../../data/ItemData';
 import { ItemManager } from '../../services/ItemManager';
 import { IAction } from '../../data/ActionData';
-import { ISkill, SkillPrerequisiteMap, SkillTreeSlug, SkillPageMap, TalentSlug, SkillList } from '../../data/SkillData';
+import { ISkill, SkillPrerequisiteMap, SkillTreeSlug, SkillPageMap, SkillList, SkillSlug } from '../../data/SkillData';
 import { DataConverter } from '../../services/DataConverter';
-import { IEnemy } from '../../data/EnemyData';
+import { IEnemy, dStatEnemy } from '../../data/EnemyData';
 import { IEffect, EffectTrigger } from '../../data/EffectData';
 
 export class StatModel {
   public static fromSave(save: IPlayerSave): StatModel {
-    let m = new StatModel(save.name, save.title, save.level, save.cosmetics, _.map(save.equipment, ItemManager.loadItem), _.map(save.inventory, ItemManager.loadItem), save.artifacts, _.map(save.skills, ItemManager.loadSkill), ItemManager.loadSkill({slug: save.talent, level: 0}), save.experience);
+    let m = new StatModel(save.name, save.level, save.cosmetics, save.equipment.map(ItemManager.loadItem), save.inventory.map(ItemManager.loadItem), save.artifacts, save.skills.map(ItemManager.loadSkill), ItemManager.loadSkill({slug: save.talent, level: 0}), save.experience);
+    m.addStatMap(dStatPlayer);
+
     m.skillpoints = save.skillPoints || 0;
     m.skillTrees = save.skillTrees;
     return m;
   }
 
   public static fromEnemy(enemy: IEnemy): StatModel {
-    let m = new StatModel(enemy.name, null, enemy.level, enemy.cosmetics, enemy.equipment);
+    let m = new StatModel(enemy.name, enemy.level, enemy.cosmetics, enemy.equipment);
     m.addStatMap(enemy.stats);
+    m.xp = enemy.xp;
 
     if (enemy.actions) {
       enemy.actions.forEach(action => {
@@ -36,6 +40,7 @@ export class StatModel {
   public skillpoints = 0;
   public skillTrees: SkillTreeSlug[];
   public onUpdate = new JMEventListener<StatModel>(false, true);
+  public xp: number; // enemy xp value
 
   private stats: StatBlock;
 
@@ -46,7 +51,6 @@ export class StatModel {
 
   constructor(
     public name?: string,
-    public title?: string,
     public level?: number,
     public cosmetics?: any,
 
@@ -323,16 +327,15 @@ export class StatModel {
   public getSave(): IPlayerSave {
     return {
       name: this.name,
-      title: this.title,
       level: this.level,
       cosmetics: this.cosmetics,
-      talent: this.talent.slug as TalentSlug,
-      equipment: _.map(this.equipment, ItemManager.saveItem),
+      talent: this.talent.slug,
+      equipment: this.equipment.map(ItemManager.saveItem),
       artifacts: this.artifacts,
-      skills: _.map(this.skills, ItemManager.saveSkill),
+      skills: this.skills.map(ItemManager.saveSkill),
       skillTrees: this.skillTrees,
       skillPoints: this.skillpoints,
-      inventory: _.map(this.inventory, ItemManager.saveItem),
+      inventory: this.inventory.map(ItemManager.saveItem),
       experience: this.experience,
     };
   }
@@ -473,18 +476,18 @@ export class StatModel {
 
   public tryLevelSkill = (skill: ISkill): ISkill => {
     if (this.skillpoints <= 0) return skill;
-    let maxLevel = (this.talent.slug === 'Noble' ? 7 : 10);
+    let maxLevel = (this.talent.slug === SkillSlug.NOBLE ? 7 : 10);
     if (skill.level >= maxLevel) return skill;
 
-    let prereq = _.find(SkillPrerequisiteMap, pre => pre[0] === skill.slug);
-    if (prereq && !_.some(this.skills, {slug: prereq[1]})) {
+    let prereq = SkillPrerequisiteMap.find(data => data[0] === skill.slug);
+
+    if (prereq && !this.skills.some(data => data.slug === prereq[1])) {
       return skill;
     }
 
     this.skillpoints--;
     let newSkill = DataConverter.getSkill(skill.slug, skill.level + 1);
-
-    let existing = _.find(this.skills, {slug: skill.slug});
+    let existing = this.skills.find(data => data.slug === skill.slug);
 
     if (existing) {
       this.subSkill(existing);

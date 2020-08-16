@@ -13,6 +13,10 @@ import { Colors } from '../../data/Colors';
 import { IBuffResult, IActionResult } from '../../engine/ActionController';
 import { AnyStat, StatTag, ICompoundMap } from '../../data/StatData';
 
+const GameSettings = {
+  auto: false,
+};
+
 export class GameView extends PIXI.Container {
   public onQueueEmpty = new JMEventListener<void>(false, false);
   public onSpriteClicked = new JMEventListener<SpriteModel>(false, true);
@@ -24,7 +28,6 @@ export class GameView extends PIXI.Container {
 
   private actionQueue: IActionResult[] = [];
   private noActions = true;
-  private auto = false;
 
   constructor() {
     super();
@@ -115,7 +118,7 @@ export class GameView extends PIXI.Container {
       if (this.actionQueue.length === 0) {
         this.noActions = true;
         this.onQueueEmpty.publishSync();
-      } else if (this.auto) {
+      } else if (GameSettings.auto) {
         this.tryNextAction();
       }
     }
@@ -211,7 +214,7 @@ export class GameView extends PIXI.Container {
     if (e.key === ' ') {
       this.tryNextAction();
     } else if (e.key === 'p') {
-      this.auto = !this.auto;
+      GameSettings.auto = !GameSettings.auto;
     } else if (e.key === 'q') {
       (window as any).addStat = (stat: AnyStat, tag: StatTag, value: number | ICompoundMap) => this.playerView.model.stats.addStat(stat, tag, value);
       (window as any).subStat = (stat: AnyStat, tag: StatTag, value: number | ICompoundMap) => this.playerView.model.stats.subStat(stat, tag, value);

@@ -85,10 +85,12 @@ export class StatisticsUI extends BaseUI {
     this.selectLeft.selectButton(0);
     this.selectRight.selectButton(0);
 
-    this.getPlayer();
-
     this.stashPanel.onItemSell = this.sellItem; // very deep callback, goes through like 5 layers
     this.inventoryPanel.onItemSell = this.sellItem; // very deep callback, goes through like 5 layers
+  }
+
+  public navIn = () => {
+    this.getPlayer();
   }
 
   public destroy() {

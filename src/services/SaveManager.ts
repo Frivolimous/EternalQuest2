@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { IExtrinsicModel, dExtrinsicModel, IPlayerSave, dPlayerSave, IPlayerLevelSave } from '../data/SaveData';
-import { IItemSave } from '../data/ItemData';
+import { IItemSave, EnchantSlug, ItemSlug } from '../data/ItemData';
+import { SkillTreeSlug, SkillSlug } from '../data/SkillData';
 
 const CURRENT_VERSION = 8;
 const SAVE_LOC: 'virtual' | 'local' | 'online' = 'virtual';
@@ -9,10 +10,10 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
   extrinsic: {
     lastCharacter: 'aewfinwgo',
     playerStash: {
-      aewfinwgo: [{ slug: 'Greatsword', level: 5, enchant: ['Mystic'] }, { slug: 'Armet', level: 5 }],
+      aewfinwgo: [{ slug: ItemSlug.GREATSWORD, level: 5, enchant: [EnchantSlug.MYSTIC] }, { slug: ItemSlug.ARMET, level: 5 }],
     },
     sharedStash: [
-      [{ slug: 'Greatsword', level: 10 }, { slug: 'Cap', level: 10 }],
+      [{ slug: ItemSlug.GREATSWORD, level: 10 }, { slug: ItemSlug.CAP, level: 10 }],
     ],
     currency: {
       gold: 1000000,
@@ -23,35 +24,37 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
     },
     storeItems: {},
     overflowStash: [],
+
+    options: {
+      autoFill: false,
+    },
   },
   Players: {
     aewfinwgo: {
       name: 'Auster',
-      title: 'Ordinary',
       level: 1,
       experience: 0,
       cosmetics: [],
-      talent: 'Deft',
-      equipment: [{ slug: 'Greatsword', level: 0, enchant: ['Master'] }, { slug: 'Armet', level: 0 }, null, null, null],
+      talent: SkillSlug.DEFT,
+      equipment: [{ slug: ItemSlug.GREATSWORD, level: 0 }, { slug: ItemSlug.ARMET, level: 0 }, null, null, null],
       artifacts: [],
       skills: [],
-      skillTrees: ['Warrior', 'Ranger', 'Mage'],
+      skillTrees: [SkillTreeSlug.WARRIOR, SkillTreeSlug.MAGE, SkillTreeSlug.RANGER],
       skillPoints: 50,
       inventory: [],
     },
     ewfngibna: {
       name: 'Rustus',
-      title: 'Ordinary',
       level: 1,
       experience: 0,
       cosmetics: [],
-      talent: 'Powerful',
-      equipment: [{ slug: 'Greatsword', level: 0, enchant: ['Master'] }, { slug: 'Armet', level: 0 }, null, null, null],
+      talent: SkillSlug.POWERFUL,
+      equipment: [{ slug: ItemSlug.GREATSWORD, level: 0 }, { slug: ItemSlug.ARMET, level: 0 }, null, null, null],
       artifacts: [],
-      skills: [{ slug: 'Fitness', level: 5}],
-      skillTrees: ['Warrior', 'Ranger'],
+      skills: [{ slug: SkillSlug.FITNESS, level: 5}],
+      skillTrees: [SkillTreeSlug.WARRIOR, SkillTreeSlug.RANGER],
       skillPoints: 10,
-      inventory: [{ slug: 'Greatsword', level: 0 }, {slug: 'Magic Bolt', level: 0 }, {slug: 'Fireball', level: 0 }, {slug: 'Magic Bolt', level: 10 }, null, { slug: 'Armet', level: 10 }],
+      inventory: [{ slug: ItemSlug.GREATSWORD, level: 0 }, null, { slug: ItemSlug.ARMET, level: 10 }],
     },
   },
   PlayerLevels: {

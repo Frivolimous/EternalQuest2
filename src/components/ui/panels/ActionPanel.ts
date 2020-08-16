@@ -8,7 +8,7 @@ import { StatModel } from '../../../engine/stats/StatModel';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
 import { SelectList } from '../SelectButton';
 import { IAction } from '../../../data/ActionData';
-import { Descriptions } from '../../../data/StringData';
+import { StringManager } from '../../../services/StringManager';
 
 export class ActionPanel extends BasePanel {
   private source: StatModel;
@@ -82,7 +82,7 @@ export class ActionPanel extends BasePanel {
   }
 
   public selectAction = (i: number) => {
-    this.statText.text = Descriptions.makeProcessedActionDescription(this.actions[i], this.temp || this.source);
+    this.statText.text = StringManager.makeProcessedActionDescription(this.actions[i], this.temp || this.source);
   }
 
   public update = () => {

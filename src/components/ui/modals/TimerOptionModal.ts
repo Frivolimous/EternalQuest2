@@ -6,13 +6,15 @@ import { Fonts } from '../../../data/Fonts';
 
 const COLOR_BACK = 0x333333;
 const COLOR_FRONT = 0x666666;
+const COLOR_TIMER = 0x999999;
 const HEIGHT = 300;
 const WIDTH = 400;
 
-export class OptionModal extends BaseModal {
+export class TimerOptionModal extends BaseModal {
   private scoreText: PIXI.Text;
+  private closed: boolean;
 
-  constructor(message: string, options: {label: string, color?: number, onClick?: () => void}[]) {
+  constructor(message: string, options: {label: string, color?: number, onClick?: () => void, timer?: number}[]) {
     super();
 
     this.pivot.set(WIDTH / 2, HEIGHT / 2);
@@ -45,10 +47,25 @@ export class OptionModal extends BaseModal {
 
       button.y = HEIGHT - button.height - 20;
       button.x = (7 + 4 * i - 2 * options.length) * WIDTH * 3 / 40;
+
+      if (option.timer) {
+        let timeT = new PIXI.Text(String(option.timer), {fontFamily: Fonts.UI, fontSize: 20, fill: COLOR_TIMER});
+        timeT.position.set (button.x + WIDTH / 8, button.y - 25);
+        this.addChild(timeT);
+
+        new JMTween({time: option.timer}, option.timer * 1000).to({time: 0}).start().onUpdate(timer => {
+          timeT.text = String(Math.ceil(timer.time));
+        }).onComplete(timer => {
+          this.closeModal(option.onClick);
+        });
+      }
     });
   }
 
   public closeModal = (onComplete?: () => void) => {
+    if (this.closed) return;
+
+    this.closed = true;
     this.animating = true;
     this.tween = new JMTween(this.scale, 300).to({x: 0, y: 0}).easing(JMEasing.Back.In).start().onComplete(() => {
       this.tween = null;

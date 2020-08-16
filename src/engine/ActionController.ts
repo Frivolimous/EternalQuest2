@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
+
 import { SpriteModel } from './sprites/SpriteModel';
-import { StatTag, AttackStats, DamageTag, StatMap, DamageTags, ActionTag } from '../data/StatData';
+import { StatTag, AttackStats, DamageTag, StatMap } from '../data/StatData';
 import { RandomSeed } from '../services/RandomSeed';
-import { StatModel } from './stats/StatModel';
 import { IAction, ActionType } from '../data/ActionData';
 import { IEffect, EffectTrigger } from '../data/EffectData';
 import { VitalType } from './stats/Vitals';
@@ -345,6 +345,11 @@ export class ActionController {
           result.positionChange = result.positionChange ? _.concat(result.positionChange, positionChange) : positionChange;
           break;
         }
+        case 'knockback': {
+          let positionChange = _.map(_.filter(others, { player: false }), data => ({ sprite: data, value: 1, source: null}));
+          result.positionChange = result.positionChange ? _.concat(result.positionChange, positionChange) : positionChange;
+          break;
+        }
         case 'wild': {
           let random = 1 - effect.value + RandomSeed.general.getRaw() * effect.value * 2;
           result.vitalChange.forEach(data => {
@@ -562,7 +567,7 @@ export class ActionController {
     return mResult;
   }
 
-  private getAttackDamage(origin: SpriteModel, target: SpriteModel, tags: StatTag[], actionStats: Partial<AttackStats>): number {
+  private getAttackDamage(origin: SpriteModel, target: SpriteModel, tags: StatTag[], actionStats: AttackStats): number {
     if (!actionStats) return 0;
 
     let crit = origin.stats.getStat('critRate', tags, actionStats.critRate);

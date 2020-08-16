@@ -161,7 +161,7 @@ export class Button extends PIXI.Container {
     return this.config.height * (withScale ? this.scale.y : 1);
   }
 
-    public highlight(b: boolean) {
+  public highlight(b: boolean) {
     if (b) {
       if (this._Highlight) return;
       this._Highlight = new PIXI.Graphics();

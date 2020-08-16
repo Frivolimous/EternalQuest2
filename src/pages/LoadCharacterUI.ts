@@ -5,7 +5,7 @@ import { BaseUI } from './_BaseUI';
 import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { Button, IButton } from '../components/ui/Button';
-import { CharacterPanel } from '../components/character/CharacterPanel';
+import { CharacterPanel } from '../components/ui/panels/CharacterPanel';
 import { SaveManager } from '../services/SaveManager';
 import { SelectList } from '../components/ui/SelectButton';
 import { IPlayerSave } from '../data/SaveData';
@@ -29,7 +29,9 @@ export class LoadCharacterUI extends BaseUI {
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel = new CharacterPanel(new PIXI.Rectangle(0, 0, 300, 500));
     this.addChild(this.title, this.leftPanel, this.rightPanel, this.backB);
+  }
 
+  public navIn = () => {
     this.loadCharacters();
   }
 

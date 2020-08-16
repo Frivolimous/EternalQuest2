@@ -2,8 +2,13 @@ import * as _ from 'lodash';
 import { StatMapLevel, StatMap, LevelValue, StatTag, DamageTags, DamageTag } from '../data/StatData';
 import { RandomSeed } from './RandomSeed';
 import { IItem } from '../data/ItemData';
+import { SpriteModel } from '../engine/sprites/SpriteModel';
+import { VitalType } from '../engine/stats/Vitals';
 
 export const Formula = {
+  COMBAT_DISTANCE: 4,
+  ENEMY_SPAWN_DISTANCE: 9,
+
   diminish(a: number, level: number): number {
     return 1 - Math.pow(1 - a, level);
   },
@@ -15,7 +20,8 @@ export const Formula = {
   },
 
   monstersByZone(zone: number): number {
-    return Math.round(7 + 100 * (1 - (100 / (100 + zone))));
+    return 1;
+    // return Math.round(7 + 100 * (1 - (100 / (100 + zone))));
   },
 
   experienceByLevel(level: number): number {
@@ -74,15 +80,57 @@ export const Formula = {
   },
 
   statLevelToStat(stat: LevelValue, level: number): number {
-    if (_.isNumber(stat)) {
+    if (typeof stat === 'number') {
       return stat;
     } else {
-      return (stat.base || 0) + (stat.inc || 0) * level + ((stat.dim && level >= 0) ? Formula.diminish(stat.dim, level) : 0);
+      let value = stat.base || 0;
+      if (stat.inc) {
+        value += stat.inc * level;
+      }
+      if (stat.dim) {
+        value += (stat.dmult || 1) * Formula.diminish(stat.dim, level);
+      }
+      if (stat.max) {
+        value = Math.min(value, stat.max);
+      }
+
+      return value;
     }
   },
 
   getDamageTag(tags: StatTag[]) {
     let m = _.intersection(tags, DamageTags);
     return m[0] as DamageTag;
+  },
+
+  genStartingAction(init: number) {
+    return init + RandomSeed.general.getInt(0, 50);
+  },
+
+  genSpawnCount(levelStart: boolean) {
+    if (levelStart) {
+      return 4;
+    } else {
+      return RandomSeed.enemySpawn.getInt(3, 9);
+    }
+  },
+
+  spriteByHighestVital(sprites: SpriteModel[], vital: VitalType, minVal?: number) {
+    let maxVal: number = 0;
+    let maxSprite: SpriteModel;
+
+    sprites.forEach(sprite => {
+      let action = sprite.vitals.getVital(vital);
+      if (action > maxVal) {
+        maxVal = action;
+        maxSprite = sprite;
+      }
+    });
+
+    if (!minVal || maxVal > minVal) {
+      return maxSprite;
+    } else {
+      return null;
+    }
   },
 };

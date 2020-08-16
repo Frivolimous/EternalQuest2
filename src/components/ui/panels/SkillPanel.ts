@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import { BasePanel } from './_BasePanel';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
 import { Fonts } from '../../../data/Fonts';
-import { SkillPageMap } from '../../../data/SkillData';
+import { SkillPageMap, SkillSlug } from '../../../data/SkillData';
 import { SkillTree } from '../../skill/SkillTree';
 import { StatModel } from '../../../engine/stats/StatModel';
 import { Button } from '../Button';
@@ -62,7 +62,7 @@ export class SkillPanel extends BasePanel {
       }
     });
 
-    if (sprite.talent.slug === 'Noble') {
+    if (sprite.talent.slug === SkillSlug.NOBLE) {
       this.tree.setMaxLevel(7);
     }
 
@@ -95,7 +95,7 @@ export class SkillPanel extends BasePanel {
   }
 
   public getRespecCost() {
-    if (this.rerespec || this.source.talent.slug === 'Ordinary') {
+    if (this.rerespec || this.source.talent.slug === SkillSlug.ORDINARY) {
       return 0;
     } else {
       return Formula.getRespecValue(this.source.getTotalSkillLevel());

@@ -4,7 +4,7 @@ import { InventoryItem } from './InventoryItem';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
 import { StatTag } from '../../data/StatData';
 import { IItem } from '../../data/ItemData';
-import { StateButton } from '../ui/StateButton';
+import { StateButton, actionStateList, neverStateList } from '../ui/StateButton';
 import { Fonts } from '../../data/Fonts';
 import { ItemManager } from '../../services/ItemManager';
 
@@ -228,15 +228,7 @@ export class InventoryDisplay extends PIXI.Container {
         }
       }
     } else {
-      let loc = this.getLocByIndex(i);
-      this.items[i] = item;
-      item.currentInventory = this;
-      item.position.set(loc.x, loc.y);
-      item.width = this.settings.width;
-      item.height = this.settings.height;
-      if (this.onItemAdded) {
-        this.onItemAdded(item.source, this.slot0Index + i);
-      }
+      this.finishAdd(item, i);
     }
   }
 
@@ -257,24 +249,33 @@ export class InventoryDisplay extends PIXI.Container {
       let loc2: {x: number, y: number} = this.toLocal(item.position, item.parent);
       index = this.getIndexByLoc(loc2);
     }
-    let loc = this.getLocByIndex(index);
+    this.finishAdd(item, index, noStats);
+  }
+
+  public finishAdd(item: InventoryItem, slot: number, noStats?: boolean) {
+    let loc = this.getLocByIndex(slot);
     this.addChild(item);
     item.position.set(loc.x, loc.y);
     item.width = this.settings.width;
     item.height = this.settings.height;
-    this.items[index] = item;
+    this.items[slot] = item;
     item.currentInventory = this;
     if (!noStats && this.onItemAdded) {
-      this.onItemAdded(item.source, this.slot0Index + index);
+      this.onItemAdded(item.source, this.slot0Index + slot);
+    }
+
+    if (this.priorityButtons[slot]) {
+      if (item.source.action) {
+        this.priorityButtons[slot].setStateList(actionStateList);
+      } else {
+        this.priorityButtons[slot].setStateList(neverStateList);
+      }
     }
   }
 
   public returnItem = (item: InventoryItem) => {
     if (item && item.parent) {
-      this.addChild(item);
-      let index = _.indexOf(this.items, item);
-      let loc = this.getLocByIndex(index);
-      item.position.set(loc.x, loc.y);
+      this.finishAdd(item, _.indexOf(this.items, item), true);
     }
   }
 
@@ -284,6 +285,10 @@ export class InventoryDisplay extends PIXI.Container {
       this.items[index] = null;
       if (this.onItemRemoved) {
         this.onItemRemoved(item.source, this.slot0Index + index);
+      }
+
+      if (this.priorityButtons[index]) {
+        this.priorityButtons[index].setStateList([]);
       }
     }
   }

@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import * as _ from 'lodash';
 import { ISkill } from '../../data/SkillData';
-import { TooltipReader } from '../../JMGE/TooltipReader';
+import { TooltipReader } from '../tooltip/TooltipReader';
 import { Fonts } from '../../data/Fonts';
 import { StringManager } from '../../services/StringManager';
 

@@ -20,8 +20,8 @@ export const Formula = {
   },
 
   monstersByZone(zone: number): number {
-    return 1;
-    // return Math.round(7 + 100 * (1 - (100 / (100 + zone))));
+    // return 1;
+    return Math.round(7 + 100 * (1 - (100 / (100 + zone))));
   },
 
   experienceByLevel(level: number): number {
@@ -29,7 +29,8 @@ export const Formula = {
   },
 
   experiencePerMonster(zone: number): number {
-    return Math.floor(Math.pow(zone, 0.77));
+    return 1;
+    // return Math.floor(Math.pow(zone, 0.77));
   },
 
   itemLevelByZone(zone: number, trade?: boolean): number {
@@ -131,6 +132,24 @@ export const Formula = {
       return maxSprite;
     } else {
       return null;
+    }
+  },
+
+  weightByEnemyCount(enemyCount: number, totalCount: number, zone: number): number {
+    if (enemyCount === totalCount) {
+      if (zone > 0 && (zone % 20 === 0)) {
+        return 7;
+      } else if (zone > 0 && zone % 5 === 0) {
+        return 6;
+      } else {
+        return 5;
+      }
+    } else if (enemyCount > 0 && (enemyCount % 30 === 0)) {
+      return 3;
+    } else if (enemyCount > 0 && (enemyCount % 10 === 0)) {
+      return 2;
+    } else {
+      return 1;
     }
   },
 };

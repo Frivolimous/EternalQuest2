@@ -16,6 +16,7 @@ import { Formula } from '../services/Formula';
 import { EffectTrigger } from '../data/EffectData';
 import { IItem } from '../data/ItemData';
 import { EnemySetId, ZoneId } from '../data/EnemyData';
+import { GOD_MODE } from '../services/_Debug';
 
 export class GameController {
   public onPlayerAdded = new JMEventListener<SpriteModel>();
@@ -135,11 +136,12 @@ export class GameController {
   }
 
   public enemyDead = (sprite: SpriteModel) => {
-    console.log('enemy dead');
+    console.log('enemy dead', sprite.stats.xp);
+    if (this.actionC.selectedTarget === sprite) {
+      this.actionC.selectedTarget = null;
+    }
     this.removeSprite(sprite);
-    this.levelData.enemyCount++;
-    this.onZoneProgress.publish(this.levelData);
-    this.player.earnXp();
+    this.player.earnXp(sprite.stats.xp);
 
     let item = ItemManager.getLootFor(this.player, this.levelData, sprite);
     if (item) {
@@ -154,8 +156,12 @@ export class GameController {
   }
 
   public endFight = () => {
-    this.spawnCount = Formula.genSpawnCount(false);
     this.fighting = false;
+
+    this.levelData.enemyCount++;
+    this.onZoneProgress.publish(this.levelData);
+
+    this.spawnCount = Formula.genSpawnCount(false);
     this.processTriggersFor('fightEnd', this.player);
   }
 
@@ -175,7 +181,7 @@ export class GameController {
       this.processing = true;
 
       let result = this.actionC.chooseAction(activeSprite, this.spriteModels, true);
-      this.onAction.publish(result);
+      this.onAction.publishSync(result);
     }
   }
 
@@ -228,8 +234,20 @@ export class GameController {
   }
 
   public selectItem = (item: IItem, type: 'unselect' | 'select' | 'double') => {
-    this.actionC.selectedItem = item;
-    this.actionC.doubleSelected = type === 'double';
+    if (type === 'select' || type === 'double') {
+      this.actionC.selectedItem = item;
+      this.actionC.doubleSelected = type === 'double';
+    } else {
+      this.actionC.selectedTarget = null;
+    }
+  }
+
+  public selectTarget = (data: {sprite: SpriteModel, type: 'unselect' | 'select'}) => {
+    if (data.type === 'select') {
+      this.actionC.selectedTarget = data.sprite;
+    } else {
+      this.actionC.selectedTarget = null;
+    }
   }
 
   public unselectItem = (item: IItem) => {
@@ -241,7 +259,7 @@ export class GameController {
     this.spriteModels.forEach(sprite => {
       let init = sprite.stats.getStat('initiative');
       sprite.vitals.setVital('action', Formula.genStartingAction(init));
-      sprite.tile = sprite.player ? 0 : 2;
+      sprite.tile = sprite.player ? 0 : (2 + sprite.stats.distanceOffset);
       this.processTriggersFor('fightStart', sprite);
     });
 
@@ -267,6 +285,7 @@ export class GameController {
       let mreg = sprite.stats.getStat('mregen') * sprite.stats.getStat('mana');
       sprite.vitals.addCount('health', hreg);
       sprite.vitals.addCount('mana', mreg);
+      if (GOD_MODE && sprite.player) sprite.vitals.setVital('health', sprite.vitals.getTotal('health'));
       this.processTriggersFor('constant', sprite);
       if (this.fighting) {
         this.processTriggersFor('constantBattle', sprite);
@@ -293,13 +312,16 @@ export class GameController {
       return;
     }
 
-    let spawn = SpawnEnemy.makeBasicEnemy(this.levelData.zoneType, this.levelData.monsterType, this.levelData.zone, this.levelData.enemyCount === totalMonsters ? 5 : 1);
+    let weight = Formula.weightByEnemyCount(this.levelData.enemyCount, totalMonsters, this.levelData.zone);
+    let spawns = SpawnEnemy.makeEnemies(this.levelData.zoneType, this.levelData.monsterType, this.levelData.zone, weight);
 
-    let enemy = new SpriteModel(StatModel.fromEnemy(spawn));
-    enemy.tile = Formula.ENEMY_SPAWN_DISTANCE;
-    console.log('Enemy: ' + enemy.stats.name);
-    this.spriteModels.push(enemy);
-    this.onSpriteAdded.publish(enemy);
+    spawns.forEach(spawn => {
+      let enemy = new SpriteModel(StatModel.fromEnemy(spawn));
+      enemy.tile = Formula.ENEMY_SPAWN_DISTANCE + enemy.stats.distanceOffset;
+      console.log('Enemy: ' + enemy.stats.name);
+      this.spriteModels.push(enemy);
+      this.onSpriteAdded.publish(enemy);
+    });
   }
 
   public addTownBuff = () => {

@@ -6,7 +6,7 @@ import { Fonts } from '../../../data/Fonts';
 import { Gauge } from '../Gauge';
 import { StatModel } from '../../../engine/stats/StatModel';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';
-import { TooltipReader } from '../../../JMGE/TooltipReader';
+import { TooltipReader } from '../../tooltip/TooltipReader';
 
 export class VitalsPanel extends BasePanel {
 

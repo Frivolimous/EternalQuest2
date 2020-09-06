@@ -11,15 +11,20 @@ import { BuffView } from './BuffView';
 export class SpriteView extends PIXI.Container {
   public facing = 1;
   public display = new PIXI.Graphics();
+  public offset = new PIXI.Point(0, 0);
 
   public animating: boolean;
+
+  private _Selected: boolean;
 
   private actionGauge: SimpleGauge;
   private manaGauge: SimpleGauge;
   private healthGauge: SimpleGauge;
-  private yOffset: number = 0;
+  // private yOffset: number = 0;
   private moving: boolean;
   private buffView: BuffView = new BuffView();
+
+  private selectDisplay = new PIXI.Graphics();
 
   constructor(public model: SpriteModel, color = 0x4488ff, private showGauges: boolean = true) {
     super();
@@ -30,7 +35,7 @@ export class SpriteView extends PIXI.Container {
     this.addChild(this.buffView);
     if (showGauges) {
       this.healthGauge = new SimpleGauge({color: 0xcc2222, bgColor: 0x550000, width: 40, height: 3});
-      this.manaGauge = new SimpleGauge({color: 0x2222cc, bgColor: 0x000055, width: 40, height: 3});
+      this.manaGauge = new SimpleGauge({color: 0x2255ff, bgColor: 0x000055, width: 40, height: 3});
       this.actionGauge = new SimpleGauge({width: 40, height: 3, bgColor: 0x555500, color: 0xcccc22});
       this.addChild(this.actionGauge, this.manaGauge, this.healthGauge);
       this.actionGauge.setTotal(100);
@@ -45,6 +50,10 @@ export class SpriteView extends PIXI.Container {
     } else {
       this.buffView.position.set(-40, -170);
     }
+
+    this.selectDisplay.lineStyle(4, 0xffff00).drawEllipse(-20, -75, 30, 85);
+    this.addChild(this.selectDisplay);
+    this.selectDisplay.visible = false;
   }
 
   public proclaim(s: string, fill: number = 0xffffff, xOff: number = 0) {
@@ -93,14 +102,22 @@ export class SpriteView extends PIXI.Container {
           this.x = destX;
         }
       }
-      // this.y = CONFIG.GAME.FLOOR_HEIGHT + CONFIG.GAME.Y_TILE * this.yOffset;
     }
 
     this.buffView.updateBuffs(this.model.buffs);
   }
 
+  public set selected(b: boolean) {
+    this._Selected = b;
+    this.selectDisplay.visible = b;
+  }
+
+  public get selected(): boolean {
+    return this._Selected;
+  }
+
   public isBusy = () => this.moving || this.animating;
 
-  private baseX = () => CONFIG.GAME.X_AT_0 + this.model.tile * CONFIG.GAME.X_TILE;
-  private baseY = () => CONFIG.GAME.FLOOR_HEIGHT + CONFIG.GAME.Y_TILE * this.yOffset;
+  private baseX = () => CONFIG.GAME.X_AT_0 + this.model.tile * CONFIG.GAME.X_TILE + this.offset.x;
+  private baseY = () => CONFIG.GAME.FLOOR_HEIGHT + this.offset.y;
 }

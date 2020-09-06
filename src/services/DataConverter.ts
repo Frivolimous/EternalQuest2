@@ -5,21 +5,22 @@ import { Formula } from './Formula';
 import { IAction, ActionSlug, ActionList, IActionRaw } from '../data/ActionData';
 import { EffectList, EffectSlug, IEffect, IEffectRaw } from '../data/EffectData';
 import { BuffSlug, BuffList, IBuff, IBuffRaw } from '../data/BuffData';
-import { AttackStat, StatMapLevel } from '../data/StatData';
+import { AttackStat, StatMapLevel, ActionTag } from '../data/StatData';
 import { ISkill, ISkillRaw, SkillSlug, SkillList } from '../data/SkillData';
 import { EnemySlug, IEnemyRaw, IEnemy, EnemyWeapon, SampleStats, dStatEnemy } from '../data/EnemyData';
 import { ItemManager } from './ItemManager';
 import { StringData } from '../data/StringData';
+import { ActionPanel } from '../components/ui/panels/ActionPanel';
 
 export const DataConverter = {
   getItem: (slug: ItemSlug | IItemRaw, level: number, enchantSlug?: EnchantSlug | EnchantSlug[], charges?: number, scrollOf?: ItemSlug): IItem => {
 
     let raw: IItemRaw;
-    if (_.isNumber(slug)) {
+    if (typeof slug === 'number') {
       if (slug === ItemSlug.SCROLL) {
         return DataConverter.getItemScroll(slug, level, enchantSlug, charges, scrollOf);
       }
-      raw = _.find(ItemList, {slug});
+      raw = ItemList.find(i => i.slug === slug);
     } else {
       if (slug.slug === ItemSlug.SCROLL) {
         return DataConverter.getItemScroll(slug, level, enchantSlug, charges, scrollOf);
@@ -46,11 +47,11 @@ export const DataConverter = {
       m.action.source = m;
     }
     if (raw.triggers) {
-      m.triggers = _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, level));
+      m.triggers = raw.triggers.map(trigger => DataConverter.getEffect(trigger, level));
     }
 
     if (enchantSlug) {
-      if (_.isArray(enchantSlug)) {
+      if (Array.isArray(enchantSlug)) {
         enchantSlug.forEach(es => DataConverter.applyEnchantment(m, es));
       } else {
         DataConverter.applyEnchantment(m, enchantSlug);
@@ -65,8 +66,8 @@ export const DataConverter = {
 
   getItemScroll: (slug: ItemSlug | IItemRaw, level: number, enchantSlug?: EnchantSlug | EnchantSlug[], charges?: number, scrollOf?: ItemSlug): IItem => {
     let raw: IItemRaw;
-    if (_.isNumber(slug)) {
-      raw = _.find(ItemList, {slug});
+    if (typeof slug === 'number') {
+      raw = ItemList.find(i => i.slug === slug);
     } else {
       raw = slug;
       slug = raw.slug;
@@ -86,7 +87,7 @@ export const DataConverter = {
         scrollOf = _.sample(LootMap.Spell);
       }
 
-      let src = DataConverter.getItem(_.find(ItemList, {slug: scrollOf}), Math.floor(level * 1.25));
+      let src = DataConverter.getItem(ItemList.find(i => i.slug === scrollOf), Math.floor(level * 1.25));
 
       m = {
         name: src.name + ' ' + StringData.ITEM[slug],
@@ -107,7 +108,7 @@ export const DataConverter = {
       }
 
       if (enchantSlug) {
-        if (_.isArray(enchantSlug)) {
+        if (Array.isArray(enchantSlug)) {
           enchantSlug.forEach(es => DataConverter.applyEnchantment(m, es));
         } else {
           DataConverter.applyEnchantment(m, enchantSlug);
@@ -123,8 +124,8 @@ export const DataConverter = {
 
   applyEnchantment: (item: IItem, enchantSlug: EnchantSlug | IEnchantRaw) => {
     let raw: IEnchantRaw;
-    if (_.isNumber(enchantSlug)) {
-      raw = _.find(EnchantList, {slug: enchantSlug});
+    if (typeof enchantSlug === 'number') {
+      raw = EnchantList.find(i => i.slug === enchantSlug);
     } else {
       raw = enchantSlug;
       enchantSlug = raw.slug;
@@ -160,7 +161,7 @@ export const DataConverter = {
       }
       let stats = Formula.statLevelMapToStatMap(raw.stats, item.level);
       stats.forEach(stat => {
-        let existing = _.find(item.stats, stat2 => stat2.stat === stat.stat && stat2.tag === stat.tag);
+        let existing = item.stats.find(stat2 => stat2.stat === stat.stat && stat2.tag === stat.tag);
         if (existing) {
           existing.value += stat.value;
         } else {
@@ -170,7 +171,7 @@ export const DataConverter = {
     }
 
     if (raw.triggers) {
-      item.triggers = _.concat(item.triggers || [], _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, item.level)));
+      item.triggers = (item.triggers || []).concat(raw.triggers.map(trigger => DataConverter.getEffect(trigger, item.level)));
     }
 
     if (raw.action) {
@@ -192,24 +193,26 @@ export const DataConverter = {
         if (raw.action.stats) {
           let actionStats = _.mapValues(raw.action.stats, (value) => Formula.statLevelToStat(value, item.level));
 
-          _.forIn(actionStats, (value, key) => {
+          for (let key of Object.keys(actionStats)) {
+            let value = actionStats[key as AttackStat];
+
             if (item.action.stats[key as AttackStat]) {
               item.action.stats[key as AttackStat] += value;
             } else {
               item.action.stats[key as AttackStat] = value;
             }
-          });
+          }
         }
 
         if (raw.action.effects) {
-          let effects = _.map(raw.action.effects, effect => DataConverter.getEffect(effect, item.level));
-          item.action.effects = _.concat(item.action.effects || [], effects);
+          let effects = raw.action.effects.map(effect => DataConverter.getEffect(effect, item.level));
+          item.action.effects = (item.action.effects || []).concat(effects);
         }
 
         if (raw.action.costs) {
-          let costs = _.mapValues(raw.action.costs, value => Formula.statLevelToStat(value, item.level));
-
-          _.forIn(costs, (value, key) => (item.action.costs as any)[key] += value);
+          for (let key of Object.keys(raw.action.costs)) {
+            (item.action.costs as any)[key] += Formula.statLevelToStat((raw.action.costs as any)[key], item.level);
+          }
         }
       } else {
         if (item.tags.includes('Unarmed')) {
@@ -224,7 +227,7 @@ export const DataConverter = {
           }
 
           if (raw.action.effects) {
-            let effects = _.map(raw.action.effects, effect => DataConverter.getEffect(effect, item.level));
+            let effects = raw.action.effects.map(effect => DataConverter.getEffect(effect, item.level));
             if (!item.triggers) {
               item.triggers = [];
             }
@@ -245,7 +248,7 @@ export const DataConverter = {
           }
 
           if (raw.action.effects) {
-            let effects = _.map(raw.action.effects, effect => DataConverter.getEffect(effect, item.level));
+            let effects = raw.action.effects.map(effect => DataConverter.getEffect(effect, item.level));
             if (!item.triggers) {
               item.triggers = [];
             }
@@ -272,12 +275,25 @@ export const DataConverter = {
   },
 
   getEnemy: (raw: IEnemyRaw, level: number, others: Partial<IEnemyRaw>[]): IEnemy => {
-    let slug = raw.slug;
+    raw = _.cloneDeep(raw);
+    others.forEach(other => {
+      // if (other.slug)
+      if (other.xp) raw.xp += other.xp;
+      if (other.cosmetics) raw.cosmetics = raw.cosmetics.concat(other.cosmetics);
+      if (other.distance) raw.distance = other.distance;
+      // if (other.baseStats)
+      if (other.stats) raw.stats = (raw.stats || []).concat(other.stats);
+      if (other.equipment) raw.equipment = (raw.equipment || []).concat(other.equipment);
+      if (other.damageTags) raw.damageTags = (raw.damageTags || []).concat(other.damageTags);
+      if (other.actions) raw.actions = (raw.actions || []).concat(other.actions);
+      if (other.triggers) raw.triggers = (raw.triggers || []).concat(other.triggers);
+    });
 
     let m: IEnemy = {
-      name: StringData.ENEMY_NAME[slug],
+      name: StringData.ENEMY_NAME[raw.slug],
+      distance: raw.distance,
       xp: raw.xp * Formula.experiencePerMonster(level),
-      slug,
+      slug: raw.slug,
       level,
       cosmetics: raw.cosmetics,
     };
@@ -299,15 +315,15 @@ export const DataConverter = {
     m.stats = m.stats.concat(Formula.statLevelMapToStatMap(dStatEnemy, level));
 
     if (raw.actions) {
-      m.actions = _.map(raw.actions, action => DataConverter.getAction(action, level));
+      m.actions = raw.actions.map(action => DataConverter.getAction(action, level));
     }
     if (raw.triggers) {
-      m.triggers = _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, level));
+      m.triggers = raw.triggers.map(trigger => DataConverter.getEffect(trigger, level));
     }
 
     if (raw.equipment) {
       let equipLevel = Math.min(level / 10, 15);
-      m.equipment = _.map(raw.equipment, item => ItemManager.loadItem({slug: item, level: equipLevel}));
+      m.equipment = raw.equipment.map(item => ItemManager.loadItem({slug: item, level: equipLevel}));
     } else {
       m.equipment = [];
     }
@@ -324,8 +340,8 @@ export const DataConverter = {
 
   getSkill: (slug: SkillSlug | ISkillRaw, level: number): ISkill => {
     let raw: ISkillRaw;
-    if (_.isNumber(slug)) {
-      raw = _.find(SkillList, {slug});
+    if (typeof slug === 'number') {
+      raw = SkillList.find(s => s.slug === slug);
     } else {
       raw = slug;
       slug = raw.slug;
@@ -344,7 +360,7 @@ export const DataConverter = {
       m.action = DataConverter.getAction(raw.action, level);
     }
     if (raw.triggers) {
-      m.triggers = _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, level));
+      m.triggers = raw.triggers.map(trigger => DataConverter.getEffect(trigger, level));
     }
 
     return m;
@@ -352,8 +368,8 @@ export const DataConverter = {
 
   getAction: (slug: ActionSlug | IActionRaw, level: number): IAction => {
     let raw: IActionRaw;
-    if (_.isString(slug)) {
-      raw = _.find(ActionList, {slug});
+    if (typeof slug === 'string') {
+      raw = ActionList.find(a => a.slug === slug);
     } else {
       raw = slug;
     }
@@ -372,7 +388,7 @@ export const DataConverter = {
     }
 
     if (raw.effects) {
-      m.effects = _.map(raw.effects, effect => DataConverter.getEffect(effect, level));
+      m.effects = raw.effects.map(effect => DataConverter.getEffect(effect, level));
     }
 
     if (raw.stats) {
@@ -387,8 +403,8 @@ export const DataConverter = {
 
   getBuff(slug: BuffSlug | IBuffRaw, level: number): IBuff {
     let raw: IBuffRaw;
-    if (_.isString(slug)) {
-      raw = _.find(BuffList, {slug});
+    if (typeof slug === 'string') {
+      raw = BuffList.find(b => b.slug === slug);
     } else {
       raw = slug;
     }
@@ -417,7 +433,7 @@ export const DataConverter = {
     }
 
     if (raw.triggers) {
-      m.triggers = _.map(raw.triggers, trigger => DataConverter.getEffect(trigger, level));
+      m.triggers = raw.triggers.map(trigger => DataConverter.getEffect(trigger, level));
     }
 
     return m;
@@ -425,8 +441,8 @@ export const DataConverter = {
 
   getEffect(slug: EffectSlug | IEffectRaw, level: number): IEffect {
     let raw: IEffectRaw;
-    if (_.isString(slug)) {
-      raw = _.find(EffectList, {slug});
+    if (typeof slug === 'string') {
+      raw = EffectList.find(e => e.slug === slug);
     } else {
       raw = slug;
     }

@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { TooltipReader } from '../../../JMGE/TooltipReader';
+import { TooltipReader } from '../../tooltip/TooltipReader';
 import { IActiveBuff } from '../../../engine/sprites/BuffContainer';
 import { Fonts } from '../../../data/Fonts';
 

@@ -7,7 +7,7 @@ import { JMEventListener } from '../../JMGE/events/JMEventListener';
 import { ActionContainer } from './ActionContainer';
 import { IItem } from '../../data/ItemData';
 import { ItemManager } from '../../services/ItemManager';
-import { IAction } from '../../data/ActionData';
+import { IAction, ActionSlug } from '../../data/ActionData';
 import { ISkill, SkillPrerequisiteMap, SkillTreeSlug, SkillPageMap, SkillList, SkillSlug } from '../../data/SkillData';
 import { DataConverter } from '../../services/DataConverter';
 import { IEnemy, dStatEnemy } from '../../data/EnemyData';
@@ -27,6 +27,7 @@ export class StatModel {
     let m = new StatModel(enemy.name, enemy.level, enemy.cosmetics, enemy.equipment);
     m.addStatMap(enemy.stats);
     m.xp = enemy.xp;
+    m.distanceOffset = enemy.distance;
 
     if (enemy.actions) {
       enemy.actions.forEach(action => {
@@ -41,6 +42,7 @@ export class StatModel {
   public skillTrees: SkillTreeSlug[];
   public onUpdate = new JMEventListener<StatModel>(false, true);
   public xp: number; // enemy xp value
+  public distanceOffset = 0; // offset for distance when spawning and starting battle
 
   private stats: StatBlock;
 
@@ -361,6 +363,10 @@ export class StatModel {
 
   public getActionList(distance?: 'b' | number) {
     return this.actions.getListAtDistance(distance);
+  }
+
+  public getAction(slug: ActionSlug) {
+    return this.actions.getAction(slug);
   }
 
   public getStrikeActions() {

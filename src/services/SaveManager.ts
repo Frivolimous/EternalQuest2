@@ -3,14 +3,15 @@ import { IExtrinsicModel, dExtrinsicModel, IPlayerSave, dPlayerSave, IPlayerLeve
 import { IItemSave, EnchantSlug, ItemSlug } from '../data/ItemData';
 import { SkillTreeSlug, SkillSlug } from '../data/SkillData';
 
-const CURRENT_VERSION = 8;
-const SAVE_LOC: 'virtual' | 'local' | 'online' = 'virtual';
+const CURRENT_VERSION = 12;
+const SAVE_LOC: 'virtual' | 'local' | 'online' = 'local';
 export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players: {[key: string]: IPlayerSave}, PlayerLevels: {[key: string]: IPlayerLevelSave}} = {
   version: 8,
   extrinsic: {
-    lastCharacter: 'aewfinwgo',
+    achievements: [],
+    lastCharacter: undefined,
     playerStash: {
-      aewfinwgo: [{ slug: ItemSlug.GREATSWORD, level: 5, enchant: [EnchantSlug.MYSTIC] }, { slug: ItemSlug.ARMET, level: 5 }],
+      aewfinwgo: [{ slug: ItemSlug.GREATSWORD, level: 5, enchant: [EnchantSlug.MYSTIC] }, { slug: ItemSlug.ARMET, level: 5 }, { slug: ItemSlug.MAGIC_BOLT, level: 0}],
     },
     sharedStash: [
       [{ slug: ItemSlug.GREATSWORD, level: 10 }, { slug: ItemSlug.CAP, level: 10 }],
@@ -36,7 +37,7 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
       experience: 0,
       cosmetics: [],
       talent: SkillSlug.DEFT,
-      equipment: [{ slug: ItemSlug.GREATSWORD, level: 0 }, { slug: ItemSlug.ARMET, level: 0 }, null, null, null],
+      equipment: [{ slug: ItemSlug.GREATSWORD, level: 0 }, { slug: ItemSlug.ARMET, level: 0 }, {slug: ItemSlug.MAGIC_BOLT, level: 0}, null, null],
       artifacts: [],
       skills: [],
       skillTrees: [SkillTreeSlug.WARRIOR, SkillTreeSlug.MAGE, SkillTreeSlug.RANGER],
@@ -66,8 +67,6 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
       enemyCount: 0,
       highestChallenge: [1],
       flags: [],
-      gambleShop: [],
-      premiumShop: [],
     },
     ewfngibna: {
       ascendedZone: 0,
@@ -77,8 +76,6 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
       enemyCount: 0,
       highestChallenge: [1],
       flags: [],
-      gambleShop: [],
-      premiumShop: [],
     },
   },
 };
@@ -94,11 +91,16 @@ function versionControl(version: number, extrinsic: any): IExtrinsicModel {
 
 export class SaveManager {
   public static async init(): Promise<null> {
+    console.log('init!');
     return new Promise((resolve) => {
       SaveManager.loadExtrinsic().then(extrinsic => {
+        console.log('ext!', extrinsic);
         if (extrinsic) {
+          console.log('has ext');
           SaveManager.loadVersion().then(version => {
+            console.log('version loaded', version);
             if (version < CURRENT_VERSION) {
+              console.log('old V');
               extrinsic = versionControl(version, extrinsic);
               SaveManager.saveVersion(CURRENT_VERSION);
               SaveManager.saveExtrinsic(extrinsic);
@@ -109,9 +111,10 @@ export class SaveManager {
             });
           });
         } else {
+          console.log('reset ext');
           SaveManager.confirmReset();
           SaveManager.saveVersion(CURRENT_VERSION);
-          SaveManager.saveExtrinsic(extrinsic);
+          SaveManager.saveExtrinsic(this.getExtrinsic());
           resolve();
         }
       });
@@ -183,6 +186,10 @@ export class SaveManager {
 
   public static async savePlayer(player?: IPlayerSave, playerSlug?: string, makeCurrent?: boolean, playerLevel?: IPlayerLevelSave): Promise<IPlayerSave> {
     return new Promise((resolve) => {
+      if (!player && !SaveManager.player) {
+        resolve();
+        return;
+      }
       player = player || SaveManager.player;
       playerLevel = playerLevel || SaveManager.playerLevel;
       playerSlug = playerSlug || this.player.__id;
@@ -195,8 +202,12 @@ export class SaveManager {
           break;
         case 'local':
           if (typeof Storage !== undefined) {
-            // window.localStorage.setItem('Player-' + i, JSON.stringify(player));
-            // window.localStorage.setItem('Player-L-' + i, JSON.stringify(playerLevel));
+            let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
+            let playerLevels: {[key: string]: IPlayerLevelSave} = JSON.parse(window.localStorage.getItem('PlayerLevels')) || {};
+            players[playerSlug] = player;
+            playerLevels[playerSlug] = playerLevel;
+            window.localStorage.setItem('Players', JSON.stringify(players));
+            window.localStorage.setItem('PlayerLevels', JSON.stringify(playerLevels));
           } else {
             console.log('NO STORAGE!');
           }
@@ -220,6 +231,9 @@ export class SaveManager {
           resolve(_.size(virtualSave.Players));
           break;
         case 'local':
+          let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
+          resolve(_.size(players));
+          break;
         case 'online':
       }
     });
@@ -232,6 +246,9 @@ export class SaveManager {
           resolve(_.values(_.mapValues(virtualSave.Players, (value, key) => (value.__id = key, value))));
           break;
         case 'local':
+          let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
+          resolve(_.values(_.mapValues(players, (value, key) => (value.__id = key, value))));
+          break;
         case 'online':
       }
     });
@@ -256,6 +273,14 @@ export class SaveManager {
           resolve();
           break;
         case 'local':
+          let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
+          let playerLevels: {[key: string]: IPlayerLevelSave} = JSON.parse(window.localStorage.getItem('PlayerLevels')) || {};
+          delete players[slug];
+          delete playerLevels[slug];
+          window.localStorage.setItem('Players', JSON.stringify(players));
+          window.localStorage.setItem('PlayerLevels', JSON.stringify(playerLevels));
+          resolve();
+          break;
         case 'online':
       }
     });
@@ -274,14 +299,11 @@ export class SaveManager {
             break;
           case 'local':
             if (typeof Storage !== undefined) {
-              // let playerStr = window.localStorage.getItem('Player-' + i);
-              // if (playerStr !== 'undefined') {
-              //   player = JSON.parse(playerStr);
-              // }
-              // playerStr = window.localStorage.getItem('Player-L-' + i);
-              // if (playerStr !== 'undefined') {
-              //   playerLevel = JSON.parse(playerStr);
-              // }
+              let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
+              let playerLevels: {[key: string]: IPlayerLevelSave} = JSON.parse(window.localStorage.getItem('PlayerLevels')) || {};
+              player = players[playerSlug];
+              playerLevel = playerLevels[playerSlug];
+              player.__id = playerSlug;
             } else {
               console.log('NO STORAGE!');
             }

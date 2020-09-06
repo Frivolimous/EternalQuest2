@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 import { EnchantSlug, ItemSlug } from './ItemData';
 import { SkillSlug, SkillTreeSlug } from './SkillData';
 import { ZoneId, EnemySetId, EnemySlug } from './EnemyData';

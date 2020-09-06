@@ -21,6 +21,7 @@ import { StoreManager, IPurchaseResult } from '../services/StoreManager';
 import { CurrencySlug } from '../data/SaveData';
 import { MiniShop } from '../components/ui/panels/MiniShop';
 import { TimerOptionModal } from '../components/ui/modals/TimerOptionModal';
+import { ActionPanel } from '../components/ui/panels/ActionPanel';
 
 export class GameUI extends BaseUI {
   public display: GameView;
@@ -30,6 +31,7 @@ export class GameUI extends BaseUI {
   private zone: ZonePanel;
   private stats: StatsPanel;
   private inventory: InventoryPanel;
+  private actionPanel: ActionPanel;
   private currencyPanel: CurrencyPanel;
   private skills: SkillPanel;
   // private log: BasePanel;
@@ -47,6 +49,7 @@ export class GameUI extends BaseUI {
     this.zone = new ZonePanel(this.navTown);
     this.stats = new StatsPanel();
     this.inventory = new InventoryPanel();
+    this.actionPanel = new ActionPanel();
     this.currencyPanel = new CurrencyPanel();
     // this.log = new BasePanel(new PIXI.Rectangle(525, 150, 275, 650), 0xf1cccc);
     this.skills = new SkillPanel();
@@ -72,11 +75,13 @@ export class GameUI extends BaseUI {
     this.controller.onPlayerAdded.addListener(this.vitals.addPlayer);
     this.controller.onPlayerAdded.addListener(this.skills.addPlayer);
     this.controller.onPlayerAdded.addListener(this.stats.changeSource);
+    this.controller.onPlayerAdded.addListener(this.actionPanel.changeSource);
     this.controller.onPlayerAdded.addListener(this.inventory.addPlayer);
-    this.controller.onPlayerLevel.addListener(this.display.playerLevel);
+    this.controller.onPlayerLevel.addListener(this.display.playerLevelUp);
     this.controller.onPlayerLevel.addListener(this.skills.update);
     this.controller.onPlayerLevel.addListener(this.vitals.addPlayer);
     this.controller.onEnemyDead.addListener(this.stats.removeTemp);
+    this.controller.onEnemyDead.addListener(this.actionPanel.removeTemp);
     this.controller.onEnemyDead.addListener(this.saveGame);
     this.controller.onItemUpdate.addListener(this.updateItem); // ESSENTIAL FOR COLLECTING LOOT and removing items - - need to offload logic to StatModel
 
@@ -87,7 +92,9 @@ export class GameUI extends BaseUI {
     this.display.onActionComplete.addListener(this.controller.finishAction);
     this.controller.onBuffEffect.addListener(this.display.animateBuff);
 
-    this.display.onSpriteClicked.addListener(this.stats.addTemp);
+    this.display.onSpriteSelected.addListener(data => data.type === 'select' ? this.stats.addTemp(data.sprite) : this.stats.removeTemp(data.sprite));
+    this.display.onSpriteSelected.addListener(data => data.type === 'select' ? this.actionPanel.addTemp(data.sprite) : this.actionPanel.removeTemp(data.sprite));
+    this.display.onSpriteSelected.addListener(this.controller.selectTarget);
     this.controller.onLevelComplete.addListener(this.levelComplete);
 
     this.display.onQueueEmpty.addListener(this.controller.proceed); // ESSENTIAL FOR ANIMATION TIMING - - replace this when headless
@@ -110,6 +117,7 @@ export class GameUI extends BaseUI {
     this.vitals.destroy();
     this.zone.destroy();
     this.stats.destroy();
+    this.actionPanel.destroy();
     this.inventory.destroy();
     this.currencyPanel.destroy();
     this.skills.destroy();
@@ -123,6 +131,7 @@ export class GameUI extends BaseUI {
     this.vitals.position.set(e.innerBounds.x, e.innerBounds.y);
     this.zone.position.set(e.outerBounds.right - this.zone.getWidth(), e.innerBounds.y);
     this.stats.position.set(e.outerBounds.right - this.stats.getWidth(), e.innerBounds.y + this.zone.getHeight());
+    this.actionPanel.position.set(e.outerBounds.right - this.stats.getWidth(), e.innerBounds.y + this.zone.getHeight());
     this.skills.position.set(e.outerBounds.right - this.skills.getWidth(), e.innerBounds.y + this.zone.getHeight());
     this.inventory.position.set(e.innerBounds.x, e.innerBounds.bottom - this.inventory.getHeight());
     this.swapPanelButton.position.set(e.outerBounds.right - this.zone.getWidth() / 2 - this.swapPanelButton.getWidth() / 2, this.stats.y - this.swapPanelButton.getHeight() - 10);
@@ -158,10 +167,10 @@ export class GameUI extends BaseUI {
   private swapPanel = () => {
     if (_.includes(this.children, this.stats)) {
       this.removeChild(this.stats);
+      this.addChild(this.actionPanel);
+    } else if (_.includes(this.children, this.actionPanel)) {
+      this.removeChild(this.actionPanel);
       this.addChild(this.skills);
-    // } else if (_.includes(this.children, this.log)) {
-    //   this.removeChild(this.log);
-    //   this.addChild(this.skills);
     } else if (_.includes(this.children, this.skills)) {
       this.removeChild(this.skills);
       this.addChild(this.stats);

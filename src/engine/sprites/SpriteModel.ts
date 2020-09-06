@@ -54,11 +54,11 @@ export class SpriteModel {
     this.vitals.addCount('action', Math.max(0, this.stats.getStat('speed') / 10));
   }
 
-  public earnXp(n: number = 1) {
+  public earnXp(earned: number = 1) {
     if (this.stats.level >= 50) {
       return;
     }
-    this.vitals.addCount('experience', n);
+    this.vitals.addCount('experience', earned);
     let cXp = this.vitals.getVital('experience');
     let tXp = this.vitals.getTotal('experience');
 

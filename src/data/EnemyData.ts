@@ -1,5 +1,5 @@
-import { StatMapLevel, StatMap, AnyStat, DamageTag, DamageTags } from './StatData';
-import { IItemSave, IItem, IItemRaw, ItemSlug } from './ItemData';
+import { StatMapLevel, StatMap, AnyStat, StatTag } from './StatData';
+import { IItem, IItemRaw, ItemSlug } from './ItemData';
 import { IActionRaw, ActionSlug, IAction } from './ActionData';
 import { EffectSlug, IEffectRaw, IEffect } from './EffectData';
 
@@ -134,14 +134,16 @@ export interface IEnemyStat {
 }
 
 export const dStatEnemy: StatMapLevel = [
-  {stat: 'mregen', value: 0.03},
   {stat: 'power', value: 100},
   {stat: 'speed', value: 100},
   {stat: 'critRate', tag: 'Weapon', value: 0.15},
   {stat: 'critMult', value: 1.5},
   {stat: 'hit', value: 1},
-  {stat: 'resist', value: {base: 0, dim: 0.001}},
-  {stat: 'mana', value: {base: 100, inc: 0.5, max: 300}},
+  {stat: 'resist', tag: 'Magical', value: {base: 0, dim: 0.001}},
+  {stat: 'resist', tag: 'Chemical', value: {base: 0, dim: 0.001}},
+  {stat: 'resist', tag: 'Spirit', value: {base: 0, dim: 0.001}},
+  {stat: 'mana', value: {base: 50, inc: 0.5, max: 300}},
+  {stat: 'mregen', value: 0.06},
 ];
 
 export const EnemyGroupList: { [key in EnemySetId]: { enemies: { base: IEnemyRaw, zones: { [key2 in ZoneId]: Partial<IEnemyRaw> } }[], zones: { [key2 in ZoneId]: Partial<IEnemyRaw> } } } = {
@@ -153,7 +155,7 @@ export const EnemyGroupList: { [key in EnemySetId]: { enemies: { base: IEnemyRaw
     },
     enemies: [
       {
-        base: {xp: 1, slug: EnemySlug.G_WARRIOR, baseStats: {dexterity: 2, accuracy: 4, block: 5, strength: 3, baseDamage: 3, health: 3, fortification: 3}},
+        base: {xp: 1, slug: EnemySlug.G_WARRIOR, distance: 0, baseStats: {dexterity: 2, accuracy: 4, block: 5, strength: 3, baseDamage: 3, health: 3, fortification: 3}},
         zones: {
           [ZoneId.FOREST]: { stats: [{stat: 'strength', value: {inc: 1}}]},
           [ZoneId.DESERT]: { stats: [{stat: 'health', value: {inc: 3}}]},
@@ -161,7 +163,7 @@ export const EnemyGroupList: { [key in EnemySetId]: { enemies: { base: IEnemyRaw
         },
       },
       {
-        base: {xp: 2, slug: EnemySlug.G_BRUTE, baseStats: {dexterity: 2, accuracy: 3, block: 3, strength: 6, baseDamage: 6, health: 6, fortification: 2}},
+        base: {xp: 2, slug: EnemySlug.G_BRUTE, distance: 0, baseStats: {dexterity: 2, accuracy: 3, block: 3, strength: 6, baseDamage: 6, health: 6, fortification: 2}},
         zones: {
           [ZoneId.FOREST]: { equipment: [ItemSlug.ENCHANT_WEAPON]},
           [ZoneId.DESERT]: { equipment: [ItemSlug.HASTE]},
@@ -169,7 +171,7 @@ export const EnemyGroupList: { [key in EnemySetId]: { enemies: { base: IEnemyRaw
         },
       },
       {
-        base: {xp: 1, slug: EnemySlug.G_SHAMAN, baseStats: {dexterity: 2, accuracy: 2, block: 2, strength: 1, baseDamage: 1, health: 2, fortification: 2, magic: 4}},
+        base: {xp: 1, slug: EnemySlug.G_SHAMAN, distance: 1, baseStats: {dexterity: 2, accuracy: 2, block: 2, strength: 1, baseDamage: 1, health: 2, fortification: 2, magic: 1}},
         zones: {
           [ZoneId.FOREST]: { damageTags: ['Magical'], equipment: [ItemSlug.MAGIC_BOLT, ItemSlug.CONFUSION]},
           [ZoneId.DESERT]: { damageTags: ['Magical'], equipment: [ItemSlug.FIREBALL, ItemSlug.VULNERABILITY]},
@@ -177,15 +179,16 @@ export const EnemyGroupList: { [key in EnemySetId]: { enemies: { base: IEnemyRaw
         },
       },
       {
-        base: {xp: 1, slug: EnemySlug.G_ALCHEMIST, damageTags: ['Chemical'], baseStats: {dexterity: 3, accuracy: 2, block: 4, strength: 2, baseDamage: 2, health: 2, fortification: 2, intellect: 2}},
+        base: {xp: 1, slug: EnemySlug.G_ALCHEMIST, distance: 1, damageTags: ['Chemical'], baseStats: {dexterity: 3, accuracy: 2, block: 4, strength: 2, baseDamage: 2, health: 2, fortification: 2, intellect: 1}},
         zones: {
-          [ZoneId.FOREST]: {equipment: [ItemSlug.ALCHEMIST_FIRE], actions: ['withdraw']},
+          // [ZoneId.FOREST]: {equipment: [ItemSlug.ALCHEMIST_FIRE], actions: ['withdraw']},
+          [ZoneId.FOREST]: {equipment: [ItemSlug.ALCHEMIST_FIRE]},
           [ZoneId.DESERT]: {equipment: [ItemSlug.ALCHEMIST_FIRE], stats: [{stat: 'intellect', value: {inc: 1}}]},
           [ZoneId.REALM]: {equipment: [ItemSlug.TOXIC_GAS], stats: [{stat: 'health', value: {inc: 3}}]},
         },
       },
       {
-        base: {xp: 0.5, slug: EnemySlug.G_BLOB, damageTags: ['Chemical'], baseStats: {dexterity: 1, accuracy: 3, block: 0, strength: 2, baseDamage: 2, health: 1, fortification: 1}, stats: [{stat: 'resist', tag: 'Chemical', value: 0.4}, {stat: 'dodge', value: 0.1}]},
+        base: {xp: 0.5, slug: EnemySlug.G_BLOB, distance: 0, damageTags: ['Chemical'], baseStats: {dexterity: 1, accuracy: 3, block: 0, strength: 2, baseDamage: 2, health: 1, fortification: 1}, stats: [{stat: 'resist', tag: 'Chemical', value: 0.4}, {stat: 'dodge', value: 0.1}]},
         zones: {
           [ZoneId.FOREST]: {},
           [ZoneId.DESERT]: {},
@@ -193,7 +196,7 @@ export const EnemyGroupList: { [key in EnemySetId]: { enemies: { base: IEnemyRaw
         },
       },
       {
-        base: {xp: 5, slug: EnemySlug.G_BOSS, baseStats: {dexterity: 4, accuracy: 4, block: 5, strength: 8, baseDamage: 6, health: 8, fortification: 4}, actions: ['leap', 'bash']},
+        base: {xp: 5, slug: EnemySlug.G_BOSS, distance: 0, baseStats: {dexterity: 4, accuracy: 4, block: 5, strength: 8, baseDamage: 6, health: 8, fortification: 4}, actions: ['leap', 'bash']},
         zones: {
           [ZoneId.FOREST]: {},
           [ZoneId.DESERT]: {},
@@ -241,11 +244,13 @@ export const EnemyWeapon: IItemRaw = { slug: 0, cost: 0, tags: ['Equipment', 'We
 export interface IEnemyRaw {
   slug: EnemySlug;
   xp: number;
+  distance: number;
+
   cosmetics?: number[];
   baseStats: IEnemyStat;
   stats?: StatMapLevel;
   equipment?: ItemSlug[];
-  damageTags?: DamageTag[];
+  damageTags?: StatTag[];
 
   actions?: (ActionSlug | IActionRaw)[];
   triggers?: (EffectSlug | IEffectRaw)[];
@@ -254,6 +259,8 @@ export interface IEnemyRaw {
 export interface IEnemy {
   name: string;
   xp: number;
+  distance: number;
+
   slug: EnemySlug;
   level: number;
   cosmetics?: number[];

@@ -19,7 +19,7 @@ const GameSettings = {
 
 export class GameView extends PIXI.Container {
   public onQueueEmpty = new JMEventListener<void>(false, false);
-  public onSpriteClicked = new JMEventListener<SpriteModel>(false, true);
+  public onSpriteSelected = new JMEventListener<{sprite: SpriteModel, type: 'select' | 'unselect'}>(false, true);
   public onActionComplete = new JMEventListener<IActionResult>();
 
   private background: Background;
@@ -50,20 +50,30 @@ export class GameView extends PIXI.Container {
     window.removeEventListener('keydown', this.onDown);
   }
 
+  public selectSprite = (sprite: SpriteView) => {
+    if (sprite.selected) {
+      sprite.selected = false;
+      this.onSpriteSelected.publish({sprite: sprite.model, type: 'unselect'});
+    } else {
+      this.spriteViews.forEach(view => view.selected = false);
+      sprite.selected = true;
+      this.onSpriteSelected.publish({sprite: sprite.model, type: 'select'});
+    }
+  }
+
   public spriteAdded = (sprite: SpriteModel) => {
     let color = sprite.player ? 0x33aaff : 0xff0000;
     let view = new SpriteView(sprite, color, sprite.player ? false : true);
+    let numEnemies = this.spriteViews.filter(v => !v.model.player).length;
 
     view.display.interactive = true;
     view.display.buttonMode = true;
-    view.display.addListener('pointerdown', () => this.onSpriteClicked.publishSync(sprite));
-    if (this.spriteViews.length >= 2) {
-      view.display.position.set(10 * (this.spriteViews.length - 1), 10 * (this.spriteViews.length - 1));
-    }
+    view.display.addListener('pointerdown', () => this.selectSprite(view));
+    view.offset.set(0 - 20 * numEnemies, 20 * numEnemies);
 
     this.spriteViews.push(view);
     this.addChild(view);
-    view.position.set(CONFIG.GAME.X_AT_0 + sprite.tile * CONFIG.GAME.X_TILE, CONFIG.GAME.FLOOR_HEIGHT);
+    view.position.set(CONFIG.GAME.X_AT_0 + sprite.tile * CONFIG.GAME.X_TILE + view.offset.x, CONFIG.GAME.FLOOR_HEIGHT + view.offset.y);
     if (sprite.player) {
       this.playerView = view;
     } else {
@@ -93,11 +103,13 @@ export class GameView extends PIXI.Container {
   public fightStarted = () => {
     this.playerView.proclaim('FIGHT!', 0x00ff00);
     new JMTween({}, 0).wait(1000).start().onWaitComplete(() => {
-      this.onQueueEmpty.publishSync();
+      if (this.actionQueue.length === 0) {
+        this.noActions = false;
+      }
     });
   }
 
-  public playerLevel = (sprite: SpriteModel) => {
+  public playerLevelUp = (sprite: SpriteModel) => {
     this.playerView.proclaim('Level Up!', 0x00ff00);
   }
 
@@ -139,7 +151,7 @@ export class GameView extends PIXI.Container {
       origin.tempWalk(() => this.onActionComplete.publishSync(action));
       return;
     } else if (action.type === 'attack' || action.type === 'curse') {
-      if (_.includes(action.source.tags, 'Projectile')) {
+      if (action.source.tags.includes('Projectile')) {
         let projectile = new PIXI.Graphics();
         projectile.beginFill(0x00ffff).lineStyle(1).drawEllipse(-5, -2.5, 10, 5);
         this.addChild(projectile);
@@ -207,7 +219,7 @@ export class GameView extends PIXI.Container {
   }
 
   private getSpriteByModel(model: SpriteModel) {
-    return _.find(this.spriteViews, view => view.model === model);
+    return this.spriteViews.find(view => view.model === model);
   }
 
   private onDown = (e: KeyboardEvent) => {

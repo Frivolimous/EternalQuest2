@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { MenuUI } from './pages/MenuUI';
 import { CONFIG } from './Config';
 import { SaveManager } from './services/SaveManager';
-import { TooltipReader } from './JMGE/TooltipReader';
+import { TooltipReader } from './components/tooltip/TooltipReader';
 import { JMRect } from './JMGE/others/JMRect';
 import { ATSManager } from './services/ATSManager';
 import { genAchievements, genTutorials, genScores } from './data/ATSData';

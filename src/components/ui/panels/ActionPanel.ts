@@ -1,8 +1,6 @@
 import * as PIXI from 'pixi.js';
 
 import { BasePanel } from './_BasePanel';
-import { Button } from '../Button';
-import { IPlayerLevelSave } from '../../../data/SaveData';
 import { Fonts } from '../../../data/Fonts';
 import { StatModel } from '../../../engine/stats/StatModel';
 import { SpriteModel } from '../../../engine/sprites/SpriteModel';

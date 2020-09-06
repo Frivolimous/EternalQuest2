@@ -275,7 +275,7 @@ export class InventoryDisplay extends PIXI.Container {
 
   public returnItem = (item: InventoryItem) => {
     if (item && item.parent) {
-      this.finishAdd(item, _.indexOf(this.items, item), true);
+      this.finishAdd(item, this.items.indexOf(item), true);
     }
   }
 
@@ -353,7 +353,7 @@ export class InventoryDisplay extends PIXI.Container {
   }
 
   public allowedRemove = (item: InventoryItem) => {
-    if (_.includes(this.items, item)) {
+    if (this.items.includes(item)) {
       return !this.customAllowedRemove || this.customAllowedRemove(item);
     } else {
       return false;
@@ -389,7 +389,7 @@ export class InventoryDisplay extends PIXI.Container {
   }
 
   public hasItem(item: InventoryItem) {
-    return _.includes(this.items, item);
+    return this.items.includes(item);
   }
 
   public getFillableItems() {

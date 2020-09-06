@@ -20,7 +20,7 @@ export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell' | 'Th
 export type ActionTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Melee' | 'Ranged' | 'Grenade' | 'Potion' | 'Cryptic' | 'Mystic' | 'Agile';
 export type EffectTag = 'Healing' | 'Force' | 'Buff' | 'Curse' | 'Fire' | 'Electric' | 'Ice' | 'Toxic' | 'Gadget' | 'Projectile' | 'Control' | 'Critical' | 'OverTime' | DamageTag;
 export type DamageTag = 'Physical' | 'Magical' | 'Chemical' | 'Holy' | 'Dark' | 'Spirit' | 'None';
-export const DamageTags = ['Physical', 'Magical', 'Chemical', 'Holy', 'Dark', 'Spirit', 'None'];
+export const DamageTags = ['Physical', 'Magical', 'Chemical', 'Holy', 'Dark', 'None'];
 
 export function getPowerType(tag: StatTag): 'action' | 'effect' | 'item' {
   if (tag === 'Equipment' || tag === 'Belt' || tag === 'Weapon' || tag === 'Helmet' || tag === 'Spell') {

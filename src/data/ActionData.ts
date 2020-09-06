@@ -13,7 +13,7 @@ export const ActionList: IActionRaw[] = [
 
   { slug: 'idle', type: 'walk', distance: ['b', 1, 2, 3], costs: { action: 50}, tags: [] },
   { slug: 'walk', type: 'walk', tags: [], distance: ['b'], effects: ['walk'], costs: { action: 0 } },
-  { slug: 'leap', type: 'walk', tags: [], distance: [2, 3], effects: ['approach', 'leapbuff'], costs: { action: 0 } },
+  { slug: 'leap', type: 'walk', tags: [], distance: [2], effects: ['approach', 'leapbuff'], costs: { action: 0 } },
   { slug: 'withdraw', type: 'walk', tags: [], distance: [1, 2], effects: ['backwards', 'aim' ], costs: { action: {base: 50, inc: -3} } },
   { slug: 'approach', type: 'walk', tags: [], distance: [2, 3], effects: ['approach', 'rushed'], costs: { action: 0 } },
   { slug: 'gotown', type: 'self', tags: [], distance: ['b'], costs: {} },

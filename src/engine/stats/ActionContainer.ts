@@ -1,4 +1,4 @@
-import { IAction } from '../../data/ActionData';
+import { IAction, ActionSlug } from '../../data/ActionData';
 import { DataConverter } from '../../services/DataConverter';
 
 export class ActionContainer {
@@ -46,6 +46,10 @@ export class ActionContainer {
 
   public getStrikeActions = () => {
     return this.list.filter(action => (action.slug === 'strike' || action.slug === 'approach' || action.slug === 'leap'));
+  }
+
+  public getAction = (slug: ActionSlug) => {
+    return this.list.find(action => action.slug === slug);
   }
 
   private sortActions() {

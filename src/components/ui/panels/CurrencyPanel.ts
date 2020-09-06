@@ -7,7 +7,7 @@ import { StringData } from '../../../data/StringData';
 import { Fonts } from '../../../data/Fonts';
 import { Gauge } from '../Gauge';
 import { Formula } from '../../../services/Formula';
-import { TooltipReader } from '../../../JMGE/TooltipReader';
+import { TooltipReader } from '../../tooltip/TooltipReader';
 
 export class CurrencyPanel extends BasePanel {
   private goldText: PIXI.Text;

@@ -6,7 +6,7 @@ import { MuterOverlay } from '../components/ui/MuterOverlay';
 import { JMTween, JMEasing } from '../JMGE/JMTween';
 import { SaveManager } from '../services/SaveManager';
 import { StringData } from '../data/StringData';
-import { TooltipReader } from '../JMGE/TooltipReader';
+import { TooltipReader } from '../components/tooltip/TooltipReader';
 import { JMRect } from '../JMGE/others/JMRect';
 import { Button } from '../components/ui/Button';
 import { Fonts } from '../data/Fonts';

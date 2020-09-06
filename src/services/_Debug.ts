@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { GameEvents } from './GameEvents';
 import { virtualSave } from './SaveManager';
-import { EnchantSlug } from '../data/ItemData';
+import { EnchantSlug, ItemSlug } from '../data/ItemData';
 import { SkillSlug } from '../data/SkillData';
 
 export const DEBUG_MODE = true;
@@ -17,7 +17,7 @@ export class Debug {
       });
     }
 
-    // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Statue', level: 5, enchant: [EnchantSlug.VAMPIRIC]});
+    // virtualSave.Players.aewfinwgo.inventory.push({slug: ItemSlug.AMPLIFICATION_POTION, level: 1});
     // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Statue', level: 5, enchant: [EnchantSlug.VAMPIRIC]});
     // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Statue', level: 5, enchant: [EnchantSlug.VAMPIRIC]});
     // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Greatsword', level: 5, enchant: [EnchantSlug.VAMPIRIC]});

@@ -133,7 +133,9 @@ export class InventoryPanel extends BasePanel {
   public updateItem = (item: IItem) => {
     let view = this.equip.getItemByModel(item) || this.belt.getItemByModel(item) || this.inventory.getItemByModel(item);
 
-    view.updateCharges(item.charges);
+    if (view) {
+      view.updateCharges(item.charges);
+    }
   }
 
   public removeItem = (item: IItem) => {

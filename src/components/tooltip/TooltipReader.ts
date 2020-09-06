@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { TooltipPopup, ITooltipPopup } from '../components/ui/TooltipPopup';
+import { TooltipPopup, ITooltipPopup } from './TooltipPopup';
 
 export interface ITooltip {
   title: string;

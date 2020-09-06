@@ -22,8 +22,8 @@ export const EffectList: IEffectRaw[] = [
   { slug: 'wild', type: 'special', trigger: 'action', value: 0.25 },
 
   { slug: 'lifesteal', type: 'special', trigger: 'hit', target: 'origin', value: {base: 0.03, inc: 0.006} },
-  { slug: 'walk', type: 'special', trigger: 'action' },
-  { slug: 'approach', type: 'special', trigger: 'action' },
+  { slug: 'walk', type: 'special', trigger: 'action', target: 'origin' },
+  { slug: 'approach', type: 'special', trigger: 'action', target: 'origin' },
   { slug: 'backwards', type: 'special', target: 'origin', trigger: 'action' },
   { slug: 'knockback', type: 'special', target: 'target', trigger: 'action' },
   { slug: 'aim', type: 'buff', trigger: 'action', target: 'origin', buff: 'aim' },

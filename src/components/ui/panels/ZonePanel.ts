@@ -7,8 +7,7 @@ import { StringData } from '../../../data/StringData';
 import { Fonts } from '../../../data/Fonts';
 import { Gauge } from '../Gauge';
 import { Formula } from '../../../services/Formula';
-import { TooltipReader } from '../../../JMGE/TooltipReader';
-import { EnemySetId } from '../../../data/EnemyData';
+import { TooltipReader } from '../../tooltip/TooltipReader';
 
 export class ZonePanel extends BasePanel {
   private zoneText: PIXI.Text;
@@ -32,6 +31,6 @@ export class ZonePanel extends BasePanel {
   public updateZoneProgress = (playerLevel: IPlayerLevelSave) => {
     this.zoneText.text = StringData.MONSTER_SET_NAME[playerLevel.monsterType] + ' ' + StringData.ZONE_NAME[playerLevel.zoneType] + ' ' + String(playerLevel.zone);
     this.zoneText.x = (this.getWidth() - this.zoneText.width) / 2;
-    this.zoneGauge.setFraction(playerLevel.enemyCount, Formula.monstersByZone(playerLevel.zoneType));
+    this.zoneGauge.setFraction(playerLevel.enemyCount, Formula.monstersByZone(playerLevel.zone));
   }
 }

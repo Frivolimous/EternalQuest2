@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { ItemDragEvent, IItemDragResult, InventoryDisplay } from './InventoryDisplay';
 import { Facade } from '../../index';
 import { IItem } from '../../data/ItemData';
-import { TooltipReader } from '../../JMGE/TooltipReader';
+import { TooltipReader } from '../tooltip/TooltipReader';
 import { Fonts } from '../../data/Fonts';
 import { StringManager } from '../../services/StringManager';
 
@@ -36,7 +36,7 @@ export class InventoryItem extends PIXI.Container {
     this.buttonMode = true;
     this.settings = _.defaults(settings, dInventoryItem);
 
-    let color: number = _.includes(source.tags, 'Belt') ? 0xffcccc : _.includes(source.tags, 'Equipment') ? 0xccccff : 0xffffcc;
+    let color: number = source.tags.includes('Belt') ? 0xffcccc : source.tags.includes('Equipment') ? 0xccccff : 0xffffcc;
     this.background.beginFill(color).lineStyle(3).drawRoundedRect(0, 0, this.settings.width, this.settings.height, 2);
     this.addChild(this.background);
 

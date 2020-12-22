@@ -19,7 +19,7 @@ export interface IExtrinsicModel {
   artifacts?: number[];
   cosmetics?: number[];
 
-  playerStash: {[key: string]: IItemSave[]};
+  heroStash: {[key: string]: IItemSave[]};
   sharedStash: IItemSave[][];
   overflowStash: IItemSave[];
 
@@ -34,28 +34,7 @@ export interface IExtrinsicModel {
   };
 }
 
-export const dExtrinsicModel: IExtrinsicModel = {
-  achievements: [],
-  lastCharacter: undefined,
-  currency: {
-    gold: 0,
-    tokens: 0,
-    refresh: 0,
-    suns: 0,
-    souls: 0,
-  },
-  storeItems: {},
-
-  playerStash: {},
-  sharedStash: [],
-  overflowStash: [],
-
-  options: {
-    autoFill: false,
-  },
-};
-
-export interface IPlayerSave {
+export interface IHeroSave {
   name?: string;
   level?: number;
   cosmetics?: number[];
@@ -70,17 +49,39 @@ export interface IPlayerSave {
   __id?: string;
 }
 
-export interface IPlayerLevelSave {
+export interface IProgressSave {
   ascendedZone?: number;
   zone: number;
   zoneType: ZoneId;
   monsterType: EnemySetId;
   enemyCount: number;
+  highestDuel: number;
   highestChallenge?: number[];
   flags?: boolean[];
 }
 
-export const dPlayerSave: IPlayerSave = {
+export const dExtrinsicModel: IExtrinsicModel = {
+  achievements: [],
+  lastCharacter: undefined,
+  currency: {
+    gold: 0,
+    tokens: 0,
+    refresh: 0,
+    suns: 0,
+    souls: 0,
+  },
+  storeItems: {},
+
+  heroStash: {},
+  sharedStash: [],
+  overflowStash: [],
+
+  options: {
+    autoFill: false,
+  },
+};
+
+export const dHeroSave: IHeroSave = {
   name: 'Blank',
   level: 1,
   experience: 0,
@@ -94,9 +95,10 @@ export const dPlayerSave: IPlayerSave = {
   inventory: [],
 };
 
-export const dPlayerLevelSave: IPlayerLevelSave = {
+export const dProgressSave: IProgressSave = {
   ascendedZone: 0,
   zone: 1,
+  highestDuel: 0,
   zoneType: 0,
   monsterType: 0,
   enemyCount: 0,

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 
 import { StatTag, dCompoundMap, StatMap, StatBlock, dStatBlock, AnyStat, StatProgression, StatDisplay, isCompoundStat, getPowerType, CompoundMap, ICompoundMap, dStatPlayer } from '../../data/StatData';
 import { Formula } from '../../services/Formula';
-import { IPlayerSave } from '../../data/SaveData';
+import { IHeroSave } from '../../data/SaveData';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
 import { ActionContainer } from './ActionContainer';
 import { IItem } from '../../data/ItemData';
@@ -14,7 +14,7 @@ import { IEnemy, dStatEnemy } from '../../data/EnemyData';
 import { IEffect, EffectTrigger } from '../../data/EffectData';
 
 export class StatModel {
-  public static fromSave(save: IPlayerSave): StatModel {
+  public static fromSave(save: IHeroSave): StatModel {
     let m = new StatModel(save.name, save.level, save.cosmetics, save.equipment.map(ItemManager.loadItem), save.inventory.map(ItemManager.loadItem), save.artifacts, save.skills.map(ItemManager.loadSkill), ItemManager.loadSkill({slug: save.talent, level: 0}), save.experience);
     m.addStatMap(dStatPlayer);
 
@@ -326,7 +326,7 @@ export class StatModel {
 
   }
 
-  public getSave(): IPlayerSave {
+  public getSave(): IHeroSave {
     return {
       name: this.name,
       level: this.level,

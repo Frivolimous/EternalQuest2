@@ -1,7 +1,7 @@
 import { BuffSlug, IBuff, IBuffRaw } from './BuffData';
 import { LevelValue, StatTag } from './StatData';
 
-export type EffectSlug = 'lifesteal' | 'walk' | 'rushed' | 'approach' | 'clearCritInit' | 'clearBlockInit' | 'backwards' | 'knockback' |
+export type EffectSlug = 'lifesteal' | 'walk' | 'rushed' | 'approach' | 'clearCritInit' | 'clearParryInit' | 'backwards' | 'knockback' |
   'doubleshot' | 'magicStrike' | 'proc' | 'dazzled' | 'spikey' |
   'ordinary' | 'deft' | 'holy' | 'noble' | 'wild' |
   BuffSlug |
@@ -34,7 +34,7 @@ export const EffectList: IEffectRaw[] = [
   { slug: 'useless', type: 'buff', trigger: 'constantSafe', target: 'origin', buff: { slug: 'useless', type: 'special', clearType: 'time', count: 3, duration: 100 }},
   { slug: 'leapbuff', type: 'buff', trigger: 'action', buff: 'leapbuff', target: 'origin' },
   { slug: 'critInit', type: 'buff', trigger: 'fightStart', target: 'origin', buff: { slug: 'critInit', type: 'stat', clearType: 'trigger', count: 1, stats: [{stat: 'critRate', value: {inc: 0.05} }], triggers: [{slug: 'clearCritInit', type: 'clearBuff', trigger: 'crit', target: 'origin', buffRemoved: 'critInit'}] }},
-  { slug: 'blockInit', type: 'buff', trigger: 'fightStart', target: 'origin', buff: { slug: 'blockInit', type: 'stat', clearType: 'trigger', count: 1, stats: [{stat: 'block', value: {inc: 0.05} }], triggers: [{slug: 'clearBlockInit', type: 'clearBuff', trigger: 'avoided', target: 'origin', triggerTags: ['Melee', 'Projectile'], buffRemoved: 'blockInit'}] }},
+  { slug: 'parryInit', type: 'buff', trigger: 'fightStart', target: 'origin', buff: { slug: 'parryInit', type: 'stat', clearType: 'trigger', count: 1, stats: [{stat: 'parry', value: {inc: 0.05} }], triggers: [{slug: 'clearParryInit', type: 'clearBuff', trigger: 'avoided', target: 'origin', triggerTags: ['Melee'], buffRemoved: 'parryInit'}] }},
   { slug: 'markInit', type: 'buff', trigger: 'fightStart', target: 'toughestEnemy', buff: { slug: 'markInit', type: 'stat', clearType: 'time', count: 3, duration: 100, stats: [{stat: 'dodge', value: {base: -0.05, inc: -0.02}}, {stat: 'fortification', value: {base: -0.05, inc: -0.02}}]}},
   { slug: 'doubleshot', type: 'special', trigger: 'actionStart', triggerTags: ['Ranged', 'Thrown'], userate: {base: 0.5, inc: 0.05}, value: 1},
 

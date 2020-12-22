@@ -39,7 +39,7 @@ export class HomeUI extends BaseUI {
     statsB.position.set(25, 250);
     stashB.position.set(25, 350);
 
-    this.rightPanel.setPlayer(SaveManager.getCurrentPlayer());
+    this.rightPanel.setSource(SaveManager.getCurrentPlayer());
   }
 
   public positionElements = (e: IResizeEvent) => {

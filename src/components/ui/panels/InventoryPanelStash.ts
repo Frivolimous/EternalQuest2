@@ -9,7 +9,7 @@ import { IItem, IItemSave } from '../../../data/ItemData';
 import { StatModel } from '../../../engine/stats/StatModel';
 import { DataConverter } from '../../../services/DataConverter';
 import { ItemManager } from '../../../services/ItemManager';
-import { IPlayerSave } from '../../../data/SaveData';
+import { IHeroSave } from '../../../data/SaveData';
 import { SaveManager } from '../../../services/SaveManager';
 import { Button } from '../Button';
 import { SelectList } from '../SelectButton';
@@ -19,7 +19,7 @@ export class InventoryPanelStash extends BasePanel {
   public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
   private inventory: InventoryDisplay;
 
-  private save: IPlayerSave;
+  private source: IHeroSave;
   private list: SelectList;
   private current: number | 'p' | 'o';
   private title: PIXI.Text;
@@ -78,15 +78,15 @@ export class InventoryPanelStash extends BasePanel {
     super.destroy();
   }
 
-  public addPlayer = (sprite: IPlayerSave) => {
-    this.save = sprite;
+  public addSource = (hero: IHeroSave) => {
+    this.source = hero;
     this.switchPage(this.list.selected);
   }
 
   public addItem = (item: IItem, slot: number) => {
     let save = ItemManager.saveItem(item);
     if (this.current === 'p') {
-      SaveManager.getExtrinsic().playerStash[this.save.__id][slot] = save;
+      SaveManager.getExtrinsic().heroStash[this.source.__id][slot] = save;
     } else if (this.current === 'o') {
       SaveManager.getExtrinsic().overflowStash[slot] = save;
     } else {
@@ -96,7 +96,7 @@ export class InventoryPanelStash extends BasePanel {
 
   public removeItem = (item: IItem, slot: number) => {
     if (this.current === 'p') {
-      SaveManager.getExtrinsic().playerStash[this.save.__id][slot] = null;
+      SaveManager.getExtrinsic().heroStash[this.source.__id][slot] = null;
     } else if (this.current === 'o') {
       SaveManager.getExtrinsic().overflowStash[slot] = null;
     } else {
@@ -111,8 +111,8 @@ export class InventoryPanelStash extends BasePanel {
 
     if (index === 0) {
       this.current = 'p';
-      if (this.save) {
-        array = extrinsic.playerStash[this.save.__id];
+      if (this.source) {
+        array = extrinsic.heroStash[this.source.__id];
       }
       this.title.text = 'Personal';
     } else if (index === 11) {

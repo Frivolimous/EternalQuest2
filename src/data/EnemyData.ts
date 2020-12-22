@@ -80,16 +80,16 @@ export const SampleStats: {[key in AnyStat]?: StatMapLevel} = {
     {stat: 'magic', value: {base: 100, inc: 1.7}}, // boss 3
     {stat: 'magic', value: {base: 100, inc: 2.55}}, // boss 4
   ],
-  intellect: [
-    {stat: 'intellect', value: {base: 50, inc: 0}}, // 0
-    {stat: 'intellect', value: {base: 50, inc: 0.43}}, // 1
-    {stat: 'intellect', value: {base: 50, inc: 0.85}}, // 2
-    {stat: 'intellect', value: {base: 50, inc: 0.85}}, // 3
-    {stat: 'intellect', value: {base: 50, inc: 1.7}}, // 4
-    {stat: 'intellect', value: {base: 50, inc: 2.55}}, // 5
-    {stat: 'intellect', value: {base: 50, inc: 3.4}}, // 6
-    {stat: 'intellect', value: {base: 100, inc: 1.7}}, // boss 3
-    {stat: 'intellect', value: {base: 100, inc: 2.55}}, // boss 4
+  cunning: [
+    {stat: 'cunning', value: {base: 50, inc: 0}}, // 0
+    {stat: 'cunning', value: {base: 50, inc: 0.43}}, // 1
+    {stat: 'cunning', value: {base: 50, inc: 0.85}}, // 2
+    {stat: 'cunning', value: {base: 50, inc: 0.85}}, // 3
+    {stat: 'cunning', value: {base: 50, inc: 1.7}}, // 4
+    {stat: 'cunning', value: {base: 50, inc: 2.55}}, // 5
+    {stat: 'cunning', value: {base: 50, inc: 3.4}}, // 6
+    {stat: 'cunning', value: {base: 100, inc: 1.7}}, // boss 3
+    {stat: 'cunning', value: {base: 100, inc: 2.55}}, // boss 4
   ],
   accuracy: [
     {stat: 'accuracy', value: {base: 0, dim: 0.01, dmult: 0.2}}, // 0
@@ -130,7 +130,7 @@ export interface IEnemyStat {
   fortification?: number;
 
   magic?: number;
-  intellect?: number;
+  cunning?: number;
 }
 
 export const dStatEnemy: StatMapLevel = [
@@ -179,11 +179,11 @@ export const EnemyGroupList: { [key in EnemySetId]: { enemies: { base: IEnemyRaw
         },
       },
       {
-        base: {xp: 1, slug: EnemySlug.G_ALCHEMIST, distance: 1, damageTags: ['Chemical'], baseStats: {dexterity: 3, accuracy: 2, block: 4, strength: 2, baseDamage: 2, health: 2, fortification: 2, intellect: 1}},
+        base: {xp: 1, slug: EnemySlug.G_ALCHEMIST, distance: 1, damageTags: ['Chemical'], baseStats: {dexterity: 3, accuracy: 2, block: 4, strength: 2, baseDamage: 2, health: 2, fortification: 2, cunning: 1}},
         zones: {
           // [ZoneId.FOREST]: {equipment: [ItemSlug.ALCHEMIST_FIRE], actions: ['withdraw']},
           [ZoneId.FOREST]: {equipment: [ItemSlug.ALCHEMIST_FIRE]},
-          [ZoneId.DESERT]: {equipment: [ItemSlug.ALCHEMIST_FIRE], stats: [{stat: 'intellect', value: {inc: 1}}]},
+          [ZoneId.DESERT]: {equipment: [ItemSlug.ALCHEMIST_FIRE], stats: [{stat: 'cunning', value: {inc: 1}}]},
           [ZoneId.REALM]: {equipment: [ItemSlug.TOXIC_GAS], stats: [{stat: 'health', value: {inc: 3}}]},
         },
       },

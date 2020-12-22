@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { IItem, IItemSave, ItemList, EnchantSlug, EnchantList, IItemRaw, EnchantMaps, LootMap, ItemSlug, CharmEnchantMaps } from '../data/ItemData';
 import { DataConverter } from './DataConverter';
 import { ISkill, ISkillSave } from '../data/SkillData';
-import { IPlayerLevelSave } from '../data/SaveData';
+import { IProgressSave } from '../data/SaveData';
 import { SpriteModel } from '../engine/sprites/SpriteModel';
 import { RandomSeed } from './RandomSeed';
 import { Formula } from './Formula';
@@ -84,17 +84,17 @@ export const ItemManager = {
     return ItemManager.loadItem(save);
   },
 
-  getLootFor: (player: SpriteModel, level: IPlayerLevelSave, enemy: SpriteModel, boss?: boolean): IItem => {
+  getLootFor: (player: SpriteModel, progress: IProgressSave, enemy: SpriteModel, boss?: boolean): IItem => {
     let iloot = player.stats.getStat('iloot');
 
-    let ploot = boss ? Math.min(level.zone / 3, 0.1) : Math.min(0.00019 * (1 + level.zone / 1500), 0.1);
+    let ploot = boss ? Math.min(progress.zone / 3, 0.1) : Math.min(0.00019 * (1 + progress.zone / 1500), 0.1);
 
     if (RandomSeed.general.getRaw() < ploot) {
       // return spawnPremium(level 0);
     }
 
     if (RandomSeed.general.getRaw() < iloot) {
-      let itemLevel = Formula.itemLevelByZone(level.zone);
+      let itemLevel = Formula.itemLevelByZone(progress.zone);
       let enchantSlug: EnchantSlug;
       let slug: ItemSlug;
       let charges: number;
@@ -134,7 +134,7 @@ export const ItemManager = {
           break;
         case 9: case 10: case 11:
           slug = _.sample(LootMap.Trade);
-          itemLevel = Formula.itemLevelByZone(level.zone, true);
+          itemLevel = Formula.itemLevelByZone(progress.zone, true);
           if (itemLevel > 15) {
             itemLevel = Math.floor(15 + (itemLevel - 15) * 0.3);
           }

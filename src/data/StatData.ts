@@ -7,11 +7,11 @@ export type VitalStat = 'health' | 'mana' | 'hregen' | 'mregen' | 'speed' | 'ini
 export type DefenseStat = 'resist' | 'avoid' | 'devaluation';
 export type SpecialStat = 'iloot' | 'magicSlots' | 'beltSlots';
 
-export type CompoundStat = 'strength' | 'dexterity' | 'intellect' | 'magic' | 'accuracy' |
+export type CompoundStat = 'strength' | 'dexterity' | 'cunning' | 'magic' | 'accuracy' |
   'parry' | 'block' | 'dodge' | 'turn' | 'tenacity' | 'fortification';
 
 export function isCompoundStat(stat: BaseStat | CompoundStat): stat is CompoundStat {
-  return (stat === 'strength' || stat === 'dexterity' || stat === 'intellect' || stat === 'magic' || stat === 'accuracy' || stat === 'parry' || stat === 'block' || stat === 'dodge' || stat === 'turn' || stat === 'tenacity' || stat === 'fortification');
+  return (stat === 'strength' || stat === 'dexterity' || stat === 'cunning' || stat === 'magic' || stat === 'accuracy' || stat === 'parry' || stat === 'block' || stat === 'dodge' || stat === 'turn' || stat === 'tenacity' || stat === 'fortification');
 }
 
 export type StatTag = SpecTag | ItemTag | ActionTag | EffectTag;
@@ -53,7 +53,7 @@ export const dCompoundMap: CompoundMap = {
     { stat: 'power', tag: 'Thrown', percent: 0.5 },
     { stat: 'speed', percent: 0.05 },
   ],
-  intellect: [
+  cunning: [
     { stat: 'power', tag: 'Gadget', percent: 1 },
     { stat: 'power', tag: 'Cryptic', percent: 0.5 },
     { stat: 'rate', tag: 'Gadget', percent: 0.001 },
@@ -101,7 +101,7 @@ export type StatDisplayType = 'numeric' | 'percent' | 'x100';
 export const StatDisplay: { [key in AnyStat]: StatDisplayType } = {
   strength: 'numeric',
   dexterity: 'numeric',
-  intellect: 'numeric',
+  cunning: 'numeric',
   magic: 'numeric',
   accuracy: 'percent',
   parry: 'percent',
@@ -140,7 +140,7 @@ export type StatProgression = 'linear' | 'diminish';
 export const StatProgression: { [key in AnyStat]: StatProgression } = {
   strength: 'linear',
   dexterity: 'linear',
-  intellect: 'linear',
+  cunning: 'linear',
   magic: 'linear',
   accuracy: 'diminish',
   parry: 'diminish',
@@ -177,7 +177,7 @@ export const StatProgression: { [key in AnyStat]: StatProgression } = {
 export const dStatBlock: StatBlock = {
   strength: { base: 0, mult: 0 },
   dexterity: { base: 0, mult: 0 },
-  intellect: { base: 0, mult: 0 },
+  cunning: { base: 0, mult: 0 },
   magic: { base: 0, mult: 0 },
   accuracy: { base: 0, mult: 0, neg: 0 },
   parry: { base: 0, mult: 0, neg: 0 },

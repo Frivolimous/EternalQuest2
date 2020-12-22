@@ -8,7 +8,7 @@ import { Button, IButton } from '../components/ui/Button';
 import { CharacterPanel } from '../components/ui/panels/CharacterPanel';
 import { SaveManager } from '../services/SaveManager';
 import { SelectList } from '../components/ui/SelectButton';
-import { IPlayerSave } from '../data/SaveData';
+import { IHeroSave } from '../data/SaveData';
 import { SimpleModal } from '../components/ui/modals/SimpleModal';
 import { OptionModal } from '../components/ui/modals/OptionModal';
 
@@ -19,7 +19,7 @@ export class LoadCharacterUI extends BaseUI {
   private backB: Button;
 
   private loadSelection: SelectList;
-  private players: IPlayerSave[];
+  private heroes: IHeroSave[];
 
   constructor() {
     super({bgColor: 0x777777});
@@ -38,16 +38,16 @@ export class LoadCharacterUI extends BaseUI {
   public loadCharacters = () => {
     this.loadSelection.destroyAll();
 
-    SaveManager.getAllPlayers().then(players => {
-      this.players = players;
-      for (let i = 0; i < players.length; i++) {
-        let button = this.loadSelection.makeLoadButton(players[i].name);
+    SaveManager.getAllPlayers().then(saves => {
+      this.heroes = saves;
+      for (let i = 0; i < saves.length; i++) {
+        let button = this.loadSelection.makeLoadButton(saves[i].name);
         this.leftPanel.addChild(button);
         button.position.set(25, 50 + i * 80);
       }
 
       let id = SaveManager.getCurrentPlayer().__id;
-      let index = _.findIndex(this.players, {__id: id});
+      let index = _.findIndex(this.heroes, {__id: id});
       if (index >= 0) {
         this.loadSelection.selectButton(index);
       } else {
@@ -69,18 +69,18 @@ export class LoadCharacterUI extends BaseUI {
   }
 
   private selectCharacter = (i: number) => {
-    this.rightPanel.setPlayer(this.players[i]);
-    SaveManager.loadPlayer(this.players[i].__id, true);
-    SaveManager.getExtrinsic().lastCharacter = this.players[i].__id;
+    this.rightPanel.setSource(this.heroes[i]);
+    SaveManager.loadPlayer(this.heroes[i].__id, true);
+    SaveManager.getExtrinsic().lastCharacter = this.heroes[i].__id;
   }
 
   private startDeleteCharacter = (i: number) => {
-    if (this.players.length <= 1) {
+    if (this.heroes.length <= 1) {
       this.addDialogueWindow(new SimpleModal('You cannot delete your last character'));
     } else {
       this.addDialogueWindow(new OptionModal('Delete this character?', [
         {label: 'Confirm', color: 0x55ff55, onClick: () => {
-          SaveManager.deletePlayer(this.players[i].__id).then(this.loadCharacters);
+          SaveManager.deletePlayer(this.heroes[i].__id).then(this.loadCharacters);
         }},
         {label: 'Cancel', color: 0xff5555},
       ]));

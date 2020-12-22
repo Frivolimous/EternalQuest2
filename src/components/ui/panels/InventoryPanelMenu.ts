@@ -52,7 +52,7 @@ export class InventoryPanelMenu extends BasePanel {
     super.destroy();
   }
 
-  public addPlayer = (sprite: SpriteModel | StatModel) => {
+  public addSource = (sprite: SpriteModel | StatModel) => {
     if (sprite instanceof SpriteModel) {
       sprite = sprite.stats;
     }

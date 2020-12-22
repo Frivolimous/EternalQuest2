@@ -7,7 +7,7 @@ import { StatModel } from './stats/StatModel';
 import { RandomSeed } from '../services/RandomSeed';
 import { JMEventListener } from '../JMGE/events/JMEventListener';
 import { SpawnEnemy } from '../services/SpawnEnemy';
-import { IPlayerLevelSave } from '../data/SaveData';
+import { IProgressSave } from '../data/SaveData';
 import { Vitals } from './stats/Vitals';
 import { IBuffResult, ActionController, IActionResult } from './ActionController';
 import { DataConverter } from '../services/DataConverter';
@@ -23,10 +23,10 @@ export class GameController {
   public onPlayerDead = new JMEventListener<null>();
   public onSpriteAdded = new JMEventListener<SpriteModel>();
   public onSpriteRemoved = new JMEventListener<SpriteModel>();
-  public onPlayerLevel = new JMEventListener<SpriteModel>();
+  public onSpriteLevel = new JMEventListener<SpriteModel>();
   public onReset = new JMEventListener<null>();
   public onEnemyDead = new JMEventListener<SpriteModel>();
-  public onZoneProgress = new JMEventListener<IPlayerLevelSave>();
+  public onZoneProgress = new JMEventListener<IProgressSave>();
   public onVitalsUpdate = new JMEventListener<Vitals>();
   public onFightStart = new JMEventListener<null>();
   public onAction = new JMEventListener<IActionResult>();
@@ -35,10 +35,10 @@ export class GameController {
   public onNavTown = new JMEventListener<null>();
   public onLevelComplete = new JMEventListener<null>();
 
-  private levelData: IPlayerLevelSave;
+  private levelData: IProgressSave;
 
   private spriteModels: SpriteModel[] = [];
-  private player: SpriteModel;
+  private playerSprite: SpriteModel;
 
   private fighting = false;
   private processing = false;
@@ -53,7 +53,7 @@ export class GameController {
 
     GameEvents.ticker.add(this.onTick);
 
-    this.levelData = SaveManager.getCurrentPlayerLevel();
+    this.levelData = SaveManager.getCurrentProgress();
     if (!this.levelData) {
       new Error('No level data - - you should not be here!!!');
     }
@@ -63,19 +63,19 @@ export class GameController {
   }
 
   public importPlayer() {
-    this.player = new SpriteModel(StatModel.fromSave(SaveManager.getCurrentPlayer()));
-    console.log('Player: ', this.player.stats.name);
-    this.player.player = true;
-    this.player.setVitalsCallback(vitals => this.onVitalsUpdate.publish(vitals));
-    this.spriteModels.push(this.player);
-    this.onPlayerAdded.publish(this.player);
-    this.onSpriteAdded.publish(this.player);
+    this.playerSprite = new SpriteModel(StatModel.fromSave(SaveManager.getCurrentPlayer()));
+    console.log('Player: ', this.playerSprite.stats.name);
+    this.playerSprite.player = true;
+    this.playerSprite.setVitalsCallback(vitals => this.onVitalsUpdate.publish(vitals));
+    this.spriteModels.push(this.playerSprite);
+    this.onPlayerAdded.publish(this.playerSprite);
+    this.onSpriteAdded.publish(this.playerSprite);
     this.onZoneProgress.publish(this.levelData);
-    this.player.onLevelUp.addListener(this.onPlayerLevel.publish);
+    this.playerSprite.onLevelUp.addListener(this.onSpriteLevel.publish);
   }
 
   public startLevel() {
-    this.player.tile = 0;
+    this.playerSprite.tile = 0;
     this.spawnCount = Formula.genSpawnCount(true);
   }
 
@@ -93,7 +93,7 @@ export class GameController {
     this.actionC.selectedItem = null;
     this.actionC.doubleSelected = false;
 
-    // this.player.resetVitals();
+    // this.playerSprite.resetVitals();
     this.importPlayer();
     this.startLevel();
   }
@@ -141,9 +141,9 @@ export class GameController {
       this.actionC.selectedTarget = null;
     }
     this.removeSprite(sprite);
-    this.player.earnXp(sprite.stats.xp);
+    this.playerSprite.earnXp(sprite.stats.xp);
 
-    let item = ItemManager.getLootFor(this.player, this.levelData, sprite);
+    let item = ItemManager.getLootFor(this.playerSprite, this.levelData, sprite);
     if (item) {
       this.onItemUpdate.publish({item, type: 'loot'});
     }
@@ -162,7 +162,7 @@ export class GameController {
     this.onZoneProgress.publish(this.levelData);
 
     this.spawnCount = Formula.genSpawnCount(false);
-    this.processTriggersFor('fightEnd', this.player);
+    this.processTriggersFor('fightEnd', this.playerSprite);
   }
 
   public playerDead = (sprite: SpriteModel) => {
@@ -325,17 +325,17 @@ export class GameController {
   }
 
   public addTownBuff = () => {
-    if (this.player.buffs.hasBuff('town')) {
-      this.actionC.expendBuff(this.player, 'town');
+    if (this.playerSprite.buffs.hasBuff('town')) {
+      this.actionC.expendBuff(this.playerSprite, 'town');
     } else {
       let buff = DataConverter.getBuff('town', 0);
       let buffAction = buff.action;
 
-      this.player.stats.addAction(buffAction);
+      this.playerSprite.stats.addAction(buffAction);
       let onRemove = () => {
-        this.player.stats.removeAction(buffAction);
+        this.playerSprite.stats.removeAction(buffAction);
       };
-      this.player.buffs.addBuff({
+      this.playerSprite.buffs.addBuff({
         source: buff,
         remaining: 1,
         timer: Infinity,
@@ -345,7 +345,7 @@ export class GameController {
   }
 
   public getPlayerSave = () => {
-    let save = this.player.stats.getSave();
+    let save = this.playerSprite.stats.getSave();
 
     return save;
   }

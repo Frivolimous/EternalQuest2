@@ -72,14 +72,14 @@ export class GameUI extends BaseUI {
 
     this.controller.onZoneProgress.addListener(this.zone.updateZoneProgress);
     this.controller.onVitalsUpdate.addListener(this.vitals.update);
-    this.controller.onPlayerAdded.addListener(this.vitals.addPlayer);
-    this.controller.onPlayerAdded.addListener(this.skills.addPlayer);
+    this.controller.onPlayerAdded.addListener(this.vitals.addSource);
+    this.controller.onPlayerAdded.addListener(this.skills.addSource);
     this.controller.onPlayerAdded.addListener(this.stats.changeSource);
     this.controller.onPlayerAdded.addListener(this.actionPanel.changeSource);
-    this.controller.onPlayerAdded.addListener(this.inventory.addPlayer);
-    this.controller.onPlayerLevel.addListener(this.display.playerLevelUp);
-    this.controller.onPlayerLevel.addListener(this.skills.update);
-    this.controller.onPlayerLevel.addListener(this.vitals.addPlayer);
+    this.controller.onPlayerAdded.addListener(this.inventory.addSource);
+    this.controller.onSpriteLevel.addListener(this.display.spriteLevelUp);
+    this.controller.onSpriteLevel.addListener(this.skills.update);
+    this.controller.onSpriteLevel.addListener(this.vitals.addSource);
     this.controller.onEnemyDead.addListener(this.stats.removeTemp);
     this.controller.onEnemyDead.addListener(this.actionPanel.removeTemp);
     this.controller.onEnemyDead.addListener(this.saveGame);

@@ -56,7 +56,7 @@ export class VitalsPanel extends BasePanel {
     TooltipReader.addTooltip(this.experienceGauge, () => ({ title: 'Experience', description: String(this.experienceGauge.count) + ' / ' + String(this.experienceGauge.total) }));
   }
 
-  public addPlayer = (sprite: SpriteModel) => {
+  public addSource = (sprite: SpriteModel) => {
     this.nameT.text = sprite.stats.name;
     this.levelT.text = 'Lv: ' + String(sprite.stats.level);
 

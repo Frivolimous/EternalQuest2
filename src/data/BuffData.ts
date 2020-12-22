@@ -2,7 +2,7 @@ import { StatMap, StatTag, LevelValue, StatMapLevel } from './StatData';
 import { IAction, ActionSlug, IActionRaw } from './ActionData';
 import { IEffect, EffectSlug, IEffectRaw } from './EffectData';
 
-export type BuffSlug = 'rushed' | 'burning' | 'crippled' | 'town' | 'useless' | 'leapbuff' | 'critInit' | 'blockInit' | 'aim' | 'markInit' |
+export type BuffSlug = 'rushed' | 'burning' | 'crippled' | 'town' | 'useless' | 'leapbuff' | 'critInit' | 'parryInit' | 'aim' | 'markInit' |
   'poisoned' | 'stunned' | 'confused' | 'weakened' | 'vulnerable' | 'empowered' | 'hastened' | 'enchanted' |
   'amplified' | 'turtle' | 'celerity' | 'purity' | 'gassed' | 'blinded' | 'cursed' |
   'afraid' | 'berserk' | 'strengthen' |

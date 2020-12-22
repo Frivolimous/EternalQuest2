@@ -44,7 +44,7 @@ export class SkillPanel extends BasePanel {
     this.respecT.position.set(190, 330);
   }
 
-  public addPlayer = (sprite: SpriteModel | StatModel) => {
+  public addSource = (sprite: SpriteModel | StatModel) => {
     if (sprite instanceof SpriteModel) {
       sprite = sprite.stats;
     }
@@ -73,7 +73,7 @@ export class SkillPanel extends BasePanel {
     if (this.source.getTotalSkillLevel() > 0) {
       this.onRepec(this.getRespecCost(), () => {
         this.source.respecSkills();
-        this.addPlayer(this.source);
+        this.addSource(this.source);
         this.setSkillpoints();
         this.rerespec = true;
       });

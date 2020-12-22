@@ -92,10 +92,10 @@ export const SkillList: ISkillRaw[] = [
   { talent: true, slug: SkillSlug.ENLIGHTENED, stats: [{stat: 'beltSlots', value: -1}, {stat: 'mregen', tag: 'Mult', value: 1}]},
   { talent: true, slug: SkillSlug.HOLY, stats: [{stat: 'power', tag: 'Holy', value: 10}, {stat: 'resist', tag: 'Spirit', value: 0.1}], triggers: ['holy'] }, // gamble
   { talent: true, slug: SkillSlug.NOBLE, triggers: ['noble'] },
-  { talent: true, slug: SkillSlug.CLEVER, stats: [{stat: 'iloot', value: 0.1}, {stat: 'intellect', value: 25}, {stat: 'health', value: -25}, {stat: 'mana', value: -25}] },
+  { talent: true, slug: SkillSlug.CLEVER, stats: [{stat: 'iloot', value: 0.1}, {stat: 'cunning', value: 25}, {stat: 'health', value: -25}, {stat: 'mana', value: -25}] },
   { talent: true, slug: SkillSlug.POWERFUL, stats: [{stat: 'power', value: 25}, {stat: 'resist', value: -0.25}] },
   { talent: true, slug: SkillSlug.WILD, triggers: ['wild']},
-  { talent: true, slug: SkillSlug.STUDIOUS, stats: [{stat: 'magic', tag: 'Mult', value: 0.2}, {stat: 'intellect', tag: 'Mult', value: 0.2}, {stat: 'accuracy', value: -0.25}, {stat: 'block', value: -0.25} ] },
+  { talent: true, slug: SkillSlug.STUDIOUS, stats: [{stat: 'magic', tag: 'Mult', value: 0.2}, {stat: 'cunning', tag: 'Mult', value: 0.2}, {stat: 'accuracy', value: -0.25}, {stat: 'block', value: -0.25} ] },
 
   { passive: true, slug: SkillSlug.WARRIOR, stats: [{ stat: 'efficiency', tag: 'Weapon', value: { base: 0, inc: 0.005}}]},
   { passive: true, slug: SkillSlug.MAGE, stats: [{ stat: 'power', tag: 'Magical', value: { base: 0, inc: 1}}]},
@@ -103,7 +103,7 @@ export const SkillList: ISkillRaw[] = [
 
   { slug: SkillSlug.FITNESS, stats: [{ stat: 'strength', value: { base: 0, inc: 8 } }, { stat: 'health', value: { base: 0, inc: 22 } }] },
   { slug: SkillSlug.SUPER_STRENGTH, stats: [{ stat: 'strength', value: { base: 0, inc: 11 } }, { stat: 'critMult', tag: 'Weapon', value: { base: 0, inc: 0.1 } }], triggers: ['critInit'] },
-  { slug: SkillSlug.COMBAT_TRAINING, stats: [{ stat: 'dexterity', value: { base: 0, inc: 4 } }, { stat: 'accuracy', value: { base: 0, inc: 0.01 } }, { stat: 'block', value: { inc: 0.02 } }], triggers: ['blockInit'] },
+  { slug: SkillSlug.COMBAT_TRAINING, stats: [{ stat: 'dexterity', value: { base: 0, inc: 4 } }, { stat: 'accuracy', value: { base: 0, inc: 0.01 } }, { stat: 'parry', value: { inc: 0.02 } }], triggers: ['parryInit'] },
   { slug: SkillSlug.TOUGHNESS, stats: [{ stat: 'health', value: { inc: 40 } }, { stat: 'hregen', value: { inc: 0.002 } }] },
   { slug: SkillSlug.LEAP_ATTACK, action: 'leap' },
 
@@ -115,8 +115,8 @@ export const SkillList: ISkillRaw[] = [
 
   { slug: SkillSlug.EAGLE_EYE, stats: [{ stat: 'accuracy', value: { base: 0, inc: 0.015 } }, { stat: 'critRate', tag: 'Weapon', value: { base: 0, inc: 0.01 } }, { stat: 'critMult', value: { base: 0, inc: 0.15 } }] },
   { slug: SkillSlug.DOUBLESHOT, stats: [{ stat: 'dexterity', value: { base: 0, inc: 4 } }], triggers: ['doubleshot'] },
-  { slug: SkillSlug.BATTLE_AWARENESS, stats: [{ stat: 'dexterity', value: { base: 0, inc: 7 } }, { stat: 'intellect', value: { base: 0, inc: 5 } }, { stat: 'dodge', value: { base: 0, inc: 0.03 } }] },
-  { slug: SkillSlug.VITAL_STRIKE, stats: [{ stat: 'critMult', value: { base: 0, inc: 0.012 } }], triggers: ['markInit'] },
+  { slug: SkillSlug.BATTLE_AWARENESS, stats: [{ stat: 'dexterity', value: { base: 0, inc: 7 } }, { stat: 'cunning', value: { base: 0, inc: 5 } }, { stat: 'dodge', value: { base: 0, inc: 0.03 } }] },
+  { slug: SkillSlug.VITAL_STRIKE, stats: [{ stat: 'critMult', value: { base: 0, inc: 0.012 } }, { stat: 'penetration', tag: 'Weapon', value: { base: 0, inc: 0.01}}], triggers: ['markInit'] },
   { slug: SkillSlug.WITHDRAW, stats: [{ stat: 'tenacity', value: { base: 0, inc: 0.1 } }], action: 'withdraw' },
 ];
 

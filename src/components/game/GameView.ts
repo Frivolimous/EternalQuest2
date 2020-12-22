@@ -109,8 +109,9 @@ export class GameView extends PIXI.Container {
     });
   }
 
-  public playerLevelUp = (sprite: SpriteModel) => {
-    this.playerView.proclaim('Level Up!', 0x00ff00);
+  public spriteLevelUp = (sprite: SpriteModel) => {
+    let view = this.getSpriteByModel(sprite);
+    if (view) view.proclaim('Level Up!', 0x00ff00);
   }
 
   public clearQueue = () => {

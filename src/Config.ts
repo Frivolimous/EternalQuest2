@@ -14,8 +14,7 @@ export const CONFIG = {
     SCREEN_HEIGHT: 800,
   },
   GAME: {
-    godmode: true,
-    playerHealth: 10,
+    godmode: false,
     FLOOR_HEIGHT: 500,
     Y_TILE: 50,
     X_AT_0: 140,

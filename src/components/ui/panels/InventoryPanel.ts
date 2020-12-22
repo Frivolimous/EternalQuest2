@@ -55,19 +55,19 @@ export class InventoryPanel extends BasePanel {
     super.destroy();
   }
 
-  public addPlayer = (player: SpriteModel) => {
-    this.sprite = player.stats;
+  public addSource = (source: SpriteModel) => {
+    this.sprite = source.stats;
     // create items in the inventory
     this.equip.clear();
     this.belt.clear();
     this.inventory.clear();
-    player.stats.inventory.forEach((item, i) => {
+    source.stats.inventory.forEach((item, i) => {
       if (item) {
         this.inventory.addItemAt(new InventoryItem(item), i, true);
       }
     });
 
-    player.stats.equipment.forEach((item, i) => {
+    source.stats.equipment.forEach((item, i) => {
       if (item) {
         if (i < 5) {
           this.equip.addItemAt(new InventoryItem(item), i, true);
@@ -77,16 +77,16 @@ export class InventoryPanel extends BasePanel {
       }
     });
 
-    this.equip.onItemAdded = player.stats.equipItem;
-    this.equip.onItemRemoved = player.stats.unequipItem;
+    this.equip.onItemAdded = source.stats.equipItem;
+    this.equip.onItemRemoved = source.stats.unequipItem;
     this.equip.selectable = true;
     this.equip.onItemSelect = this.selectItem;
-    this.belt.onItemAdded = player.stats.equipItem;
-    this.belt.onItemRemoved = player.stats.unequipItem;
+    this.belt.onItemAdded = source.stats.equipItem;
+    this.belt.onItemRemoved = source.stats.unequipItem;
     this.belt.selectable = true;
     this.belt.onItemSelect = this.selectItem;
-    this.inventory.onItemAdded = player.stats.addItem;
-    this.inventory.onItemRemoved = player.stats.removeItem;
+    this.inventory.onItemAdded = source.stats.addItem;
+    this.inventory.onItemRemoved = source.stats.removeItem;
     this.updateSlots();
   }
 

@@ -1,16 +1,16 @@
 import * as _ from 'lodash';
-import { IExtrinsicModel, dExtrinsicModel, IPlayerSave, dPlayerSave, IPlayerLevelSave } from '../data/SaveData';
+import { IExtrinsicModel, dExtrinsicModel, IHeroSave, dHeroSave, IProgressSave } from '../data/SaveData';
 import { IItemSave, EnchantSlug, ItemSlug } from '../data/ItemData';
 import { SkillTreeSlug, SkillSlug } from '../data/SkillData';
 
-const CURRENT_VERSION = 12;
+const CURRENT_VERSION = 13;
 const SAVE_LOC: 'virtual' | 'local' | 'online' = 'local';
-export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players: {[key: string]: IPlayerSave}, PlayerLevels: {[key: string]: IPlayerLevelSave}} = {
+export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Heroes: {[key: string]: IHeroSave}, Progresses: {[key: string]: IProgressSave}} = {
   version: 8,
   extrinsic: {
     achievements: [],
     lastCharacter: undefined,
-    playerStash: {
+    heroStash: {
       aewfinwgo: [{ slug: ItemSlug.GREATSWORD, level: 5, enchant: [EnchantSlug.MYSTIC] }, { slug: ItemSlug.ARMET, level: 5 }, { slug: ItemSlug.MAGIC_BOLT, level: 0}],
     },
     sharedStash: [
@@ -30,7 +30,7 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
       autoFill: false,
     },
   },
-  Players: {
+  Heroes: {
     aewfinwgo: {
       name: 'Auster',
       level: 1,
@@ -58,10 +58,11 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
       inventory: [{ slug: ItemSlug.GREATSWORD, level: 0 }, null, { slug: ItemSlug.ARMET, level: 10 }],
     },
   },
-  PlayerLevels: {
+  Progresses: {
     aewfinwgo: {
       ascendedZone: 0,
       zone: 0,
+      highestDuel: 0,
       monsterType: 0,
       zoneType: 2,
       enemyCount: 0,
@@ -71,6 +72,7 @@ export const virtualSave: {version: number, extrinsic: IExtrinsicModel, Players:
     ewfngibna: {
       ascendedZone: 0,
       zone: 10,
+      highestDuel: 0,
       zoneType: 1,
       monsterType: 1,
       enemyCount: 0,
@@ -132,18 +134,12 @@ export class SaveManager {
     }
   }
 
-  public static getCurrentPlayer(): IPlayerSave {
-    return SaveManager.player || dPlayerSave;
+  public static getCurrentPlayer(): IHeroSave {
+    return SaveManager.player || dHeroSave;
   }
 
-  public static getCurrentPlayerLevel(): IPlayerLevelSave {
-    return SaveManager.playerLevel;
-  }
-
-  public static getStashesForPlayer(): Promise<{personal: IItemSave[], public: IItemSave[][], overflow: IItemSave[]}> {
-    return new Promise(resolve => {
-
-    });
+  public static getCurrentProgress(): IProgressSave {
+    return SaveManager.progress;
   }
 
   public static async saveCurrent(): Promise<null> {
@@ -184,30 +180,30 @@ export class SaveManager {
     });
   }
 
-  public static async savePlayer(player?: IPlayerSave, playerSlug?: string, makeCurrent?: boolean, playerLevel?: IPlayerLevelSave): Promise<IPlayerSave> {
+  public static async savePlayer(save?: IHeroSave, slug?: string, makeCurrent?: boolean, progress?: IProgressSave): Promise<IHeroSave> {
     return new Promise((resolve) => {
-      if (!player && !SaveManager.player) {
+      if (!save && !SaveManager.player) {
         resolve();
         return;
       }
-      player = player || SaveManager.player;
-      playerLevel = playerLevel || SaveManager.playerLevel;
-      playerSlug = playerSlug || this.player.__id;
-      player.__id = playerSlug;
+      save = save || SaveManager.player;
+      progress = progress || SaveManager.progress;
+      slug = slug || this.player.__id;
+      save.__id = slug;
 
       switch (SAVE_LOC) {
         case 'virtual':
-          virtualSave.Players[playerSlug] = player;
-          virtualSave.PlayerLevels[playerSlug] = playerLevel;
+          virtualSave.Heroes[slug] = save;
+          virtualSave.Progresses[slug] = progress;
           break;
         case 'local':
           if (typeof Storage !== undefined) {
-            let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
-            let playerLevels: {[key: string]: IPlayerLevelSave} = JSON.parse(window.localStorage.getItem('PlayerLevels')) || {};
-            players[playerSlug] = player;
-            playerLevels[playerSlug] = playerLevel;
-            window.localStorage.setItem('Players', JSON.stringify(players));
-            window.localStorage.setItem('PlayerLevels', JSON.stringify(playerLevels));
+            let players: {[key: string]: IHeroSave} = JSON.parse(window.localStorage.getItem('Heroes')) || {};
+            let Progresses: {[key: string]: IProgressSave} = JSON.parse(window.localStorage.getItem('Progresses')) || {};
+            players[slug] = save;
+            Progresses[slug] = progress;
+            window.localStorage.setItem('Heroes', JSON.stringify(players));
+            window.localStorage.setItem('Progresses', JSON.stringify(Progresses));
           } else {
             console.log('NO STORAGE!');
           }
@@ -216,11 +212,11 @@ export class SaveManager {
       }
 
       if (makeCurrent) {
-        SaveManager.player = player;
-        SaveManager.playerLevel = playerLevel;
+        SaveManager.player = save;
+        SaveManager.progress = progress;
       }
 
-      resolve(player);
+      resolve(save);
     });
   }
 
@@ -228,10 +224,10 @@ export class SaveManager {
     return new Promise((resolve) => {
       switch (SAVE_LOC) {
         case 'virtual':
-          resolve(_.size(virtualSave.Players));
+          resolve(_.size(virtualSave.Heroes));
           break;
         case 'local':
-          let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
+          let players: {[key: string]: IHeroSave} = JSON.parse(window.localStorage.getItem('Heroes')) || {};
           resolve(_.size(players));
           break;
         case 'online':
@@ -239,14 +235,14 @@ export class SaveManager {
     });
   }
 
-  public static getAllPlayers = (): Promise<IPlayerSave[]> => {
+  public static getAllPlayers = (): Promise<IHeroSave[]> => {
     return new Promise((resolve) => {
       switch (SAVE_LOC) {
         case 'virtual':
-          resolve(_.values(_.mapValues(virtualSave.Players, (value, key) => (value.__id = key, value))));
+          resolve(_.values(_.mapValues(virtualSave.Heroes, (value, key) => (value.__id = key, value))));
           break;
         case 'local':
-          let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
+          let players: {[key: string]: IHeroSave} = JSON.parse(window.localStorage.getItem('Heroes')) || {};
           resolve(_.values(_.mapValues(players, (value, key) => (value.__id = key, value))));
           break;
         case 'online':
@@ -268,17 +264,17 @@ export class SaveManager {
     return new Promise((resolve) => {
       switch (SAVE_LOC) {
         case 'virtual':
-          delete virtualSave.Players[slug];
-          delete virtualSave.PlayerLevels[slug];
+          delete virtualSave.Heroes[slug];
+          delete virtualSave.Progresses[slug];
           resolve();
           break;
         case 'local':
-          let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
-          let playerLevels: {[key: string]: IPlayerLevelSave} = JSON.parse(window.localStorage.getItem('PlayerLevels')) || {};
+          let players: {[key: string]: IHeroSave} = JSON.parse(window.localStorage.getItem('Heroes')) || {};
+          let Progresses: {[key: string]: IProgressSave} = JSON.parse(window.localStorage.getItem('Progresses')) || {};
           delete players[slug];
-          delete playerLevels[slug];
-          window.localStorage.setItem('Players', JSON.stringify(players));
-          window.localStorage.setItem('PlayerLevels', JSON.stringify(playerLevels));
+          delete Progresses[slug];
+          window.localStorage.setItem('Heroes', JSON.stringify(players));
+          window.localStorage.setItem('Progresses', JSON.stringify(Progresses));
           resolve();
           break;
         case 'online':
@@ -286,24 +282,24 @@ export class SaveManager {
     });
   }
 
-  public static async loadPlayer(playerSlug: string, makeCurrent: boolean = true): Promise <IPlayerSave> {
-    if (playerSlug) {
-      let player: IPlayerSave;
-      let playerLevel: IPlayerLevelSave;
+  public static async loadPlayer(slug: string, makeCurrent: boolean = true): Promise <IHeroSave> {
+    if (slug) {
+      let player: IHeroSave;
+      let progress: IProgressSave;
       return new Promise((resolve) => {
         switch (SAVE_LOC) {
           case 'virtual':
-            player = virtualSave.Players[playerSlug];
-            playerLevel = virtualSave.PlayerLevels[playerSlug];
-            player.__id = playerSlug;
+            player = virtualSave.Heroes[slug];
+            progress = virtualSave.Progresses[slug];
+            player.__id = slug;
             break;
           case 'local':
             if (typeof Storage !== undefined) {
-              let players: {[key: string]: IPlayerSave} = JSON.parse(window.localStorage.getItem('Players')) || {};
-              let playerLevels: {[key: string]: IPlayerLevelSave} = JSON.parse(window.localStorage.getItem('PlayerLevels')) || {};
-              player = players[playerSlug];
-              playerLevel = playerLevels[playerSlug];
-              player.__id = playerSlug;
+              let players: {[key: string]: IHeroSave} = JSON.parse(window.localStorage.getItem('Heroes')) || {};
+              let Progresses: {[key: string]: IProgressSave} = JSON.parse(window.localStorage.getItem('Progresses')) || {};
+              player = players[slug];
+              progress = Progresses[slug];
+              player.__id = slug;
             } else {
               console.log('NO STORAGE!');
             }
@@ -313,7 +309,7 @@ export class SaveManager {
 
         if (makeCurrent) {
           SaveManager.player = player;
-          SaveManager.playerLevel = playerLevel;
+          SaveManager.progress = progress;
         }
 
         resolve(player);
@@ -324,8 +320,8 @@ export class SaveManager {
     }
   }
 
-  private static player: IPlayerSave;
-  private static playerLevel: IPlayerLevelSave;
+  private static player: IHeroSave;
+  private static progress: IProgressSave;
   private static extrinsic: IExtrinsicModel;
 
   private static confirmReset = () => {
@@ -391,4 +387,4 @@ export class SaveManager {
   }
 }
 
-(window as any).checkSaves = () => console.log(SaveManager.getExtrinsic(), SaveManager.getCurrentPlayer(), SaveManager.getCurrentPlayerLevel());
+(window as any).checkSaves = () => console.log(SaveManager.getExtrinsic(), SaveManager.getCurrentPlayer(), SaveManager.getCurrentProgress());

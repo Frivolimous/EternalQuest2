@@ -5,7 +5,7 @@ import { BaseUI } from './_BaseUI';
 import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { Button } from '../components/ui/Button';
-import { IPlayerSave, CurrencySlug } from '../data/SaveData';
+import { IHeroSave, CurrencySlug } from '../data/SaveData';
 import { SaveManager } from '../services/SaveManager';
 import { SelectList } from '../components/ui/SelectButton';
 import { StatModel } from '../engine/stats/StatModel';
@@ -31,7 +31,7 @@ export class StoreUI extends BaseUI {
   private rightPanel = new PIXI.Graphics();
   private backB: Button;
 
-  private save: IPlayerSave;
+  private save: IHeroSave;
   private model: StatModel;
 
   private storePanel: InventoryPanelStore;
@@ -106,10 +106,10 @@ export class StoreUI extends BaseUI {
   }
 
   public navIn = () => {
-    this.storePanel.addSlugArray(BasicStore, Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
+    this.storePanel.addSlugArray(BasicStore, Formula.itemLevelByZone(SaveManager.getCurrentProgress().zone));
     let blackArray = SaveManager.getExtrinsic().storeItems.gamble;
     if (blackArray) {
-      this.blackPanel.addSlugArray(blackArray,  Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
+      this.blackPanel.addSlugArray(blackArray,  Formula.itemLevelByZone(SaveManager.getCurrentProgress().zone));
       this.setRefreshText();
     } else {
       this.finishRefreshGamble();
@@ -149,7 +149,7 @@ export class StoreUI extends BaseUI {
   public finishRefreshGamble = () => {
     let blackArray = ItemManager.makeGambleArray();
     SaveManager.getExtrinsic().storeItems.gamble = blackArray;
-    this.blackPanel.addSlugArray(blackArray,  Formula.itemLevelByZone(SaveManager.getCurrentPlayerLevel().zone));
+    this.blackPanel.addSlugArray(blackArray,  Formula.itemLevelByZone(SaveManager.getCurrentProgress().zone));
     this.setRefreshText();
   }
 
@@ -163,9 +163,9 @@ export class StoreUI extends BaseUI {
     this.model = StatModel.fromSave(this.save);
     // this.storeP.changeSource(this.model);
     // this.actionPanel.changeSource(this.model);
-    this.inventoryPanel.addPlayer(this.model);
-    this.stashPanel.addPlayer(this.save);
-    // this.skillPanel.addPlayer(this.model);
+    this.inventoryPanel.addSource(this.model);
+    this.stashPanel.addSource(this.save);
+    // this.skillPanel.addSource(this.model);
 
     this.model.onUpdate.addListener(this.updateStats);
   }

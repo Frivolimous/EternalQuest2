@@ -16,26 +16,5 @@ export class Debug {
         console.log('APP:', e.type, ' : ', e.text);
       });
     }
-
-    // virtualSave.Players.aewfinwgo.inventory.push({slug: ItemSlug.AMPLIFICATION_POTION, level: 1});
-    // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Statue', level: 5, enchant: [EnchantSlug.VAMPIRIC]});
-    // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Statue', level: 5, enchant: [EnchantSlug.VAMPIRIC]});
-    // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Greatsword', level: 5, enchant: [EnchantSlug.VAMPIRIC]});
-    // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Magic Bolt', level: 5});
-    // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Darts', level: 5, charges: 5});
-    // virtualSave.Players.aewfinwgo.skills.push({slug: SkillSlug.FITNESS, level: 99});
-    // for (let i = 0; i < 5; i++) {
-    //   virtualSave.Players.aewfinwgo.inventory.push({slug: 'Trophy', level: i});
-    // }
-    // EnchantMaps.Charm.forEach(slug => {
-      // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Statue', level: 5, enchant: [slug]});
-    // });
-    // virtualSave.Players.aewfinwgo.inventory.push({slug: 'Gloves', level: 5});
-    // ItemList.forEach((item, i) => {
-    //   virtualSave.extrinsic.overflowStash.push({slug: item.slug, level: 0});
-    //   if (i > 15) {
-    //     virtualSave.Players.aewfinwgo.inventory.push({slug: item.slug, level: 5});
-    //   }
-    // });
   }
 }

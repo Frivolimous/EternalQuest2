@@ -2,7 +2,7 @@ import { BasePanel } from './_BasePanel';
 import * as PIXI from 'pixi.js';
 
 import { Button } from '../Button';
-import { IPlayerLevelSave } from '../../../data/SaveData';
+import { IProgressSave } from '../../../data/SaveData';
 import { StringData } from '../../../data/StringData';
 import { Fonts } from '../../../data/Fonts';
 import { Gauge } from '../Gauge';
@@ -28,9 +28,9 @@ export class ZonePanel extends BasePanel {
     TooltipReader.addTooltip(this.zoneGauge, () => ({ title: 'Enemies Killed', description: String(this.zoneGauge.count) + ' / ' + String(this.zoneGauge.total) }));
   }
 
-  public updateZoneProgress = (playerLevel: IPlayerLevelSave) => {
-    this.zoneText.text = StringData.MONSTER_SET_NAME[playerLevel.monsterType] + ' ' + StringData.ZONE_NAME[playerLevel.zoneType] + ' ' + String(playerLevel.zone);
+  public updateZoneProgress = (progress: IProgressSave) => {
+    this.zoneText.text = StringData.MONSTER_SET_NAME[progress.monsterType] + ' ' + StringData.ZONE_NAME[progress.zoneType] + ' ' + String(progress.zone);
     this.zoneText.x = (this.getWidth() - this.zoneText.width) / 2;
-    this.zoneGauge.setFraction(playerLevel.enemyCount, Formula.monstersByZone(playerLevel.zone));
+    this.zoneGauge.setFraction(progress.enemyCount, Formula.monstersByZone(progress.zone));
   }
 }

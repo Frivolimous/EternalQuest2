@@ -7,7 +7,7 @@ import { IResizeEvent } from '../services/GameEvents';
 import { Button } from '../components/ui/Button';
 import { CharacterPanel } from '../components/ui/panels/CharacterPanel';
 import { SaveManager } from '../services/SaveManager';
-import { IPlayerSave, dPlayerSave, dPlayerLevelSave } from '../data/SaveData';
+import { IHeroSave, dHeroSave, dProgressSave } from '../data/SaveData';
 import { RandomSeed } from '../services/RandomSeed';
 import { InputText } from '../components/ui/InputText';
 import { SelectList } from '../components/ui/SelectButton';
@@ -25,7 +25,7 @@ export class NewCharacterUI extends BaseUI {
   private talentList: SelectList;
   private currentTalent: SkillSlug;
 
-  private save: IPlayerSave;
+  private save: IHeroSave;
 
   constructor() {
     super({bgColor: 0x777777});
@@ -64,9 +64,8 @@ export class NewCharacterUI extends BaseUI {
 
   public setupCharacter = () => {
     let slug = RandomSeed.randomSlug();
-    this.save = _.cloneDeep(dPlayerSave);
+    this.save = _.cloneDeep(dHeroSave);
     this.save.__id = slug;
-    // this.rightPanel.setPlayer(this.save);
   }
 
   public positionElements = (e: IResizeEvent) => {
@@ -84,7 +83,7 @@ export class NewCharacterUI extends BaseUI {
     this.save.equipment = equip.splice(0, 10);
     this.save.inventory = equip;
     SaveManager.getExtrinsic().lastCharacter = this.save.__id;
-    SaveManager.savePlayer(this.save, this.save.__id, true, _.cloneDeep(dPlayerLevelSave)).then(() => this.navBack());
+    SaveManager.savePlayer(this.save, this.save.__id, true, _.cloneDeep(dProgressSave)).then(() => this.navBack());
   }
 
   private navMenu = () => {

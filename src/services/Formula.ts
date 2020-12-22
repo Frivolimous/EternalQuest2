@@ -29,8 +29,8 @@ export const Formula = {
   },
 
   experiencePerMonster(zone: number): number {
-    return 1;
-    // return Math.floor(Math.pow(zone, 0.77));
+    // return 1;
+    return Math.floor(Math.pow(zone, 0.57));
   },
 
   itemLevelByZone(zone: number, trade?: boolean): number {

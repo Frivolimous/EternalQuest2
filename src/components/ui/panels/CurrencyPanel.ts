@@ -1,12 +1,8 @@
 import { BasePanel } from './_BasePanel';
 import * as PIXI from 'pixi.js';
 
-import { Button } from '../Button';
-import { IPlayerLevelSave, IExtrinsicModel } from '../../../data/SaveData';
-import { StringData } from '../../../data/StringData';
+import { IExtrinsicModel } from '../../../data/SaveData';
 import { Fonts } from '../../../data/Fonts';
-import { Gauge } from '../Gauge';
-import { Formula } from '../../../services/Formula';
 import { TooltipReader } from '../../tooltip/TooltipReader';
 
 export class CurrencyPanel extends BasePanel {

@@ -5,7 +5,7 @@ import { BaseUI } from './_BaseUI';
 import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { Button } from '../components/ui/Button';
-import { IPlayerSave } from '../data/SaveData';
+import { IHeroSave } from '../data/SaveData';
 import { SaveManager } from '../services/SaveManager';
 import { SelectList } from '../components/ui/SelectButton';
 import { StatsPanel } from '../components/ui/panels/StatsPanel';
@@ -31,7 +31,7 @@ export class StatisticsUI extends BaseUI {
   private rightPanel = new PIXI.Graphics();
   private backB: Button;
 
-  private save: IPlayerSave;
+  private source: IHeroSave;
   private model: StatModel;
 
   private statsPanel: StatsPanel;
@@ -90,7 +90,7 @@ export class StatisticsUI extends BaseUI {
   }
 
   public navIn = () => {
-    this.getPlayer();
+    this.getSource();
   }
 
   public destroy() {
@@ -103,14 +103,14 @@ export class StatisticsUI extends BaseUI {
     this.model.onUpdate.removeListener(this.updateStats);
   }
 
-  public getPlayer() {
-    this.save = SaveManager.getCurrentPlayer();
-    this.model = StatModel.fromSave(this.save);
+  public getSource() {
+    this.source = SaveManager.getCurrentPlayer();
+    this.model = StatModel.fromSave(this.source);
     this.statsPanel.changeSource(this.model);
     this.actionPanel.changeSource(this.model);
-    this.inventoryPanel.addPlayer(this.model);
-    this.stashPanel.addPlayer(this.save);
-    this.skillPanel.addPlayer(this.model);
+    this.inventoryPanel.addSource(this.model);
+    this.stashPanel.addSource(this.source);
+    this.skillPanel.addSource(this.model);
 
     this.model.onUpdate.addListener(this.updateStats);
   }
@@ -142,7 +142,7 @@ export class StatisticsUI extends BaseUI {
   }
 
   public navOut = () => {
-    SaveManager.savePlayer(this.model.getSave(), this.save.__id, true);
+    SaveManager.savePlayer(this.model.getSave(), this.source.__id, true);
   }
 
   private navMenu = () => {

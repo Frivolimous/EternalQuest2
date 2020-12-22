@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
 
-import { IPlayerSave } from '../data/SaveData';
+import { IHeroSave } from '../data/SaveData';
 import { StringData } from '../data/StringData';
 import { SkillTreeSlug, SkillPageMap, ISkill } from '../data/SkillData';
 import { IItem } from '../data/ItemData';
-import { StatDisplay, BaseStat } from '../data/StatData';
+import { StatDisplay, BaseStat, StatMap } from '../data/StatData';
 import { IAction } from '../data/ActionData';
 import { StatModel } from '../engine/stats/StatModel';
 import { IEffect } from '../data/EffectData';
@@ -12,7 +12,7 @@ import { Formula } from './Formula';
 import { IBuff } from '../data/BuffData';
 
 export const StringManager = {
-  titleFromSave: (save: IPlayerSave): string => {
+  titleFromSave: (save: IHeroSave): string => {
     let title = 'The ' + StringData.SKILL[save.talent];
 
     let skills: [SkillTreeSlug, number][] = SkillPageMap.map(page => {
@@ -49,20 +49,20 @@ export const StringManager = {
     let str = '';
 
     if (item.level < 0) {
-      str += 'Level: ?\n';
+      str += '<@b>Level:<@n> ?\n';
       item.tags.forEach(tag => str += tag + ' ');
       str += '\n';
-      str += 'Cost: ' + item.cost + 'g';
+      str += '<@b>Cost:<@n> ' + item.cost + 'g';
       return str;
     }
 
-    str += 'Level ' + item.level + '\n';
+    str += '<@b>Level: ' + item.level + '<@n>\n';
     item.tags.forEach(tag => str += tag + ' ');
     str += '\n';
-    str += 'Cost: ' + item.cost + 'g';
+    str += '<@b>Cost:<@n> ' + item.cost + 'g';
     str += '\n\n';
     if (item.stats) {
-      item.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + (StatDisplay[stat.stat] === 'percent' ? (Math.round(stat.value * 100) + '%') : Math.round(stat.value)) + '\n');
+      str += StringManager.makeStatDescription(item.stats);
     }
     if (item.action) {
       str += StringManager.makeActionDescription(item.action) + '\n';
@@ -81,7 +81,7 @@ export const StringManager = {
     str += 'Level ' + skill.level + '\n';
     str += '\n\n';
     if (skill.stats) {
-      skill.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + (StatDisplay[stat.stat] === 'percent' ? (Math.round(stat.value * 100) + '%') : Math.round(stat.value)) + '\n');
+      str += StringManager.makeStatDescription(skill.stats);
     }
     if (skill.action) {
       str += StringManager.makeActionDescription(skill.action) + '\n';
@@ -89,26 +89,33 @@ export const StringManager = {
 
     return str;
   },
+
+  makeStatDescription: (stats: StatMap): string => {
+    let str = '';
+    stats.forEach(stat => str += '<@b>' + (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': <@n>' + (StatDisplay[stat.stat] === 'percent' ? (Math.round(stat.value * 100) + '%') : Math.round(stat.value)) + '\n');
+    return str;
+  },
+
   makeActionDescription: (action: IAction): string => {
     let str = '';
     if (action.userate) {
       str += Math.round(action.userate * 100) + '% ';
     }
-    str += action.slug;
+    str += '<@b>' + action.slug + '<@n>';
     if (action.tags && action.tags.length > 0) {
       str += '\n';
       action.tags.forEach(tag => str += tag + ' ');
       str += '\n\n';
-      str += 'Cost: ';
+      str += '<@b>Cost:<@n> ';
       _.forIn(action.costs, (val, key) => {
-        str += key + ': ' + val + ', ';
+        str += '<@b>' + key + ':<@n> ' + val + ', ';
       });
     }
     if (action.stats && _.size(action.stats) > 0) {
       str += '\n\n';
       _.forIn(action.stats, (stat, key) => {
         let percent = StatDisplay[key as BaseStat] === 'percent';
-        str += key + ': ' + _.round(stat * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
+        str += '<@b>' + key + ':<@n> ' + _.round(stat * (percent ? 100 : 1), 1) + (percent ? '%' : '') + '\n';
       });
     }
     if (action.effects && action.effects.length > 0) {
@@ -123,7 +130,7 @@ export const StringManager = {
     if (action.userate) {
       str += Math.round(action.userate * 100) + '% ';
     }
-    str += action.slug;
+    str += '<@b>' + action.slug + '<@n>';
 
     let tags = action.tags.concat(action.source ? action.source.tags : []);
 
@@ -131,15 +138,15 @@ export const StringManager = {
       str += '\n';
       tags.forEach(tag => str += tag + ' ');
       str += '\n\n';
-      str += 'Cost: ';
+      str += '<@b>Cost:<@n> ';
       if (action.costs.action) {
-        str += 'action: ' + action.costs.action * (1 - origin.getStat('efficiency', tags)) + ', ';
+        str += '<@b>action:<@n> ' + action.costs.action * (1 - origin.getStat('efficiency', tags)) + ', ';
       }
       if (action.costs.mana) {
-        str += 'mana: ' + action.costs.action * (1 - origin.getStat('manacost', tags)) + ', ';
+        str += '<@b>mana:<@n> ' + action.costs.action * (1 - origin.getStat('manacost', tags)) + ', ';
       }
       if (action.costs.health) {
-        str += 'health: ' + action.costs.action * (1 - origin.getStat('manacost', tags)) + ', ';
+        str += '<@b>health:<@n> ' + action.costs.action * (1 - origin.getStat('manacost', tags)) + ', ';
       }
     }
     if (action.stats) {
@@ -150,16 +157,16 @@ export const StringManager = {
       let hit = origin.getStat('hit', tags, action.stats.hit);
       let penetration = origin.getStat('penetration', tags, action.stats.penetration);
       if (hit) {
-        str += 'hit: ' + Math.round(hit) + '\n';
+        str += '<@b>hit:<@n> ' + Math.round(hit) + '\n';
       }
       if (damage) {
-        str += 'damage: ' + Math.round(damage) + '\n';
+        str += '<@b>damage:<@n> ' + Math.round(damage) + '\n';
       }
       if (critRate) {
-        str += 'crit: ' + Math.round(critRate * 100) + '% x' + critMult + '\n';
+        str += '<@b>crit:<@n> ' + Math.round(critRate * 100) + '% x' + critMult + '\n';
       }
       if (penetration) {
-        str += 'penetration: ' + Math.round(penetration * 100) + '%\n';
+        str += '<@b>penetration:<@n> ' + Math.round(penetration * 100) + '%\n';
       }
     }
 
@@ -183,12 +190,12 @@ export const StringManager = {
       str += StringManager.makeBuffDescription(effect.buff);
     } else {
       if (effect.type === 'damage') {
-        str += effect.name + ': ';
+        str += '<@b>' + effect.name + ':<@n> ';
         str += Math.round(effect.damage.value) + ' ' + Formula.getDamageTag(effect.damage.tags).substr(0, 1).toUpperCase();
       } else if (effect.type === 'clearBuff') {
         str += 'clears ' + effect.buffRemoved;
       } else if (effect.type === 'special') {
-        str += effect.name + ': ';
+        str += '<@b>' + effect.name + ':<@n> ';
         if (effect.value) {
           str += Math.round(effect.value * 100);
         }
@@ -201,7 +208,7 @@ export const StringManager = {
   makeBuffDescription: (buff: IBuff): string => {
     let str = '';
 
-    str += buff.count + 'x ' + buff.name;
+    str += buff.count + 'x ' + '<@b>' + buff.name + '<@n>';
     if (buff.type === 'action') {
       str += '\n';
       str += StringManager.makeActionDescription(buff.action);
@@ -211,7 +218,7 @@ export const StringManager = {
     } else if (buff.type === 'stat') {
       str += '\n';
       if (buff.stats) {
-        buff.stats.forEach(stat => str += (stat.tag ? stat.tag : '') + ' ' + stat.stat + ': ' + (StatDisplay[stat.stat] === 'percent' ? (Math.round(stat.value * 100) + '%') : Math.round(stat.value)) + '\n');
+        str += StringManager.makeStatDescription(buff.stats);
       }
     } else if (buff.type === 'trigger') {
       buff.triggers.forEach(trigger => {

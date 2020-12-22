@@ -244,7 +244,7 @@ export const EnchantList: IEnchantRaw[] = [
   {slug: EnchantSlug.PROTECTIVE, costMult: 3.6, stats: [{stat: 'resist', tag: 'Magical', value: {base: 0.03, inc: 0.003}}, {stat: 'resist', tag: 'Chemical', value: {base: 0.03, inc: 0.003}}, {stat: 'resist', tag: 'Spirit', value: {base: 0.03, inc: 0.003}}]},
   {slug: EnchantSlug.SEEKING, costMult: 4, stats: [{stat: 'iloot', value: {base: 0.05, inc: 0.005}}]},
   {slug: EnchantSlug.CLOAKING, costMult: 3, stats: [{stat: 'dodge', value: {base: 0.05, inc: 0.005}}]},
-  {slug: EnchantSlug.UTILITY, costMult: 2.6, stats: [{stat: 'intellect', value: {base: 2, inc: 2}}]},
+  {slug: EnchantSlug.UTILITY, costMult: 2.6, stats: [{stat: 'cunning', value: {base: 2, inc: 2}}]},
   {slug: EnchantSlug.SPIKEY, costMult: 2.7, triggers: ['spikey']},
   {slug: EnchantSlug.BERSERKER, costMult: 2.5, triggers: ['berserk']},
   {slug: EnchantSlug.FEARSOME, costMult: 3.4, triggers: ['afraid']},

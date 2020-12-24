@@ -8,6 +8,7 @@ import { SaveManager } from '../services/SaveManager';
 import { LoadCharacterUI } from './LoadCharacterUI';
 import { NewCharacterUI } from './NewCharacterUI';
 import { StatisticsUI } from './StatisticsUI';
+import { StringManager } from '../services/StringManager';
 
 export class HomeUI extends BaseUI {
   private title: PIXI.Text;
@@ -17,16 +18,16 @@ export class HomeUI extends BaseUI {
 
   constructor() {
     super({bgColor: 0x777777});
-    this.title = new PIXI.Text('Home', { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
-    this.backB = new Button({ width: 100, height: 30, label: 'Menu', onClick: this.navMenu });
+    this.title = new PIXI.Text(StringManager.data.BUTTON.HOME, { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
+    this.backB = new Button({ width: 100, height: 30, label: StringManager.data.BUTTON.MENU, onClick: this.navMenu });
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel = new CharacterPanel(new PIXI.Rectangle(0, 0, 300, 500));
     this.addChild(this.title, this.leftPanel, this.rightPanel, this.backB);
 
-    let newB = new Button({ width: 250, height: 30, label: 'New Character', onClick: () => this.navForward(new NewCharacterUI()) });
-    let loadB = new Button({ width: 250, height: 30, label: 'Load Character', onClick: () => this.navForward(new LoadCharacterUI()) });
-    let statsB = new Button({ width: 250, height: 30, label: 'Statistics', onClick: () => this.navForward(new StatisticsUI()) });
-    let stashB = new Button({ width: 250, height: 30, label: 'Stash', onClick: () => {
+    let newB = new Button({ width: 250, height: 30, label: StringManager.data.BUTTON.NEW_CHAR, onClick: () => this.navForward(new NewCharacterUI()) });
+    let loadB = new Button({ width: 250, height: 30, label: StringManager.data.BUTTON.LOAD_CHAR, onClick: () => this.navForward(new LoadCharacterUI()) });
+    let statsB = new Button({ width: 250, height: 30, label: StringManager.data.BUTTON.STATISTICS, onClick: () => this.navForward(new StatisticsUI()) });
+    let stashB = new Button({ width: 250, height: 30, label: StringManager.data.BUTTON.STASH, onClick: () => {
       let page = new StatisticsUI();
       page.selectLeft.selectButton(2);
       page.selectRight.selectButton(0);

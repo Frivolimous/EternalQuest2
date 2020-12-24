@@ -56,6 +56,15 @@ export class SpriteView extends PIXI.Container {
     this.selectDisplay.visible = false;
   }
 
+  public set selected(b: boolean) {
+    this._Selected = b;
+    this.selectDisplay.visible = b;
+  }
+
+  public get selected(): boolean {
+    return this._Selected;
+  }
+
   public proclaim(s: string, fill: number = 0xffffff, xOff: number = 0) {
     new FlyingText(s, {fill}, -10 + xOff, -100, this);
   }
@@ -105,15 +114,6 @@ export class SpriteView extends PIXI.Container {
     }
 
     this.buffView.updateBuffs(this.model.buffs);
-  }
-
-  public set selected(b: boolean) {
-    this._Selected = b;
-    this.selectDisplay.visible = b;
-  }
-
-  public get selected(): boolean {
-    return this._Selected;
   }
 
   public isBusy = () => this.moving || this.animating;

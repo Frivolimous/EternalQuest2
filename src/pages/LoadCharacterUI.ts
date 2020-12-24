@@ -11,6 +11,7 @@ import { SelectList } from '../components/ui/SelectButton';
 import { IHeroSave } from '../data/SaveData';
 import { SimpleModal } from '../components/ui/modals/SimpleModal';
 import { OptionModal } from '../components/ui/modals/OptionModal';
+import { StringManager } from '../services/StringManager';
 
 export class LoadCharacterUI extends BaseUI {
   private title: PIXI.Text;
@@ -24,8 +25,8 @@ export class LoadCharacterUI extends BaseUI {
   constructor() {
     super({bgColor: 0x777777});
     this.loadSelection = new SelectList({ width: 250, height: 60 }, this.selectCharacter, this.startDeleteCharacter);
-    this.title = new PIXI.Text('Load Character', { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
-    this.backB = new Button({ width: 100, height: 30, label: 'Back', onClick: this.navMenu });
+    this.title = new PIXI.Text(StringManager.data.BUTTON.LOAD_CHAR, { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
+    this.backB = new Button({ width: 100, height: 30, label: StringManager.data.BUTTON.BACK, onClick: this.navMenu });
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel = new CharacterPanel(new PIXI.Rectangle(0, 0, 300, 500));
     this.addChild(this.title, this.leftPanel, this.rightPanel, this.backB);
@@ -76,13 +77,13 @@ export class LoadCharacterUI extends BaseUI {
 
   private startDeleteCharacter = (i: number) => {
     if (this.heroes.length <= 1) {
-      this.addDialogueWindow(new SimpleModal('You cannot delete your last character'));
+      this.addDialogueWindow(new SimpleModal(StringManager.data.MENU_TEXT.LAST_CHAR));
     } else {
-      this.addDialogueWindow(new OptionModal('Delete this character?', [
-        {label: 'Confirm', color: 0x55ff55, onClick: () => {
+      this.addDialogueWindow(new OptionModal(StringManager.data.MENU_TEXT.DELETE_CHAR, [
+        {label: StringManager.data.BUTTON.CONFIRM, color: 0x55ff55, onClick: () => {
           SaveManager.deletePlayer(this.heroes[i].__id).then(this.loadCharacters);
         }},
-        {label: 'Cancel', color: 0xff5555},
+        {label: StringManager.data.BUTTON.CANCEL, color: 0xff5555},
       ]));
     }
   }

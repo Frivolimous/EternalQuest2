@@ -13,7 +13,7 @@ import { InputText } from '../components/ui/InputText';
 import { SelectList } from '../components/ui/SelectButton';
 import { TalentList, SkillSlug } from '../data/SkillData';
 import { EquipmentSets } from '../data/ItemData';
-import { StringData } from '../data/StringData';
+import { StringManager } from '../services/StringManager';
 
 export class NewCharacterUI extends BaseUI {
   private title: PIXI.Text;
@@ -29,12 +29,12 @@ export class NewCharacterUI extends BaseUI {
 
   constructor() {
     super({bgColor: 0x777777});
-    this.title = new PIXI.Text('New Character', { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
-    this.backB = new Button({ width: 100, height: 30, color: 0xff9999 , label: 'Cancel', onClick: this.navMenu });
-    this.confirmB = new Button({ width: 100, height: 30, label: 'Confirm', onClick: this.navConfirm });
+    this.title = new PIXI.Text(StringManager.data.BUTTON.NEW_CHAR, { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
+    this.backB = new Button({ width: 100, height: 30, color: 0xff9999 , label: StringManager.data.BUTTON.CANCEL, onClick: this.navMenu });
+    this.confirmB = new Button({ width: 100, height: 30, label: StringManager.data.BUTTON.CONFIRM, onClick: this.navConfirm });
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel = new CharacterPanel(new PIXI.Rectangle(0, 0, 300, 500));
-    let name = new PIXI.Text('Name: ', {fontSize: 20, fill: 0xffffff, fontFamily: Fonts.UI});
+    let name = new PIXI.Text(StringManager.data.MENU_TEXT.NAME + ': ', {fontSize: 20, fill: 0xffffff, fontFamily: Fonts.UI});
     this.input = new InputText({width: 200});
     name.position.set(10, 10);
     this.input.position.set(80, 10);
@@ -44,7 +44,7 @@ export class NewCharacterUI extends BaseUI {
 
     this.talentList = new SelectList({width: 100, height: 30}, this.selectTalent);
     TalentList.forEach((slug, i) => {
-      let button = this.talentList.makeButton(StringData.SKILL[slug]);
+      let button = this.talentList.makeButton(StringManager.data.SKILL[slug]);
       this.leftPanel.addChild(button);
       button.position.set(40 + 110 * Math.floor(i / 5), 100 + (i % 5) * 40);
     });

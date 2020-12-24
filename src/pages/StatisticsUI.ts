@@ -21,6 +21,7 @@ import { JMTicker } from '../JMGE/events/JMTicker';
 import { StoreManager, IPurchaseResult } from '../services/StoreManager';
 import { BaseModal } from '../components/ui/modals/_BaseModal';
 import { SimpleModal } from '../components/ui/modals/SimpleModal';
+import { StringManager } from '../services/StringManager';
 
 export class StatisticsUI extends BaseUI {
   public selectLeft: SelectList;
@@ -44,8 +45,8 @@ export class StatisticsUI extends BaseUI {
 
   constructor() {
     super({bgColor: 0x777777});
-    this.title = new PIXI.Text('Statistics', { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
-    this.backB = new Button({ width: 100, height: 30, label: 'Back', onClick: this.navMenu });
+    this.title = new PIXI.Text(StringManager.data.BUTTON.STATISTICS, { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
+    this.backB = new Button({ width: 100, height: 30, label: StringManager.data.BUTTON.BACK, onClick: this.navMenu });
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.currencyPanel = new CurrencyPanel();
@@ -56,17 +57,17 @@ export class StatisticsUI extends BaseUI {
     this.selectRight = new SelectList({ width: 90, height: 30}, this.switchRight);
 
     let button: Button;
-    button = this.selectLeft.makeButton('Stats');
+    button = this.selectLeft.makeButton(StringManager.data.BUTTON.STATS_TAB);
     this.addChild(button);
-    button = this.selectLeft.makeButton('Actions');
+    button = this.selectLeft.makeButton(StringManager.data.BUTTON.ACTION_TAB);
     this.addChild(button);
-    button = this.selectLeft.makeButton('Stash');
+    button = this.selectLeft.makeButton(StringManager.data.BUTTON.STASH);
     this.addChild(button);
-    button = this.selectRight.makeButton('Inventory');
+    button = this.selectRight.makeButton(StringManager.data.BUTTON.INVENTORY_TAB);
     this.addChild(button);
-    button = this.selectRight.makeButton('Skills');
+    button = this.selectRight.makeButton(StringManager.data.BUTTON.SKILL_TAB);
     this.addChild(button);
-    button = this.selectRight.makeButton('Cosmetics');
+    button = this.selectRight.makeButton(StringManager.data.BUTTON.COSMETIC_TAB);
     this.addChild(button);
 
     this.statsPanel = new StatsPanel(new PIXI.Rectangle(0, 0, 300, 500));
@@ -173,9 +174,9 @@ export class StatisticsUI extends BaseUI {
       if (result.success) {
         onSuccess();
       } else if (result.confirmation) {
-        this.addDialogueWindow(new OptionModal(result.message || 'Proceed with purchase?', [{ label: 'Yes', onClick: result.confirmation, color: 0x66ff66}, { label: 'No', color: 0xff6666 }]));
+        this.addDialogueWindow(new OptionModal(result.message || StringManager.data.MENU_TEXT.COMPLETE_PUCHASE, [{ label: StringManager.data.BUTTON.YES, onClick: result.confirmation, color: 0x66ff66}, { label: StringManager.data.BUTTON.NO, color: 0xff6666 }]));
       } else {
-        this.addDialogueWindow(new SimpleModal(result.message || 'Not enough gold'));
+        this.addDialogueWindow(new SimpleModal(result.message || StringManager.data.MENU_TEXT.NOT_ENOUGH + StringManager.data.CURRENCY.gold));
       }
     });
   }

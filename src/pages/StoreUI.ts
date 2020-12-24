@@ -21,6 +21,7 @@ import { Formula } from '../services/Formula';
 import { InventoryPanelBlack } from '../components/ui/panels/InventoryPanelBlack';
 import { InventoryPanelStash } from '../components/ui/panels/InventoryPanelStash';
 import { ItemManager } from '../services/ItemManager';
+import { StringManager } from '../services/StringManager';
 
 export class StoreUI extends BaseUI {
   public selectLeft: SelectList;
@@ -47,8 +48,8 @@ export class StoreUI extends BaseUI {
 
   constructor() {
     super({bgColor: 0x777777});
-    this.title = new PIXI.Text('Store', { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
-    this.backB = new Button({ width: 100, height: 30, label: 'Back', onClick: this.navMenu });
+    this.title = new PIXI.Text(StringManager.data.BUTTON.STORE, { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
+    this.backB = new Button({ width: 100, height: 30, label: StringManager.data.BUTTON.BACK, onClick: this.navMenu });
     this.leftPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.rightPanel.beginFill(0x555555).lineStyle(2, 0x333333).drawRoundedRect(0, 0, 300, 500, 5);
     this.currencyPanel = new CurrencyPanel();
@@ -59,15 +60,15 @@ export class StoreUI extends BaseUI {
     this.selectRight = new SelectList({ width: 90, height: 30}, this.switchRight);
 
     let button: Button;
-    button = this.selectLeft.makeButton('Gold Store');
+    button = this.selectLeft.makeButton(StringManager.data.BUTTON.GOLD_STORE);
     this.addChild(button);
-    button = this.selectLeft.makeButton('Black Market');
+    button = this.selectLeft.makeButton(StringManager.data.BUTTON.BLACK_MARKET);
     this.addChild(button);
     // button = this.selectLeft.makeButton('Actions');
     // this.addChild(button);
-    button = this.selectRight.makeButton('Inventory');
+    button = this.selectRight.makeButton(StringManager.data.BUTTON.INVENTORY_TAB);
     this.addChild(button);
-    button = this.selectRight.makeButton('Stash');
+    button = this.selectRight.makeButton(StringManager.data.BUTTON.STASH);
     this.addChild(button);
     // button = this.selectRight.makeButton('Cosmetics');
     // this.addChild(button);
@@ -139,7 +140,7 @@ export class StoreUI extends BaseUI {
       this.finishRefreshGamble();
     } else {
       if (!this.refreshTokenUsed) {
-        this.addDialogueWindow(new OptionModal('Use 1 Power Token to refresh the store slots?', [{ label: 'Yes', onClick: () => (this.refreshTokenUsed = true, this.refreshGamble()), color: 0x66ff66}, { label: 'No', color: 0xff6666 }]));
+        this.addDialogueWindow(new OptionModal(StringManager.data.MENU_TEXT.REFRESH_STORE_TOKEN, [{ label: StringManager.data.BUTTON.YES, onClick: () => (this.refreshTokenUsed = true, this.refreshGamble()), color: 0x66ff66}, { label: StringManager.data.BUTTON.NO, color: 0xff6666 }]));
       } else {
         this.canAfford(1, this.finishRefreshGamble, 'tokens');
       }
@@ -233,14 +234,20 @@ export class StoreUI extends BaseUI {
     });
   }
 
-  private canAfford = (value: number, onSuccess: () => void, currency: CurrencySlug = 'gold') => {
+  private canAfford = (value: number, onSuccess: () => void, currency: CurrencySlug = 'gold', noDialogue?: boolean) => {
     StoreManager.purchaseAttempt(value, currency, (result: IPurchaseResult) => {
       if (result.success) {
         onSuccess();
       } else if (result.confirmation) {
-        this.addDialogueWindow(new OptionModal(result.message || 'Proceed with purchase?', [{ label: 'Yes', onClick: result.confirmation, color: 0x66ff66}, { label: 'No', color: 0xff6666 }]));
+        if (!noDialogue) {
+          this.addDialogueWindow(new OptionModal(result.message || StringManager.data.MENU_TEXT.COMPLETE_PUCHASE, [{ label: StringManager.data.BUTTON.YES, onClick: result.confirmation, color: 0x66ff66}, { label: StringManager.data.BUTTON.NO, color: 0xff6666 }]));
+        } else {
+          result.confirmation();
+        }
       } else {
-        this.addDialogueWindow(new SimpleModal(result.message || 'Not enough ' + currency));
+        if (!noDialogue) {
+          this.addDialogueWindow(new SimpleModal(result.message || StringManager.data.MENU_TEXT.NOT_ENOUGH + StringManager.data.CURRENCY[currency]));
+        }
       }
     });
   }

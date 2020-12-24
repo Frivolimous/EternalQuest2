@@ -22,6 +22,7 @@ import { CurrencySlug } from '../data/SaveData';
 import { MiniShop } from '../components/ui/panels/MiniShop';
 import { TimerOptionModal } from '../components/ui/modals/TimerOptionModal';
 import { ActionPanel } from '../components/ui/panels/ActionPanel';
+import { StringManager } from '../services/StringManager';
 
 export class GameUI extends BaseUI {
   public display: GameView;
@@ -54,7 +55,7 @@ export class GameUI extends BaseUI {
     // this.log = new BasePanel(new PIXI.Rectangle(525, 150, 275, 650), 0xf1cccc);
     this.skills = new SkillPanel();
 
-    this.swapPanelButton = new Button({ width: 80, height: 20, label: 'Next Tab', onClick: this.swapPanel, rounding: 2, labelStyle: {fontSize: 18} });
+    this.swapPanelButton = new Button({ width: 80, height: 20, label: StringManager.data.BUTTON.NEXT_TAB, onClick: this.swapPanel, rounding: 2, labelStyle: {fontSize: 18} });
 
     this.addChild(this.vitals, this.zone, this.swapPanelButton, this.inventory, this.skills, this.currencyPanel);
   }
@@ -159,7 +160,7 @@ export class GameUI extends BaseUI {
   private playerDead = () => {
     this.saveGame();
     // this.display.clearQueue();
-    this.addDialogueWindow(new SimpleModal('You have died!', () => {
+    this.addDialogueWindow(new SimpleModal(StringManager.data.MENU_TEXT.DEAD_MODAL, () => {
       this.controller.restartLevel();
     }));
   }
@@ -183,7 +184,7 @@ export class GameUI extends BaseUI {
   }
 
   private levelComplete = () => {
-    this.addDialogueWindow(new TimerOptionModal('You finished the level!', [{label: 'To Town', onClick: this.finishNavTown}, {label: 'Continue', onClick: this.nextLevel, timer: 15}]));
+    this.addDialogueWindow(new TimerOptionModal(StringManager.data.MENU_TEXT.LEVEL_COMPLETE, [{label: StringManager.data.BUTTON.TO_TOWN, onClick: this.finishNavTown}, {label: StringManager.data.BUTTON.CONTINUE, onClick: this.nextLevel, timer: 15}]));
     this.addMinishop();
   }
 
@@ -247,13 +248,13 @@ export class GameUI extends BaseUI {
         onSuccess();
       } else if (result.confirmation) {
         if (!noDialogue) {
-          this.addDialogueWindow(new OptionModal(result.message || 'Proceed with purchase?', [{ label: 'Yes', onClick: result.confirmation, color: 0x66ff66}, { label: 'No', color: 0xff6666 }]));
+          this.addDialogueWindow(new OptionModal(result.message || StringManager.data.MENU_TEXT.COMPLETE_PUCHASE, [{ label: StringManager.data.BUTTON.YES, onClick: result.confirmation, color: 0x66ff66}, { label: StringManager.data.BUTTON.NO, color: 0xff6666 }]));
         } else {
           result.confirmation();
         }
       } else {
         if (!noDialogue) {
-          this.addDialogueWindow(new SimpleModal(result.message || 'Not enough ' + currency));
+          this.addDialogueWindow(new SimpleModal(result.message || StringManager.data.MENU_TEXT.NOT_ENOUGH + StringManager.data.CURRENCY[currency]));
         }
       }
     });

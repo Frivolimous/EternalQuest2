@@ -231,6 +231,7 @@ export class GameView extends PIXI.Container {
     } else if (e.key === 'q') {
       (window as any).addStat = (stat: AnyStat, tag: StatTag, value: number | ICompoundMap) => this.playerView.model.stats.addStat(stat, tag, value);
       (window as any).subStat = (stat: AnyStat, tag: StatTag, value: number | ICompoundMap) => this.playerView.model.stats.subStat(stat, tag, value);
+      (window as any).getStat = (stat: AnyStat, tags: StatTag[], withValue: number) => this.playerView.model.stats.getStat(stat, tags, withValue);
       // this.playerView.model.stats.addCompountStat('strength', 50);
     } else if (!isNaN(Number(e.key))) {
       let speed = Number(e.key);

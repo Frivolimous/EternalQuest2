@@ -135,7 +135,7 @@ export const StatDisplay: { [key in AnyStat]: StatDisplayType } = {
   beltSlots: 'numeric',
 };
 
-export type StatProgression = 'linear' | 'diminish';
+export type StatProgression = 'linear' | 'diminish' | 'dim2';
 
 export const StatProgression: { [key in AnyStat]: StatProgression } = {
   strength: 'linear',
@@ -160,7 +160,7 @@ export const StatProgression: { [key in AnyStat]: StatProgression } = {
   power: 'linear',
   critMult: 'linear',
   critRate: 'diminish',
-  hit: 'diminish',
+  hit: 'dim2',
   penetration: 'diminish',
   rate: 'diminish',
   resist: 'diminish',
@@ -219,7 +219,7 @@ export const dStatPlayer: StatMap = [
   {stat: 'power', value: 100},
   {stat: 'critRate', tag: 'Weapon', value: 0.15},
   {stat: 'critMult', value: 1.5},
-  {stat: 'hit', value: 1},
+  {stat: 'hit', value: 0},
   {stat: 'iloot', value: 0.15},
   {stat: 'magicSlots', value: 1},
   {stat: 'beltSlots', value: 5},

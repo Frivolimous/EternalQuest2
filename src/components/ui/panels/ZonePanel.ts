@@ -3,11 +3,11 @@ import * as PIXI from 'pixi.js';
 
 import { Button } from '../Button';
 import { IProgressSave } from '../../../data/SaveData';
-import { StringData } from '../../../data/StringData';
 import { Fonts } from '../../../data/Fonts';
 import { Gauge } from '../Gauge';
 import { Formula } from '../../../services/Formula';
 import { TooltipReader } from '../../tooltip/TooltipReader';
+import { StringManager } from '../../../services/StringManager';
 
 export class ZonePanel extends BasePanel {
   private zoneText: PIXI.Text;
@@ -29,7 +29,7 @@ export class ZonePanel extends BasePanel {
   }
 
   public updateZoneProgress = (progress: IProgressSave) => {
-    this.zoneText.text = StringData.MONSTER_SET_NAME[progress.monsterType] + ' ' + StringData.ZONE_NAME[progress.zoneType] + ' ' + String(progress.zone);
+    this.zoneText.text = StringManager.data.MONSTER_SET_NAME[progress.monsterType] + ' ' + StringManager.data.ZONE_NAME[progress.zoneType] + ' ' + String(progress.zone);
     this.zoneText.x = (this.getWidth() - this.zoneText.width) / 2;
     this.zoneGauge.setFraction(progress.enemyCount, Formula.monstersByZone(progress.zone));
   }

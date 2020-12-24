@@ -94,7 +94,7 @@ function versionControl(version: number, extrinsic: any): IExtrinsicModel {
 export class SaveManager {
   public static async init(): Promise<null> {
     console.log('init!');
-    return new Promise((resolve) => {
+    return new Promise<null>((resolve) => {
       SaveManager.loadExtrinsic().then(extrinsic => {
         console.log('ext!', extrinsic);
         if (extrinsic) {
@@ -109,7 +109,7 @@ export class SaveManager {
             }
             SaveManager.extrinsic = extrinsic;
             SaveManager.loadPlayer(extrinsic.lastCharacter, true).then(() => {
-              resolve();
+              resolve(null);
             });
           });
         } else {
@@ -117,7 +117,7 @@ export class SaveManager {
           SaveManager.confirmReset();
           SaveManager.saveVersion(CURRENT_VERSION);
           SaveManager.saveExtrinsic(this.getExtrinsic());
-          resolve();
+          resolve(null);
         }
       });
     });
@@ -148,13 +148,13 @@ export class SaveManager {
       SaveManager.saveExtrinsic().then(() => {
         processes--;
         if (processes === 0) {
-          resolve();
+          resolve(null);
         }
       });
       SaveManager.savePlayer().then(() => {
         processes--;
         if (processes === 0) {
-          resolve();
+          resolve(null);
         }
       });
     });
@@ -183,7 +183,7 @@ export class SaveManager {
   public static async savePlayer(save?: IHeroSave, slug?: string, makeCurrent?: boolean, progress?: IProgressSave): Promise<IHeroSave> {
     return new Promise((resolve) => {
       if (!save && !SaveManager.player) {
-        resolve();
+        resolve(null);
         return;
       }
       save = save || SaveManager.player;
@@ -266,7 +266,7 @@ export class SaveManager {
         case 'virtual':
           delete virtualSave.Heroes[slug];
           delete virtualSave.Progresses[slug];
-          resolve();
+          resolve(null);
           break;
         case 'local':
           let players: {[key: string]: IHeroSave} = JSON.parse(window.localStorage.getItem('Heroes')) || {};
@@ -275,7 +275,7 @@ export class SaveManager {
           delete Progresses[slug];
           window.localStorage.setItem('Heroes', JSON.stringify(players));
           window.localStorage.setItem('Progresses', JSON.stringify(Progresses));
-          resolve();
+          resolve(null);
           break;
         case 'online':
       }
@@ -316,7 +316,7 @@ export class SaveManager {
       });
     } else {
       console.log('NO CHARACTER INDEX!');
-      return new Promise((resolve) => resolve());
+      return new Promise((resolve) => resolve(null));
     }
   }
 

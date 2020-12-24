@@ -9,8 +9,8 @@ import { AttackStat, StatMapLevel, ActionTag } from '../data/StatData';
 import { ISkill, ISkillRaw, SkillSlug, SkillList } from '../data/SkillData';
 import { EnemySlug, IEnemyRaw, IEnemy, EnemyWeapon, SampleStats, dStatEnemy } from '../data/EnemyData';
 import { ItemManager } from './ItemManager';
-import { StringData } from '../data/StringData';
 import { ActionPanel } from '../components/ui/panels/ActionPanel';
+import { StringManager } from './StringManager';
 
 export const DataConverter = {
   getItem: (slug: ItemSlug | IItemRaw, level: number, enchantSlug?: EnchantSlug | EnchantSlug[], charges?: number, scrollOf?: ItemSlug): IItem => {
@@ -30,7 +30,7 @@ export const DataConverter = {
     }
 
     let m: IItem = {
-      name: StringData.ITEM[slug],
+      name: StringManager.data.ITEM[slug],
       slug,
       level,
       tags: _.clone(raw.tags),
@@ -76,7 +76,7 @@ export const DataConverter = {
     let m: IItem;
     if (level === -1) {
       m = {
-        name: StringData.ITEM[slug],
+        name: StringManager.data.ITEM[slug],
         slug,
         level,
         tags: _.clone(raw.tags),
@@ -90,7 +90,7 @@ export const DataConverter = {
       let src = DataConverter.getItem(ItemList.find(i => i.slug === scrollOf), Math.floor(level * 1.25));
 
       m = {
-        name: src.name + ' ' + StringData.ITEM[slug],
+        name: src.name + ' ' + StringManager.data.ITEM[slug],
         slug,
         level,
         tags: _.clone(raw.tags).concat(src.tags.filter(tag => tag !== 'Equipment')),
@@ -137,7 +137,7 @@ export const DataConverter = {
       item.enchantSlug.push(enchantSlug);
     }
 
-    item.name = StringData.ENCHANT[enchantSlug] + ' ' + item.name;
+    item.name = StringManager.data.ENCHANT[enchantSlug] + ' ' + item.name;
 
     item.cost *= raw.costMult;
 
@@ -290,7 +290,7 @@ export const DataConverter = {
     });
 
     let m: IEnemy = {
-      name: StringData.ENEMY_NAME[raw.slug],
+      name: StringManager.data.ENEMY_NAME[raw.slug],
       distance: raw.distance,
       xp: raw.xp * Formula.experiencePerMonster(level),
       slug: raw.slug,
@@ -348,7 +348,7 @@ export const DataConverter = {
     }
 
     let m: ISkill = {
-      name: StringData.SKILL[slug],
+      name: StringManager.data.SKILL[slug],
       slug,
       level,
     };

@@ -123,9 +123,28 @@ export class StatModel {
             }
             chunk.tags[tag].base += value;
           }
-        } else {
+        } else if (StatProgression[stat] === 'diminish') {
           if (!tag || tag === 'Base') {
             chunk.base = Formula.addMult(chunk.base, value);
+          } else {
+            if (!chunk.tags[tag]) {
+              chunk.tags[tag] = {base: 0, mult: 0, neg: 0};
+            }
+            if (value < 0) {
+              chunk.tags[tag].neg = Formula.addMult(chunk.tags[tag].neg, -value);
+            } else {
+              chunk.tags[tag].base = Formula.addMult(chunk.tags[tag].base, value);
+            }
+          }
+        } else if (StatProgression[stat] === 'dim2') {
+          if (stat === 'hit') {
+            console.log(stat, tag, value, chunk.base, chunk.mult, chunk.neg, chunk.tags);
+          }
+          if (!tag || tag === 'Base') {
+            if (chunk.base === 0) {
+              chunk.base = 1;
+            }
+            chunk.base = 1 + Formula.addMult(chunk.base - 1, value);
           } else {
             if (!chunk.tags[tag]) {
               chunk.tags[tag] = {base: 0, mult: 0, neg: 0};
@@ -197,9 +216,25 @@ export class StatModel {
             }
             chunk.tags[tag].base -= value;
           }
-        } else {
+        } else if (StatProgression[stat] === 'diminish') {
           if (!tag || tag === 'Base') {
             chunk.base = Formula.subMult(chunk.base, value);
+          } else {
+            if (!chunk.tags[tag]) {
+              chunk.tags[tag] = {base: 0, mult: 0, neg: 0};
+            }
+            if (value < 0) {
+              chunk.tags[tag].neg = Formula.subMult(chunk.tags[tag].neg, -value);
+            } else {
+              chunk.tags[tag].base = Formula.subMult(chunk.tags[tag].base, value);
+            }
+          }
+        } else if (StatProgression[stat] === 'dim2') {
+          if (!tag || tag === 'Base') {
+            if (chunk.base === 0) {
+              chunk.base = 1;
+            }
+            chunk.base = 1 + Formula.subMult(chunk.base - 1, value);
           } else {
             if (!chunk.tags[tag]) {
               chunk.tags[tag] = {base: 0, mult: 0, neg: 0};
@@ -260,6 +295,24 @@ export class StatModel {
         m = Formula.addMult(m, withValue);
       }
       m = Formula.addMult(m, m * mult) - neg;
+    } else if (StatProgression[stat] === 'dim2') {
+      let neg = bs.neg;
+      m--;
+
+      if (tags) {
+        tags.forEach(tag => {
+          if (bs.tags[tag]) {
+            m = Formula.addMult(m, bs.tags[tag].base);
+            mult += bs.tags[tag].mult;
+            neg += bs.tags[tag].neg;
+          }
+        });
+      }
+      if (withValue) {
+        m = Formula.addMult(m, withValue);
+      }
+      m = Formula.addMult(m, m * mult) - neg;
+      m++;
     }
 
     return m;

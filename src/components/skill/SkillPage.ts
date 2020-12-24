@@ -4,8 +4,7 @@ import { SkillIcon } from './SkillIcon';
 import { ISkill, ISkillPageMap, SkillPrerequisiteMap } from '../../data/SkillData';
 import { DataConverter } from '../../services/DataConverter';
 import { Fonts } from '../../data/Fonts';
-import { StringData } from '../../data/StringData';
-
+import { StringManager } from '../../services/StringManager';
 export interface ISkillPage {
   width: number;
   height: number;
@@ -67,7 +66,7 @@ export class SkillPage extends PIXI.Container {
       }
     });
 
-    this.title = new PIXI.Text(StringData.SKILL_TREE[pageSettings.slug], {fontSize: 20, fontFamily: Fonts.UI});
+    this.title = new PIXI.Text(StringManager.data.SKILL_TREE[pageSettings.slug], {fontSize: 20, fontFamily: Fonts.UI});
     this.addChild(this.title);
     this.title.position.set((settings.width - this.title.width) / 2, -this.title.height - padding * 2);
   }

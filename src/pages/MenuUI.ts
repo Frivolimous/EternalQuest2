@@ -1,20 +1,13 @@
 import * as PIXI from 'pixi.js';
 import { BaseUI } from './_BaseUI';
-import { CONFIG } from '../Config';
 import { CreditsUI } from './CreditsUI';
 import { MuterOverlay } from '../components/ui/MuterOverlay';
-import { JMTween, JMEasing } from '../JMGE/JMTween';
 import { SaveManager } from '../services/SaveManager';
-import { StringData } from '../data/StringData';
-import { TooltipReader } from '../components/tooltip/TooltipReader';
-import { JMRect } from '../JMGE/others/JMRect';
 import { Button } from '../components/ui/Button';
 import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { GameUI } from './GameUI';
-import { BuffIcon } from '../components/game/sprites/BuffIcon';
-// import { GameManager } from '../TDDR/GameManager';
-// import { facade };
+import { StringManager } from '../services/StringManager';
 
 export class MenuUI extends BaseUI {
   public muter: MuterOverlay;
@@ -23,17 +16,21 @@ export class MenuUI extends BaseUI {
 
   private startB: Button;
   private creditsB: Button;
+  private langB: Button;
 
   constructor() {
     super({bgColor: 0x777777});
-    this.title = new PIXI.Text(StringData.GAME_TITLE, { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
+    this.title = new PIXI.Text(StringManager.data.GAME_TITLE, { fontSize: 30, fontFamily: Fonts.UI, fill: 0x3333ff });
     this.addChild(this.title);
 
-    this.startB = new Button({ width: 100, height: 30, label: 'Start', onClick: this.startGame });
+    this.startB = new Button({ width: 100, height: 30, label: StringManager.data.BUTTON.ADVENTURE, onClick: this.startGame });
     this.startB.position.set(150, 200);
-    this.creditsB = new Button({ width: 100, height: 30, label: 'Credits', onClick: this.navCredits });
+    this.creditsB = new Button({ width: 100, height: 30, label: StringManager.data.BUTTON.CREDITS, onClick: this.navCredits });
     this.creditsB.position.set(150, 380);
     this.addChild(this.startB, this.creditsB);
+    this.langB = new Button({ width: 100, height: 30, label: StringManager.data.BUTTON.LANGUAGE, onClick: this.changeLanguage });
+    this.langB.position.set(150, 380);
+    this.addChild(this.startB, this.langB);
 
     this.muter = new MuterOverlay();
     this.addChild(this.muter);
@@ -70,6 +67,9 @@ export class MenuUI extends BaseUI {
     this.title.y = 50;
     this.muter.x = e.outerBounds.right - this.muter.getWidth();
     this.muter.y = e.outerBounds.bottom - this.muter.getHeight();
+    this.langB.addLabel(StringManager.getCurrentLanguage());
+    this.langB.x = e.outerBounds.right - this.langB.width - 20;
+    this.langB.y = 20;
   }
 
   private startGame = () => {
@@ -78,5 +78,9 @@ export class MenuUI extends BaseUI {
 
   private navCredits = () => {
     this.navForward(new CreditsUI());
+  }
+
+  private changeLanguage = () => {
+    this.langB.addLabel(StringManager.changeLanguage());
   }
 }

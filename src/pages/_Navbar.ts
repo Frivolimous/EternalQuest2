@@ -13,6 +13,7 @@ import { HomeUI } from './HomeUI';
 import { NewCharacterUI } from './NewCharacterUI';
 import { StatisticsUI } from './StatisticsUI';
 import { StoreUI } from './StoreUI';
+import { DuelMenuUI } from './DuelMenuUI';
 
 export class Navbar extends PIXI.Container {
   private background = new PIXI.Graphics();
@@ -28,14 +29,14 @@ export class Navbar extends PIXI.Container {
     this.addContent('► New Character', NewCharacterUI);
     this.addContent('► Load Character', LoadCharacterUI);
     this.addContent('► Statistics', StatisticsUI);
-    this.addContent2('► Stash', () => { let page = new StatisticsUI(); page.selectLeft.selectButton(2); page.selectRight.selectButton(0); Facade.setCurrentPage(page); });
+    this.addContent2('► Stash', () => { let page = new StatisticsUI(); page.selectLeft.selectButton(2); page.selectRight.selectButton(0); Facade.setCurrentPage(page, null, true); });
     this.addContent('Game', GameUI);
-    this.addContent('► Duel Arena', BlankUI, true);
+    this.addContent('► Duel Arena', DuelMenuUI);
     this.addContent('► Epic Mode', BlankUI, true);
     this.addContent('► Special Event', BlankUI, true);
     this.addContent('Main Store', StoreUI);
     this.addContent('► Gold Store', StoreUI);
-    this.addContent2('► Black Market', () => { let page = new StoreUI(); page.selectLeft.selectButton(1); page.selectRight.selectButton(0); Facade.setCurrentPage(page); });
+    this.addContent2('► Black Market', () => { let page = new StoreUI(); page.selectLeft.selectButton(1); page.selectRight.selectButton(0); Facade.setCurrentPage(page, null, true); });
     this.addContent('► Premium Store', BlankUI, true);
     this.addContent('Library', BlankUI, true);
     this.addContent('Achievements', BlankUI, true);
@@ -54,7 +55,7 @@ export class Navbar extends PIXI.Container {
 
     content.addListener('pointerdown', () => {
       let page = new PageConstructor();
-      Facade.setCurrentPage(page);
+      Facade.setCurrentPage(page, null, true);
     });
 
     if (!nowhere) {

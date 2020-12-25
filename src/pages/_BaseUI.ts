@@ -53,18 +53,11 @@ export class BaseUI extends PIXI.Container {
   }
 
   public navBack = (fadeTiming?: IFadeTiming) => {
-    // if (this.previousUI) {
-    //   this.finishNav(this.previousUI, fadeTiming, true);
-    // } else {
+    if (this.previousUI) {
+      this.finishNav(this.previousUI, fadeTiming, true);
+    } else {
       this.finishNav(new MenuUI(), fadeTiming, true);
-    // }
-    // if (this.saveCallback) {
-    //   this.saveCallback(() => {
-    //     this.finishNav(this.previousUI, fadeTiming, true);
-    //   });
-    // } else {
-    //   this.finishNav(this.previousUI, fadeTiming, true);
-    // }
+    }
   }
 
   public navForward = (nextUI: BaseUI, previousUI?: BaseUI, fadeTiming?: IFadeTiming) => {
@@ -73,25 +66,7 @@ export class BaseUI extends PIXI.Container {
   }
 
   protected finishNav = (nextUI: BaseUI, fadeTiming?: IFadeTiming, andDestroy?: boolean) => {
-    Facade.setCurrentPage(nextUI, fadeTiming);
-    // fadeTiming = _.defaults(fadeTiming || {}, dFadeTiming);
-
-    // let screen = new ScreenCover(this.previousResize.outerBounds, fadeTiming.color).onFadeComplete(() => {
-    //   this.navOut();
-    //   this.parent.addChild(nextUI);
-    //   this.parent.removeChild(this);
-    //   nextUI.navIn();
-    //   if (this.previousResize) {
-    //     nextUI.onResize(this.previousResize);
-    //   }
-    //   let screen2 = new ScreenCover(this.previousResize.outerBounds, fadeTiming.color).fadeOut(fadeTiming.fadeOut);
-    //   nextUI.addChild(screen2);
-
-    //   if (andDestroy) {
-    //     this.destroy();
-    //   }
-    // }).fadeIn(fadeTiming.fadeIn, fadeTiming.delay, fadeTiming.delayBlank);
-    // this.addChild(screen);
+    Facade.setCurrentPage(nextUI, fadeTiming, andDestroy);
   }
 
   protected addDialogueWindow(window: BaseModal, delay: number = 0) {
@@ -105,7 +80,6 @@ export class BaseUI extends PIXI.Container {
   }
 
   private redrawBase = (e: IResizeEvent) => {
-    // this.background.clear().beginFill(this.config.bgColor).drawShape(e.outerBounds);
     this.background.clear().beginFill(this.config.bgColor).drawShape(e.innerBounds);
   }
 }

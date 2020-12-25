@@ -82,5 +82,8 @@ export class MenuUI extends BaseUI {
 
   private changeLanguage = () => {
     this.langB.addLabel(StringManager.changeLanguage());
+    this.title.text = StringManager.data.GAME_TITLE;
+    this.startB.addLabel(StringManager.data.BUTTON.ADVENTURE);
+    this.creditsB.addLabel(StringManager.data.BUTTON.CREDITS);
   }
 }

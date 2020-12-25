@@ -116,14 +116,14 @@ export let Facade = new class FacadeInner {
     });
   }
 
-  public setCurrentPage(nextPage: BaseUI, fadeTiming?: IFadeTiming) {
+  public setCurrentPage(nextPage: BaseUI, fadeTiming?: IFadeTiming, andDestroy?: boolean) {
     fadeTiming = _.defaults(fadeTiming || {}, dFadeTiming);
 
     let screen = new ScreenCover(this.previousResize.outerBounds, fadeTiming.color).onFadeComplete(() => {
       this.currentPage.navOut();
       SaveManager.saveCurrent().then(() => {
         this.screen.removeChild(this.currentPage);
-        this.currentPage.destroy();
+        if (andDestroy) this.currentPage.destroy();
 
         this.currentPage = nextPage;
         this.screen.addChildAt(nextPage, 0);

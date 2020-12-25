@@ -395,6 +395,44 @@ export const EnglishStringData = {
     [ItemSlug.BERSERK]: 'Berserk',
     [ItemSlug.DARK_BURST]: 'Dark Burst',
   },
+
+  TAG_DESC: {
+    Incanted: 'Only uses half spell power',
+    Double: 'Attacks twice',
+    Relic: 'Only one Relic of any type can ever be equipped at a time',
+    Trade: 'Can be sold for money... no other use',
+    Heavy: 'Gains bonus damage from Strength',
+    Finesse: 'Gains bonus damage from Dexterity',
+    Cryptic: 'Gains bonus damage from Cunning',
+    Mystic: 'Gains bonus damage from Magic',
+    Ranged: 'Can only be used midrange or far',
+    Thrown: 'Can be used in melee or midrange',
+  },
+
+  EFFECT_DESC: {
+    lifesteal: 'Heals based on a percent of base damage',
+    walk: 'Advance through the realm',
+    rushed: 'Reduced stats',
+    approach: 'Advance towards the enemy',
+    backwards: 'Move away from the enemy',
+    knockback: 'Pushes your opponent away from you',
+    doubleshot: 'Chance to attack again',
+    town: 'Go back to town during the next safe action',
+    gassed: 'Takes damage over time',
+    spikey: 'Deals damage whenever struck by a melee weapon',
+//     export type EffectSlug = 'lifesteal' | 'walk' | 'rushed' | 'approach' | 'clearCritInit' | 'clearParryInit' | 'backwards' | 'knockback' |
+//   'doubleshot' | 'magicStrike' | 'proc' | 'dazzled' | 'spikey' |
+//   'ordinary' | 'deft' | 'holy' | 'noble' | 'wild' |
+//   BuffSlug |
+//   EffectSlugExt;
+// export type EffectSlugExt = 'Bonus Physical';
+
+// 'rushed' | 'burning' | 'crippled' | 'town' | 'useless' | 'leapbuff' | 'critInit' | 'parryInit' | 'aim' | 'markInit' |
+//   'poisoned' | 'stunned' | 'confused' | 'weakened' | 'vulnerable' | 'empowered' | 'hastened' | 'enchanted' |
+//   'amplified' | 'turtle' | 'celerity' | 'purity' | 'gassed' | 'blinded' | 'cursed' |
+//   'afraid' | 'berserk' | 'strengthen' |
+//   'deft';
+  },
 };
 
 export let GibberishStringData = EnglishStringData;

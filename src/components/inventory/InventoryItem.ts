@@ -56,7 +56,7 @@ export class InventoryItem extends PIXI.Container {
       this.charges.position.set(this.getWidth() - this.charges.width - 1, this.getHeight() - this.charges.height - 1);
     }
 
-    TooltipReader.addTooltip(this, {title: source.name, description: StringManager.makeItemDescription(source)});
+    TooltipReader.addTooltip(this, {title: source.name, description: StringManager.makeItemDescription(source), config: {levelNumber: source.level === -1 ? '?' : String(source.level)}});
   }
 
   public updateSource(source: IItem) {
@@ -73,7 +73,7 @@ export class InventoryItem extends PIXI.Container {
       this.addChild(this.charges);
       this.charges.position.set(this.getWidth() - this.charges.width - 1, this.getHeight() - this.charges.height - 1);
     }
-    TooltipReader.addTooltip(this, {title: source.name, description: StringManager.makeItemDescription(source)});
+    TooltipReader.addTooltip(this, {title: source.name, description: StringManager.makeItemDescription(source), config: {levelNumber: source.level === -1 ? '?' : String(source.level)}});
   }
 
   public updateCharges(n: number) {

@@ -72,7 +72,7 @@ export let Facade = new class FacadeInner {
     this.innerBorders = new JMRect(0, 0, CONFIG.STAGE.SCREEN_WIDTH, CONFIG.STAGE.SCREEN_HEIGHT);
 
     // Initialize Libraries
-    new TooltipReader(this.screen, this.stageBorders, {backgroundColor: 0xff0000});
+    new TooltipReader(this.screen, this.stageBorders, {});
     TextureCache.initialize(this.app);
     Debug.initialize(this.app);
 

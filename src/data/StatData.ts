@@ -16,8 +16,8 @@ export function isCompoundStat(stat: BaseStat | CompoundStat): stat is CompoundS
 
 export type StatTag = SpecTag | ItemTag | ActionTag | EffectTag;
 export type SpecTag = 'Base' | 'Neg' | 'Mult' | 'Map' | 'Far' | 'Near';
-export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell' | 'Thrown' | 'Incanted' | 'Premium' | 'Double' | 'Charm' | 'Relic' | 'Trade' | 'Scroll';
-export type ActionTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Melee' | 'Ranged' | 'Grenade' | 'Potion' | 'Cryptic' | 'Mystic' | 'Agile';
+export type ItemTag = 'Equipment' | 'Belt' | 'Helmet' | 'Weapon' | 'Spell' | 'Thrown' | 'Incanted' | 'Premium' | 'Double' | 'Charm' | 'Relic' | 'Trade' | 'Scroll' | 'Agile';
+export type ActionTag = 'Light Melee' | 'Heavy' | 'Finesse' | 'Unarmed' | 'Melee' | 'Ranged' | 'Grenade' | 'Potion' | 'Cryptic' | 'Mystic';
 export type EffectTag = 'Healing' | 'Force' | 'Buff' | 'Curse' | 'Fire' | 'Electric' | 'Ice' | 'Toxic' | 'Gadget' | 'Projectile' | 'Control' | 'Critical' | 'OverTime' | DamageTag;
 export type DamageTag = 'Physical' | 'Magical' | 'Chemical' | 'Holy' | 'Dark' | 'Spirit' | 'None';
 export const DamageTags = ['Physical', 'Magical', 'Chemical', 'Holy', 'Dark', 'None'];
@@ -26,7 +26,7 @@ export function getPowerType(tag: StatTag): 'action' | 'effect' | 'item' {
   if (tag === 'Equipment' || tag === 'Belt' || tag === 'Weapon' || tag === 'Helmet' || tag === 'Spell') {
     return 'item';
   }
-  if (tag === 'Light Melee' || tag === 'Heavy' || tag === 'Finesse' || tag === 'Unarmed' || tag === 'Melee' || tag === 'Ranged' || tag === 'Grenade' || tag === 'Potion' || tag === 'Cryptic' || tag === 'Mystic' || tag === 'Agile') {
+  if (tag === 'Light Melee' || tag === 'Heavy' || tag === 'Finesse' || tag === 'Unarmed' || tag === 'Melee' || tag === 'Ranged' || tag === 'Grenade' || tag === 'Potion' || tag === 'Cryptic' || tag === 'Mystic') {
     return 'action';
   }
   return 'effect';

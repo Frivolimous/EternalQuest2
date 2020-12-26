@@ -22,6 +22,7 @@ export const EnglishStringData = {
     CONFIRM: 'Confirm',
     CANCEL: 'Cancel',
     BACK: 'Back',
+    FIGHT: 'Fight!',
     ADVENTURE: 'Adventure',
     CREDITS: 'Credits',
     LANGUAGE: 'Language',

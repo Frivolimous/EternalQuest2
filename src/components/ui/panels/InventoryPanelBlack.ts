@@ -117,6 +117,15 @@ export class InventoryPanelBlack extends BasePanel {
     });
   }
 
+  public returnItem = () => {
+    let item = this.upgradeStack.getItemAt(0);
+    if (item && this.addToInventory) {
+      this.upgradeStack.removeItem(item);
+      this.addToInventory(item);
+      this.addUpgrade();
+    }
+  }
+
   public sellItem = (item: IItem, slot: number, callback: () => void) => {
     if (this.onItemSell) this.onItemSell(item, slot, callback);
   }

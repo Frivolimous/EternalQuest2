@@ -199,6 +199,8 @@ export class StoreUI extends BaseUI {
   }
 
   public navOut = () => {
+    this.storePanel.returnItem();
+    this.blackPanel.returnItem();
     SaveManager.savePlayer(this.model.getSave(), this.save.__id, true);
   }
 

@@ -31,7 +31,7 @@ export class Navbar extends PIXI.Container {
     this.addContent('► Statistics', StatisticsUI);
     this.addContent2('► Stash', () => { let page = new StatisticsUI(); page.selectLeft.selectButton(2); page.selectRight.selectButton(0); Facade.setCurrentPage(page, null, true); });
     this.addContent('Game', GameUI);
-    this.addContent('► Duel Arena', DuelMenuUI);
+    this.addContent('► Duel Arena', DuelMenuUI, false);
     this.addContent('► Epic Mode', BlankUI, true);
     this.addContent('► Special Event', BlankUI, true);
     this.addContent('Main Store', StoreUI);
@@ -46,8 +46,8 @@ export class Navbar extends PIXI.Container {
     this.addContent('Notifications', BlankUI, true);
   }
 
-  private addContent(title: string, PageConstructor: typeof BaseUI, nowhere = false) {
-    let content = new PIXI.Text(title, {fontFamily: Fonts.UI, fill: nowhere ? 0xff7777 : 0xffffff, fontSize: 20});
+  private addContent(title: string, PageConstructor: typeof BaseUI, nowhere: boolean = null) {
+    let content = new PIXI.Text(title, {fontFamily: Fonts.UI, fill: nowhere ? 0xff7777 : nowhere === false ? 0xaaaa77 : 0xffffff, fontSize: 20});
     this.addChild(content);
     this.contents.push(content);
     content.interactive = true;
@@ -58,7 +58,7 @@ export class Navbar extends PIXI.Container {
       Facade.setCurrentPage(page, null, true);
     });
 
-    if (!nowhere) {
+    if (nowhere === null) {
       content.addListener('pointerover', () => content.tint = 0x00ffff);
       content.addListener('pointerout', () => content.tint = 0xffffff);
     }

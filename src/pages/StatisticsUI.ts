@@ -91,7 +91,7 @@ export class StatisticsUI extends BaseUI {
   }
 
   public navIn = () => {
-    this.getSource();
+    this.setSource();
   }
 
   public destroy() {
@@ -104,8 +104,13 @@ export class StatisticsUI extends BaseUI {
     this.model.onUpdate.removeListener(this.updateStats);
   }
 
-  public getSource() {
-    this.source = SaveManager.getCurrentPlayer();
+  public setSource(source?: IHeroSave) {
+    if (source) {
+      this.source = source;
+    }
+    if (!this.source) {
+      this.source = SaveManager.getCurrentPlayer();
+    }
     this.model = StatModel.fromSave(this.source);
     this.statsPanel.changeSource(this.model);
     this.actionPanel.changeSource(this.model);

@@ -17,49 +17,51 @@ import { EffectTrigger } from '../data/EffectData';
 import { IItem } from '../data/ItemData';
 import { EnemySetId, ZoneId } from '../data/EnemyData';
 import { GOD_MODE } from '../services/_Debug';
+import { GameController } from './GameController';
 
-export class GameController {
-  public onPlayerAdded = new JMEventListener<SpriteModel>();
-  public onPlayerDead = new JMEventListener<null>();
-  public onSpriteAdded = new JMEventListener<SpriteModel>();
-  public onSpriteRemoved = new JMEventListener<SpriteModel>();
-  public onSpriteLevel = new JMEventListener<SpriteModel>();
-  public onReset = new JMEventListener<null>();
-  public onEnemyDead = new JMEventListener<SpriteModel>();
-  public onZoneProgress = new JMEventListener<IProgressSave>();
-  public onVitalsUpdate = new JMEventListener<Vitals>();
-  public onFightStart = new JMEventListener<null>();
-  public onAction = new JMEventListener<IActionResult>();
-  public onBuffEffect = new JMEventListener<IBuffResult>();
-  public onItemUpdate = new JMEventListener<IItemUpdate>();
-  public onNavTown = new JMEventListener<null>();
-  public onLevelComplete = new JMEventListener<null>();
+export class DuelGameController extends GameController {
+  // public onPlayerAdded = new JMEventListener<SpriteModel>();
+  // public onPlayerDead = new JMEventListener<null>();
+  // public onSpriteAdded = new JMEventListener<SpriteModel>();
+  // public onSpriteRemoved = new JMEventListener<SpriteModel>();
+  // public onSpriteLevel = new JMEventListener<SpriteModel>();
+  // public onReset = new JMEventListener<null>();
+  // public onEnemyDead = new JMEventListener<SpriteModel>();
+  // public onZoneProgress = new JMEventListener<IProgressSave>();
+  // public onVitalsUpdate = new JMEventListener<Vitals>();
+  // public onFightStart = new JMEventListener<null>();
+  // public onAction = new JMEventListener<IActionResult>();
+  // public onBuffEffect = new JMEventListener<IBuffResult>();
+  // public onItemUpdate = new JMEventListener<IItemUpdate>();
+  // public onNavTown = new JMEventListener<null>();
+  // public onLevelComplete = new JMEventListener<null>();
 
-  protected levelData: IProgressSave;
+  // private levelData: IProgressSave;
 
-  protected spriteModels: SpriteModel[] = [];
-  protected playerSprite: SpriteModel;
+  // private spriteModels: SpriteModel[] = [];
+  // private playerSprite: SpriteModel;
 
-  protected fighting = false;
-  protected processing = false;
-  protected spawnCount: number;
+  // private fighting = false;
+  // private processing = false;
+  // private spawnCount: number;
 
-  protected levelComplete = false;
+  // private levelComplete = false;
 
-  protected actionC: ActionController;
+  // private actionC: ActionController;
 
   constructor() {
-    this.actionC = new ActionController(this.onBuffEffect.publish, this.updateItem, this.unselectItem);
+    super();
+    // this.actionC = new ActionController(this.onBuffEffect.publish, this.updateItem, this.unselectItem);
 
-    GameEvents.ticker.add(this.onTick);
+    // GameEvents.ticker.add(this.onTick);
 
-    this.levelData = SaveManager.getCurrentProgress();
-    if (!this.levelData) {
-      new Error('No level data - - you should not be here!!!');
-    }
+    // this.levelData = SaveManager.getCurrentProgress();
+    // if (!this.levelData) {
+    //   new Error('No level data - - you should not be here!!!');
+    // }
 
-    this.importPlayer();
-    this.startLevel();
+    // this.importPlayer();
+    // this.startLevel();
   }
 
   public importPlayer() {

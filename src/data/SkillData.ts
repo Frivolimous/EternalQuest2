@@ -35,6 +35,8 @@ export const enum SkillSlug {
   POWERFUL,
   WILD,
   STUDIOUS,
+
+  HOBO,
 }
 
 export const enum SkillTreeSlug {
@@ -96,6 +98,8 @@ export const SkillList: ISkillRaw[] = [
   { talent: true, slug: SkillSlug.POWERFUL, stats: [{stat: 'power', value: 25}, {stat: 'resist', value: -0.25}] },
   { talent: true, slug: SkillSlug.WILD, triggers: ['wild']},
   { talent: true, slug: SkillSlug.STUDIOUS, stats: [{stat: 'magic', tag: 'Mult', value: 0.2}, {stat: 'cunning', tag: 'Mult', value: 0.2}, {stat: 'accuracy', value: -0.25}, {stat: 'block', value: -0.25} ] },
+
+  { talent: true, slug: SkillSlug.HOBO, stats: [{stat: 'strength', value: -50}, {stat: 'magic', value: -50}]},
 
   { passive: true, slug: SkillSlug.WARRIOR, stats: [{ stat: 'efficiency', tag: 'Weapon', value: { base: 0, inc: 0.005}}]},
   { passive: true, slug: SkillSlug.MAGE, stats: [{ stat: 'power', tag: 'Magical', value: { base: 0, inc: 1}}]},

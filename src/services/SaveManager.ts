@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import { IExtrinsicModel, dExtrinsicModel, IHeroSave, dHeroSave, IProgressSave } from '../data/SaveData';
 import { IItemSave, EnchantSlug, ItemSlug } from '../data/ItemData';
 import { SkillTreeSlug, SkillSlug } from '../data/SkillData';
+import { DuelCharacters } from '../data/EnemyData';
 
 const CURRENT_VERSION = 13;
 const SAVE_LOC: 'virtual' | 'local' | 'online' = 'local';
@@ -136,6 +137,33 @@ export class SaveManager {
 
   public static getCurrentPlayer(): IHeroSave {
     return SaveManager.player || dHeroSave;
+  }
+
+  public static getDuelPlayer(): IHeroSave {
+    let player = SaveManager.duelPlayer;
+    if (!player) {
+      player = _.cloneDeep(SaveManager.getCurrentPlayer());
+      SaveManager.duelPlayer = player;
+    }
+    return player;
+  }
+
+  public static getDuelOpponent(): IHeroSave {
+    let player = SaveManager.duelOpponent;
+    if (!player) {
+      let level = SaveManager.progress.highestDuel;
+      player = _.cloneDeep(DuelCharacters[level % DuelCharacters.length]);
+      SaveManager.duelOpponent = player;
+    }
+    return player;
+  }
+
+  public static clearDuelPlayer() {
+    SaveManager.duelPlayer = null;
+  }
+
+  public static clearDuelOpponent() {
+    SaveManager.duelOpponent = null;
   }
 
   public static getCurrentProgress(): IProgressSave {
@@ -323,6 +351,9 @@ export class SaveManager {
   private static player: IHeroSave;
   private static progress: IProgressSave;
   private static extrinsic: IExtrinsicModel;
+
+  private static duelPlayer: IHeroSave;
+  private static duelOpponent: IHeroSave;
 
   private static confirmReset = () => {
     SaveManager.extrinsic = _.cloneDeep(dExtrinsicModel);

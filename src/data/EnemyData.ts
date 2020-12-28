@@ -2,6 +2,8 @@ import { StatMapLevel, StatMap, AnyStat, StatTag } from './StatData';
 import { IItem, IItemRaw, ItemSlug } from './ItemData';
 import { IActionRaw, ActionSlug, IAction } from './ActionData';
 import { EffectSlug, IEffectRaw, IEffect } from './EffectData';
+import { IHeroSave } from './SaveData';
+import { SkillSlug, SkillTreeSlug } from './SkillData';
 
 export const enum ZoneId {
   FOREST,
@@ -238,6 +240,14 @@ export const EnemyGroupList: { [key in EnemySetId]: { enemies: { base: IEnemyRaw
     enemies: [],
   },
 };
+
+export const DuelCharacters: IHeroSave[] = [
+  {name: 'Bobo', level: 1, talent: SkillSlug.HOBO,
+    equipment: [{slug: ItemSlug.MACE_SHIELD, level: 1}, {slug: ItemSlug.CAP, level: 1}, {slug: ItemSlug.MAGIC_BOLT, level: 1}],
+    skills: [{slug: SkillSlug.FITNESS, level: 1}],
+    skillTrees: [SkillTreeSlug.WARRIOR],
+  },
+];
 
 export const EnemyWeapon: IItemRaw = { slug: 0, cost: 0, tags: ['Equipment', 'Weapon', 'Melee'], action: { slug: 'strike', type: 'attack', tags: ['Physical'], distance: [1], stats: { baseDamage: { base: 0 } }, costs: { action: 100 } } };
 

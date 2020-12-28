@@ -23,4 +23,12 @@ export class CharacterPanel extends PIXI.Graphics {
     this.nameT.position.set((this.bounds.width - this.nameT.width) / 2, 20);
     this.levelT.position.set((this.bounds.width - this.levelT.width) / 2, this.nameT. y + this.nameT. height + 5);
   }
+
+  public getWidth() {
+    return this.bounds.width;
+  }
+
+  public getHeight() {
+    return this.bounds.height;
+  }
 }

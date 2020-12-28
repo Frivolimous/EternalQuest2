@@ -119,6 +119,8 @@ export const EnglishStringData = {
     [SkillSlug.POWERFUL]: 'Powerful',
     [SkillSlug.WILD]: 'Wild',
     [SkillSlug.STUDIOUS]: 'Studious',
+
+    [SkillSlug.HOBO]: 'Hobo',
   },
   SKILL_DESC: {
     [SkillSlug.FITNESS]: 'Working out makes you physically fit.',
@@ -151,6 +153,8 @@ export const EnglishStringData = {
     [SkillSlug.HOLY]: 'You are known as a man of piety and honour.',
     [SkillSlug.WILD]: 'Your unusual fighting style makes others wary of you.',
     [SkillSlug.NOBLE]: 'You were born to a wealthy family with many resources.',
+
+    [SkillSlug.HOBO]: '',
   },
 
   SKILL_TREE: {

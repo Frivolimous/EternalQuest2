@@ -113,6 +113,15 @@ export class InventoryPanelStore extends BasePanel {
     });
   }
 
+  public returnItem = () => {
+    let item = this.fillStack.getItemAt(0);
+    if (item && this.addToInventory) {
+      this.fillStack.removeItem(item);
+      this.addToInventory(item);
+      this.addFill();
+    }
+  }
+
   public sellItem = (item: IItem, slot: number, callback: () => void) => {
     if (this.onItemSell) this.onItemSell(item, slot, callback);
   }

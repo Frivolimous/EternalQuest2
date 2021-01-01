@@ -122,7 +122,7 @@ export class InventoryPanelMenu extends BasePanel {
   }
 
   public getFillableCost = () => {
-    return this.getFillableItems().reduce((n, item) => Formula.costToFill(item.source), 0);
+    return this.getFillableItems().reduce((n, item) => n += Formula.costToFill(item.source), 0);
   }
 
   public fillAllItems = () => {

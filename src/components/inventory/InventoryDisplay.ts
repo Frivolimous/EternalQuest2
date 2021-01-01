@@ -388,8 +388,12 @@ export class InventoryDisplay extends PIXI.Container {
     return this.getIndexByLoc(loc);
   }
 
-  public hasItem(item: InventoryItem) {
-    return this.items.includes(item);
+  public hasItem(item?: InventoryItem) {
+    if (item) {
+      return this.items.includes(item);
+    } else {
+      return this.items.length > 0 && this.items.find(val => Boolean(val));
+    }
   }
 
   public getFillableItems() {

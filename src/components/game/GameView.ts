@@ -12,6 +12,7 @@ import { JMTicker } from '../../JMGE/events/JMTicker';
 import { Colors } from '../../data/Colors';
 import { IBuffResult, IActionResult } from '../../engine/ActionController';
 import { AnyStat, StatTag, ICompoundMap } from '../../data/StatData';
+import { TextureCache } from '../../services/TextureCache';
 
 const GameSettings = {
   auto: false,
@@ -29,10 +30,12 @@ export class GameView extends PIXI.Container {
   private actionQueue: IActionResult[] = [];
   private noActions = true;
 
+  private scrolling = false;
+
   constructor() {
     super();
 
-    this.background = new Background(new PIXI.Rectangle(0, 0, CONFIG.INIT.SCREEN_WIDTH, CONFIG.INIT.SCREEN_HEIGHT));
+    this.background = new Background(TextureCache.getTextureBackgrounds(0), TextureCache.getTextureParalax(0), new PIXI.Rectangle(0, 0, CONFIG.INIT.SCREEN_WIDTH, CONFIG.INIT.SCREEN_HEIGHT));
 
     this.addChild(this.background);
 
@@ -135,6 +138,9 @@ export class GameView extends PIXI.Container {
         this.tryNextAction();
       }
     }
+    if (this.scrolling) {
+      this.background.scrollX(CONFIG.GAME.WALK_SPEED);
+    }
   }
 
   private tryNextAction() {
@@ -149,7 +155,14 @@ export class GameView extends PIXI.Container {
     origin.proclaim(action.name);
 
     if (action.type === 'walk') {
-      origin.tempWalk(() => this.onActionComplete.publishSync(action));
+      if (origin === this.playerView) {
+        this.scrolling = true;
+      }
+      origin.tempWalk(() => this.onActionComplete.publishSync(action), () => {
+        if (origin === this.playerView) {
+          this.scrolling = false;
+        }
+      });
       return;
     } else if (action.type === 'attack' || action.type === 'curse') {
       if (action.source.tags.includes('Projectile')) {
@@ -239,6 +252,8 @@ export class GameView extends PIXI.Container {
       JMTween.speedFactor = speed;
     } else if (e.key === 'l') {
       this.playerView.model.earnXp(this.playerView.model.vitals.getTotal('experience'));
+    } else if (e.key === 'b') {
+      this.scrolling = !this.scrolling;
     }
   }
 }

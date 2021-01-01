@@ -93,35 +93,6 @@ export class Button extends PIXI.Container {
     });
   }
 
-  public startCustomDraw(clear: boolean = true) {
-    if (clear) {
-      this.background.clear();
-    }
-    this.background.beginFill(0xffffff);
-    return this.background;
-  }
-
-  public setColor(color: number) {
-    this.color = color;
-    this.background.tint = color;
-  }
-
-  public addLabel(s?: string) {
-    if (s) {
-      this.label.text = s;
-    }
-    this.label.scale.set(1, 1);
-
-    if (this.label.width > this.background.width * 0.9) {
-      this.label.width = this.background.width * 0.9;
-    }
-    this.label.scale.y = this.label.scale.x;
-    this.label.x = (this.background.width - this.label.width) / 2;
-    this.label.y = (this.background.height - this.label.height) / 2;
-  }
-
-  public getLabel() { return this.label.text; }
-
   public set disabled(b: boolean) {
     this._Disabled = b;
     this.interactive = !b;
@@ -152,6 +123,35 @@ export class Button extends PIXI.Container {
   public get selected(): boolean {
     return this._Selected;
   }
+
+  public startCustomDraw(clear: boolean = true) {
+    if (clear) {
+      this.background.clear();
+    }
+    this.background.beginFill(0xffffff);
+    return this.background;
+  }
+
+  public setColor(color: number) {
+    this.color = color;
+    this.background.tint = color;
+  }
+
+  public addLabel(s?: string) {
+    if (s) {
+      this.label.text = s;
+    }
+    this.label.scale.set(1, 1);
+
+    if (this.label.width > this.background.width * 0.9) {
+      this.label.width = this.background.width * 0.9;
+    }
+    this.label.scale.y = this.label.scale.x;
+    this.label.x = (this.background.width - this.label.width) / 2;
+    this.label.y = (this.background.height - this.label.height) / 2;
+  }
+
+  public getLabel() { return this.label.text; }
 
   public getWidth(withScale = true) {
     return this.config.width * (withScale ? this.scale.x : 1);

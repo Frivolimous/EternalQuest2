@@ -18,6 +18,7 @@ import { BaseUI, IFadeTiming, dFadeTiming } from './pages/_BaseUI';
 import { ScreenCover } from './JMGE/effects/ScreenCover';
 import { Navbar } from './pages/_Navbar';
 import { DEBUG_MODE } from './services/_Debug';
+import { TextureData } from './data/TextureData';
 
 export let interactionMode: 'desktop'|'mobile' = 'desktop';
 
@@ -74,6 +75,8 @@ export let Facade = new class FacadeInner {
     // Initialize Libraries
     new TooltipReader(this.screen, this.stageBorders, {});
     TextureCache.initialize(this.app);
+    TextureData.backgrounds.forEach((bg, i) => TextureCache.addTextureBackgrounds(i, bg));
+    TextureData.paralax.forEach((para, i) => TextureCache.addTextureParalax(i, para));
     Debug.initialize(this.app);
 
     // Resize Event (for full screen mode / scaling)

@@ -7,16 +7,20 @@ import { SpriteModel } from '../../../engine/sprites/SpriteModel';
 import { IItem } from '../../../data/ItemData';
 import { StatModel } from '../../../engine/stats/StatModel';
 import { Formula } from '../../../services/Formula';
+import { Button } from '../Button';
 
 export class InventoryPanel extends BasePanel {
   public onItemSell: (item: IItem, slot: number, callback: () => void) => void;
   public onItemSelect: (item: IItem, type: 'select' | 'unselect' | 'double') => void;
+  public offsetY: number = 0;
+  public maxOffset: number = 140;
 
   private equip: InventoryDisplay;
   private belt: InventoryDisplay;
   private inventory: InventoryDisplay;
 
   private sprite: StatModel;
+  private tab: Button;
 
   constructor() {
     super(new PIXI.Rectangle(0, 650, 800, 270), 0x999999);
@@ -27,7 +31,8 @@ export class InventoryPanel extends BasePanel {
     this.equip.overflow = this.inventory;
     this.belt.overflow = this.inventory;
     this.inventory.overflow = this.inventory;
-    this.addChild(this.equip, this.belt, this.inventory);
+    this.tab = new Button({label: 'pull', onClick: this.pullTab, width: 50, height: 30});
+    this.addChild(this.equip, this.belt, this.inventory, this.tab);
 
     this.equip.addRequirement(0, {tags: ['Equipment', 'Weapon']});
     this.equip.addRequirement(1, {tags: ['Equipment', 'Helmet']});
@@ -41,6 +46,7 @@ export class InventoryPanel extends BasePanel {
     this.equip.position.set(50, 30);
     this.belt.position.set(400, 30);
     this.inventory.position.set(50, 130);
+    this.tab.position.set((this.getWidth() - this.tab.getWidth()) / 2, -this.tab.getHeight());
 
     this.equip.onItemSell = this.sellItem;
     this.belt.onItemSell = this.sellItem;
@@ -53,6 +59,16 @@ export class InventoryPanel extends BasePanel {
     this.inventory.destroy();
 
     super.destroy();
+  }
+
+  public pullTab = () => {
+    if (this.offsetY === 0) {
+      this.offsetY = this.maxOffset;
+      this.y += this.maxOffset;
+    } else {
+      this.offsetY = 0;
+      this.y -= this.maxOffset;
+    }
   }
 
   public addSource = (source: SpriteModel) => {

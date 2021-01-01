@@ -23,7 +23,7 @@ export class TextureCache {
     return m;
   }
 
-  public static getTextureFromUrl = (url: TextureUrl): PIXI.Texture => {
+  public static getTextureFromUrl = (url: TextureUrl | string): PIXI.Texture => {
     if (TextureCache.cache[url]) {
       return TextureCache.cache[url];
     } else {
@@ -41,8 +41,33 @@ export class TextureCache {
     }
   }
 
+  public static addTextureBackgrounds(i: number, a: string[]) {
+    if (!TextureCache.backgrounds[i]) {
+      TextureCache.backgrounds[i] = [];
+    }
+
+    for (let j = 0; j < a.length; j++) {
+      let texture = TextureCache.getTextureFromUrl(a[j]);
+      TextureCache.backgrounds[i][j] = texture;
+    }
+  }
+
+  public static addTextureParalax(i: number, s: string) {
+    TextureCache.paralaxes[i] = TextureCache.getTextureFromUrl(s);
+  }
+
+  public static getTextureBackgrounds(zone: number) {
+    return TextureCache.backgrounds[zone];
+  }
+
+  public static getTextureParalax(zone: number) {
+    return TextureCache.paralaxes[zone];
+  }
+
   private static renderer: PIXI.Renderer;
   private static cache: { [key: string]: PIXI.Texture } = {};
+  private static backgrounds: PIXI.Texture[][] = [];
+  private static paralaxes: PIXI.Texture[] = [];
 }
 
 function createGraphicTextures() {

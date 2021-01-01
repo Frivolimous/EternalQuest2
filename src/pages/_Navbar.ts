@@ -78,7 +78,7 @@ export class Navbar extends PIXI.Container {
 
   private onResize = (e: IResizeEvent) => {
     let bounds = new PIXI.Rectangle(0, 0, e.innerBounds.x - e.outerBounds.x, e.outerBounds.height);
-    this.background.clear().beginFill(0x333333).drawShape(bounds);
+    this.background.clear().beginFill(0x333333, 0.8).drawShape(bounds);
     this.position.set(e.outerBounds.x, e.outerBounds.y);
 
     let top = 20;

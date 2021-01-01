@@ -48,8 +48,9 @@ export class GameUI extends BaseUI {
 
     this.vitals = new VitalsPanel();
     this.zone = new ZonePanel(this.navTown);
-    this.stats = new StatsPanel();
     this.inventory = new InventoryPanel();
+
+    this.stats = new StatsPanel();
     this.actionPanel = new ActionPanel();
     this.currencyPanel = new CurrencyPanel();
     // this.log = new BasePanel(new PIXI.Rectangle(525, 150, 275, 650), 0xf1cccc);
@@ -134,7 +135,7 @@ export class GameUI extends BaseUI {
     this.stats.position.set(e.outerBounds.right - this.stats.getWidth(), e.innerBounds.y + this.zone.getHeight());
     this.actionPanel.position.set(e.outerBounds.right - this.stats.getWidth(), e.innerBounds.y + this.zone.getHeight());
     this.skills.position.set(e.outerBounds.right - this.skills.getWidth(), e.innerBounds.y + this.zone.getHeight());
-    this.inventory.position.set(e.innerBounds.x, e.innerBounds.bottom - this.inventory.getHeight());
+    this.inventory.position.set(e.innerBounds.x, e.innerBounds.bottom - this.inventory.getHeight() + this.inventory.offsetY);
     this.swapPanelButton.position.set(e.outerBounds.right - this.zone.getWidth() / 2 - this.swapPanelButton.getWidth() / 2, this.stats.y - this.swapPanelButton.getHeight() - 10);
     this.currencyPanel.position.set(this.vitals.x + this.vitals.getWidth() + (this.zone.x - this.vitals.x - this.vitals.getWidth() - this.currencyPanel.getWidth()) / 2, 0);
     this.minishop && this.minishop.position.set(e.outerBounds.left + e.outerBounds.width / 2, e.outerBounds.top + e.outerBounds.height / 2);
@@ -174,6 +175,8 @@ export class GameUI extends BaseUI {
       this.addChild(this.skills);
     } else if (_.includes(this.children, this.skills)) {
       this.removeChild(this.skills);
+      // this.addChild(this.stats);
+    } else {
       this.addChild(this.stats);
     }
   }

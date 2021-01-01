@@ -69,11 +69,14 @@ export class SpriteView extends PIXI.Container {
     new FlyingText(s, {fill}, -10 + xOff, -100, this);
   }
 
-  public tempWalk = (trigger: () => void) => {
+  public tempWalk = (trigger: () => void, onComplete: () => void) => {
     this.animating = true;
     trigger();
     new JMTween(this as SpriteView, 100).to({y: this.y - 5}).onComplete(() => {
-      new JMTween(this as SpriteView, 100).to({y: this.baseY()}).start().onComplete(() => this.animating = false);
+      new JMTween(this as SpriteView, 100).to({y: this.baseY()}).start().onComplete(() => {
+        this.animating = false;
+        onComplete();
+      });
     }).start();
   }
 

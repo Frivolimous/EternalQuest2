@@ -27,7 +27,8 @@ export class TextureCache {
     if (TextureCache.cache[url]) {
       return TextureCache.cache[url];
     } else {
-      let m = PIXI.Texture.from(url, {crossorigin: true});
+      // let m = PIXI.Texture.from(url, {crossorigin: true});
+      let m = PIXI.Texture.WHITE;
       TextureCache.cache[url] = m;
       return m;
     }

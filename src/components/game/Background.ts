@@ -50,14 +50,18 @@ export class Background  extends PIXI.Container {
   }
 
   public scrollX(pixels: number) {
+    if (this.tiles.length === 0) return;
+
     this.tiles.forEach(tile => tile.display.x -= pixels);
 
-    while (this.tiles[0].display.x + this.tiles[0].display.width < this.minX) {
+    while (this.tiles.length > 0 && this.tiles[0].display.x + this.tiles[0].display.width < this.minX) {
       this.tiles.shift().display.destroy();
     }
-    while (this.tiles[this.tiles.length - 1].display.x > this.maxX) {
+
+    while (this.tiles.length > 0 && this.tiles[this.tiles.length - 1].display.x > this.maxX) {
       this.tiles.pop().display.destroy();
     }
+    if (this.tiles.length === 0) return;
     while (this.getLastX() < this.maxX) {
       let random = RandomSeed.general.getInt(1, 10);
       // if (this.index >= 4) {

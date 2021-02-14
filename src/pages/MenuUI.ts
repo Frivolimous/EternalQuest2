@@ -8,7 +8,7 @@ import { Fonts } from '../data/Fonts';
 import { IResizeEvent } from '../services/GameEvents';
 import { GameUI } from './GameUI';
 import { StringManager } from '../services/StringManager';
-import { DragonSpriteBasic } from '../components/game/sprites/DragonAvatar/DragonSpriteBasic';
+// import { DragonSpriteBasic } from '../components/game/sprites/DragonAvatar/DragonSpriteBasic';
 import { AssetLoader } from '../services/AssetLoader';
 
 export class MenuUI extends BaseUI {
@@ -37,17 +37,17 @@ export class MenuUI extends BaseUI {
     this.muter = new MuterOverlay();
     this.addChild(this.muter);
 
-    AssetLoader.getBody('sheep', data => {
-      let dragon = new DragonSpriteBasic(data);
-      this.addChild(dragon.display);
-      dragon.display.scale.set(0.5);
-      dragon.display.position.set(500, 500);
-      window.addEventListener('keydown', (e) => {
-        if (e.key === ' ') {
-          dragon.nextAnim();
-        }
-      });
-    });
+    // AssetLoader.getBody('sheep', data => {
+    //   let dragon = new DragonSpriteBasic(data);
+    //   this.addChild(dragon.display);
+    //   dragon.display.scale.set(0.5);
+    //   dragon.display.position.set(500, 500);
+    //   window.addEventListener('keydown', (e) => {
+    //     if (e.key === ' ') {
+    //       dragon.nextAnim();
+    //     }
+    //   });
+    // });
 
     // let width = 50;
     // let iconb = new PIXI.Graphics();

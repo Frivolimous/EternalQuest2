@@ -363,7 +363,7 @@ function gibberize(data: any) {
   _.forIn(data, ((value, key) => {
     if (_.isString(value)) {
       data[key] = _.shuffle(value.split('')).join('');
-      console.log('gib:', data.key, value);
+      // console.log('gib:', data.key, value);
     } else {
       data[key] = gibberize(value);
     }

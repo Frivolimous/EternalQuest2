@@ -15,7 +15,7 @@ import { AnyStat, StatTag, ICompoundMap } from '../../data/StatData';
 import { TextureCache } from '../../services/TextureCache';
 
 const GameSettings = {
-  auto: false,
+  auto: true,
 };
 
 export class GameView extends PIXI.Container {

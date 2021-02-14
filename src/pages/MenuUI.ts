@@ -9,7 +9,7 @@ import { IResizeEvent } from '../services/GameEvents';
 import { GameUI } from './GameUI';
 import { StringManager } from '../services/StringManager';
 // import { DragonSpriteBasic } from '../components/game/sprites/DragonAvatar/DragonSpriteBasic';
-import { AssetLoader } from '../services/AssetLoader';
+// import { AssetLoader } from '../services/AssetLoader';
 
 export class MenuUI extends BaseUI {
   public muter: MuterOverlay;

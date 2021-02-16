@@ -10,7 +10,6 @@ import { genAchievements, genTutorials, genScores } from './data/ATSData';
 import { AchievementPopup } from './components/ui/AchievementPopup';
 import { TutorialPopup } from './components/ui/TutorialPopup';
 import { Fonts } from './data/Fonts';
-import { loadFonts } from './helpers/loadFonts';
 import { TextureCache } from './services/TextureCache';
 import { GameEvents, IResizeEvent } from './services/GameEvents';
 import { Debug } from './services/_Debug';
@@ -19,6 +18,7 @@ import { ScreenCover } from './JMGE/effects/ScreenCover';
 import { Navbar } from './pages/_Navbar';
 import { DEBUG_MODE } from './services/_Debug';
 import { TextureData } from './data/TextureData';
+import { FontLoader } from './services/FontLoader';
 
 export let interactionMode: 'desktop'|'mobile' = 'desktop';
 
@@ -87,7 +87,7 @@ export let Facade = new class FacadeInner {
 
     // load fonts then preloader!
     GameEvents.APP_LOG.publish({type: 'INITIALIZE', text: 'Primary Setup'});
-    window.requestAnimationFrame(() => loadFonts(fonts).then(this.init));
+    window.requestAnimationFrame(() => FontLoader.load(fonts).then(this.init));
   }
 
   public init = () => {

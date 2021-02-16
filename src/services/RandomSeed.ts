@@ -4,7 +4,7 @@ class SingleSeed {
   private numberSeed: number;
   private current: number = 0;
 
-  constructor(seed: string) {
+  constructor(private seed: string) {
     let num = 0;
     for (let i = 0; i < seed.length; i++) {
       num += seed.charCodeAt(i);
@@ -21,6 +21,9 @@ class SingleSeed {
   }
 
   public getRaw(): number {
+    if (this.seed === '1') return 1;
+    if (this.seed === '0') return 0;
+
     this.current += this.numberSeed;
     this.current = this.current - Math.floor(this.current);
     return this.current;
@@ -42,6 +45,8 @@ class SingleSeed {
 export const RandomSeed = {
   general: new SingleSeed('general'),
   enemySpawn: new SingleSeed('enemy'),
+  always1: new SingleSeed('1'),
+  always0: new SingleSeed('0'),
   randomSlug: () => {
     let str = '';
     for (let i = 0; i < 20; i++) {

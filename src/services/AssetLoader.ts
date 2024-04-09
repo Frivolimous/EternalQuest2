@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ILoadedBody, ILoadedCosmetic, ILoadedOutfit, ILoadedSticker } from '../components/game/sprites/DragonAvatar/DragonInterfaces';
 import { TextureData } from '../data/TextureData';
 
@@ -69,25 +69,25 @@ export function isLoaderQueue(part: ILoaderQueue |ILoadedCosmetic): part is ILoa
 }
 
 let getSharedResource = (packet: IPixiLoaderPacket) => {
-  if (PIXI.Loader.shared.loading) {
-    loaderQueue.push(packet);
-  } else {
-    let unloaded = _.filter(packet.slugs, (slug => !PIXI.Loader.shared.resources[slug]));
-    if (unloaded.length === 0) {
+  // if (PIXI.Loader.shared.loading) {
+  //   loaderQueue.push(packet);
+  // } else {
+  //   let unloaded = _.filter(packet.slugs, (slug => !PIXI.Loader.shared.resources[slug]));
+  //   if (unloaded.length === 0) {
 
-      packet.callback({ res: PIXI.Loader.shared.resources, newLoad: false });
+  //     packet.callback({ res: PIXI.Loader.shared.resources, newLoad: false });
 
-      if (loaderQueue.length > 0) {
-        getSharedResource(loaderQueue.shift());
-      }
-    } else if (!PIXI.Loader.shared.loading) {
-      unloaded.forEach(slug => PIXI.Loader.shared.add(slug, slug));
-      PIXI.Loader.shared.load((loader, res) => {
-        packet.callback({ res, newLoad: true });
-        if (loaderQueue.length > 0) {
-          getSharedResource(loaderQueue.shift());
-        }
-      });
-    }
-  }
+  //     if (loaderQueue.length > 0) {
+  //       getSharedResource(loaderQueue.shift());
+  //     }
+  //   } else if (!PIXI.Loader.shared.loading) {
+  //     unloaded.forEach(slug => PIXI.Loader.shared.add(slug, slug));
+  //     PIXI.Loader.shared.load((loader, res) => {
+  //       packet.callback({ res, newLoad: true });
+  //       if (loaderQueue.length > 0) {
+  //         getSharedResource(loaderQueue.shift());
+  //       }
+  //     });
+  //   }
+  // }
 };

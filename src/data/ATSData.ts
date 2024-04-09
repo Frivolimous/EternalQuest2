@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { IAchievement, ITutorial, IScore } from '../services/ATSManager';
 
 // Achievement Tutorial Score Datas

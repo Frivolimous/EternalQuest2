@@ -1,10 +1,10 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { JMTween } from '../JMTween';
 import { Fonts } from '../../data/Fonts';
 
 export class FlyingText extends PIXI.Text {
-  constructor(s: string, style: PIXI.TextStyleOptions, x: number, y: number, parent?: PIXI.Container) {
+  constructor(s: string, style: Partial<PIXI.ITextStyle>, x: number, y: number, parent?: PIXI.Container) {
     super(s, _.defaults(style, { fontSize: 20, fontWeight: 'bold', dropShadow: true, fill: 0xffffff, fontFamily: Fonts.FLYING, dropShadowDistance: 2 }));
     this.anchor.set(0.5, 0.5);
 

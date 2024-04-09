@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as PIXI from 'pixi.js';
 import { SkillPage } from './SkillPage';
 import { DataConverter } from '../../services/DataConverter';

@@ -18,7 +18,8 @@ export class TextureCache {
       console.warn('overwriting texture', id);
     }
 
-    let m: PIXI.Texture = TextureCache.renderer.generateTexture(graphic, PIXI.SCALE_MODES.LINEAR, 1);
+    // let m: PIXI.Texture = TextureCache.renderer.generateTexture(graphic, PIXI.SCALE_MODES.LINEAR, 1);
+    let m: PIXI.Texture = TextureCache.renderer.generateTexture(graphic, {resolution: 1});
     TextureCache.cache[id] = m;
     return m;
   }
@@ -65,7 +66,7 @@ export class TextureCache {
     return TextureCache.paralaxes[zone];
   }
 
-  private static renderer: PIXI.Renderer;
+  private static renderer: PIXI.IRenderer;
   private static cache: { [key: string]: PIXI.Texture } = {};
   private static backgrounds: PIXI.Texture[][] = [];
   private static paralaxes: PIXI.Texture[] = [];

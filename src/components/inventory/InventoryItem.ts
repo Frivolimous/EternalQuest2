@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ItemDragEvent, IItemDragResult, InventoryDisplay } from './InventoryDisplay';
 import { Facade } from '../../index';
 import { IItem } from '../../data/ItemData';
@@ -33,7 +33,7 @@ export class InventoryItem extends PIXI.Container {
   constructor(public source: IItem, private settings?: IInventoryItem) {
     super();
     this.interactive = true;
-    this.buttonMode = true;
+    this.cursor = 'pointer';
     this.settings = _.defaults(settings, dInventoryItem);
 
     let color: number = source.tags.includes('Belt') ? 0xffcccc : source.tags.includes('Equipment') ? 0xccccff : 0xffffcc;
@@ -110,8 +110,8 @@ export class InventoryItem extends PIXI.Container {
     return this.settings.height;
   }
 
-  private pointerDown = (e: PIXI.interaction.InteractionEvent) => {
-    if (e.data.originalEvent.ctrlKey) {
+  private pointerDown = (e: PIXI.FederatedPointerEvent) => {
+    if (e.ctrlKey) {
       ItemDragEvent.publishSync({
         type: 'sell',
         item: this,
@@ -129,7 +129,7 @@ export class InventoryItem extends PIXI.Container {
     }
   }
 
-  private pointerUp = (e: PIXI.interaction.InteractionEvent) => {
+  private pointerUp = (e: PIXI.FederatedPointerEvent) => {
     if (this.dragging) {
       this.endDrag();
     } else {
@@ -155,7 +155,7 @@ export class InventoryItem extends PIXI.Container {
     }
   }
 
-  private pointerMove = (e: PIXI.interaction.InteractionEvent) => {
+  private pointerMove = (e: PIXI.FederatedPointerEvent) => {
     if (this.dragging) {
       let loc = e.data.getLocalPosition(Facade.screen);
       this.position.set(loc.x - this.getWidth() / 2, loc.y - this.getHeight() / 2);
@@ -170,7 +170,7 @@ export class InventoryItem extends PIXI.Container {
     }
   }
 
-  private startDrag = (e: PIXI.interaction.InteractionEvent) => {
+  private startDrag = (e: PIXI.FederatedPointerEvent) => {
     if (this.selected) {
       ItemDragEvent.publishSync({
         type: 'unselect',

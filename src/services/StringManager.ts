@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { IHeroSave } from '../data/SaveData';
 import { EnglishStringData, GibberishStringData } from '../data/StringData';

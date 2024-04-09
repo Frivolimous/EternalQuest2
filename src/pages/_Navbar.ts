@@ -51,7 +51,7 @@ export class Navbar extends PIXI.Container {
     this.addChild(content);
     this.contents.push(content);
     content.interactive = true;
-    content.buttonMode = true;
+    content.cursor = 'pointer';
 
     content.addListener('pointerdown', () => {
       let page = new PageConstructor();
@@ -69,7 +69,7 @@ export class Navbar extends PIXI.Container {
     this.addChild(content);
     this.contents.push(content);
     content.interactive = true;
-    content.buttonMode = true;
+    content.cursor = 'pointer';
 
     content.addListener('pointerdown', onDown);
     content.addListener('pointerover', () => content.tint = 0x00ffff);

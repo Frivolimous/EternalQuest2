@@ -1,4 +1,4 @@
-import './dragonbones';
+import './dragonBones';
 import * as PIXI from 'pixi.js';
 
 import { IPixiArmatureDisplay, ILoadedBody, ILoadedCosmetic } from './DragonInterfaces';

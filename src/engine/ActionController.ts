@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { SpriteModel } from './sprites/SpriteModel';
 import { StatTag, AttackStats, DamageTag, StatMap, EffectTag } from '../data/StatData';

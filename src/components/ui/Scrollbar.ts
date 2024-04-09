@@ -19,7 +19,7 @@ export class Scrollbar extends PIXI.Container {
     this.addChild(this.mover);
 
     this.interactive = true;
-    this.buttonMode = true;
+    this.cursor = 'pointer';
 
     this.back.beginFill(this.backColor, this.backAlpha).drawRoundedRect(0, 0, width, height, width / 2);
     this.drawMover(this.ratio);
@@ -57,12 +57,12 @@ export class Scrollbar extends PIXI.Container {
     return this.mover.y / this.bottomY;
   }
 
-  private startMove = (e: PIXI.interaction.InteractionEvent) => {
+  private startMove = (e: PIXI.FederatedPointerEvent) => {
     let pos = e.data.getLocalPosition(this);
     this.offsetY = pos.y - this.y - this.mover.y;
   }
 
-  private mouseMove = (e: PIXI.interaction.InteractionEvent) => {
+  private mouseMove = (e: PIXI.FederatedPointerEvent) => {
     if (this.offsetY !== null) {
       let pos = e.data.getLocalPosition(this);
       let _y = pos.y - this.y - this.offsetY;
@@ -73,7 +73,7 @@ export class Scrollbar extends PIXI.Container {
     }
   }
 
-  private endMove = (e: PIXI.interaction.InteractionEvent) => {
+  private endMove = (e: PIXI.FederatedPointerEvent) => {
     this.offsetY = null;
   }
 }

@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { colorLuminance } from '../../JMGE/others/Colors';
 // import { SoundData, SoundIndex } from '../../utils/SoundData';
 
@@ -41,7 +41,7 @@ export class ToggleButton extends PIXI.Container {
     this.inner.addChild(this.background);
 
     this.interactive = true;
-    this.buttonMode = true;
+    this.cursor = 'pointer';
 
     this.addListener('mouseover', () => {
       this.background.tint = colorLuminance(this.color, 0.8);

@@ -1,5 +1,5 @@
 import { Button, IButton } from './Button';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { LoadButton } from './LoadButton';
 
 export class SelectList {

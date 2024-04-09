@@ -1,6 +1,6 @@
-import './dragonbones';
+import './dragonBones';
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 // import * as TWEEN from '@tweenjs/tween.js';
 
 import { IPixiArmatureDisplay, ILoadedSticker, ILoadedOutfit, ILoadedBody, isLoadedOutfit, isLoadedColor, ILoadedCosmetic, isLoadedBody } from './DragonInterfaces';

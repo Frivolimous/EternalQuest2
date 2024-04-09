@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { StatTag, dCompoundMap, StatMap, StatBlock, dStatBlock, AnyStat, StatProgression, StatDisplay, isCompoundStat, getPowerType, CompoundMap, ICompoundMap, dStatPlayer } from '../../data/StatData';
 import { Formula } from '../../services/Formula';

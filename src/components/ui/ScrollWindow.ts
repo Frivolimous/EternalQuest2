@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Scrollbar } from './Scrollbar';
 
 interface IScrollWindow {
@@ -10,7 +10,7 @@ interface IScrollWindow {
 export class ScrollWindow extends PIXI.Container {
   public paddingTB = 50;
   public container: PIXI.Container;
-  public mask: PIXI.Graphics;
+  public maskAccessor: PIXI.Graphics;
   public back: PIXI.Graphics;
 
   private vY: number = 0;
@@ -31,8 +31,8 @@ export class ScrollWindow extends PIXI.Container {
     this.container = new PIXI.Container();
     this.addChild(this.container);
 
-    this.mask = new PIXI.Graphics();
-    this.mask.beginFill(0).drawRect(0, 0, width, height);
+    this.mask = this.maskAccessor = new PIXI.Graphics();
+    this.maskAccessor.beginFill(0).drawRect(0, 0, width, height);
     this.addChild(this.mask);
 
     this.interactive = true;
@@ -77,7 +77,7 @@ export class ScrollWindow extends PIXI.Container {
 
   public resize(width: number, height: number) {
     this.back.clear().beginFill(0, 0.01).drawRect(0, 0, width, height);
-    this.mask.clear().beginFill(0).drawRect(0, 0, width, height);
+    this.maskAccessor.clear().beginFill(0).drawRect(0, 0, width, height);
     this.outerHeight = height;
     this.calculateInnerHeight();
     this.fixY();
@@ -160,19 +160,19 @@ export class ScrollWindow extends PIXI.Container {
     }
   }
 
-  private onDown = (e: PIXI.interaction.InteractionEvent) => {
+  private onDown = (e: PIXI.FederatedPointerEvent) => {
     if (e.target === this) {
       let pos = e.data.getLocalPosition(this);
       this.offsetY = pos.y - this.y - this.container.y;
     }
   }
 
-  private onUp = (e: PIXI.interaction.InteractionEvent) => {
+  private onUp = (e: PIXI.FederatedPointerEvent) => {
     this.goalY = null;
     this.offsetY = null;
   }
 
-  private onMove = (e: PIXI.interaction.InteractionEvent) => {
+  private onMove = (e: PIXI.FederatedPointerEvent) => {
     if (this.offsetY !== null) {
       let pos = e.data.getLocalPosition(this);
       let _y = pos.y - this.y - this.offsetY;

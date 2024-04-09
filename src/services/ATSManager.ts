@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { SaveManager } from './SaveManager';
 import { JMEventListener } from '../JMGE/events/JMEventListener';
 import { TutorialPopup } from '../components/ui/TutorialPopup';

@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as PIXI from 'pixi.js';
 import { SkillIcon } from './SkillIcon';
 import { ISkill, ISkillPageMap, SkillPrerequisiteMap } from '../../data/SkillData';

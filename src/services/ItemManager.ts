@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { IItem, IItemSave, ItemList, EnchantSlug, EnchantList, IItemRaw, EnchantMaps, LootMap, ItemSlug, CharmEnchantMaps } from '../data/ItemData';
 import { DataConverter } from './DataConverter';
 import { ISkill, ISkillSave } from '../data/SkillData';

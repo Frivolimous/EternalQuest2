@@ -1,9 +1,9 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Fonts } from '../../data/Fonts';
 
 const defaultConfig: Partial<IBasicElement> = {width: 200, height: 50, rounding: 5, color: 0x8080ff};
-const defaultLabelStyle: PIXI.TextStyleOptions = { fill: 0, fontFamily: Fonts.UI };
+const defaultLabelStyle: Partial<PIXI.ITextStyle> = { fill: 0, fontFamily: Fonts.UI };
 
 export interface IBasicElement {
   color?: number;
@@ -11,7 +11,7 @@ export interface IBasicElement {
   height?: number;
   rounding?: number;
   label?: string;
-  labelStyle?: PIXI.TextStyleOptions;
+  labelStyle?: PIXI.ITextStyle;
 }
 
 export class BasicElement extends PIXI.Container {

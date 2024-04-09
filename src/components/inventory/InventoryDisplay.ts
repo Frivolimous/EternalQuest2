@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { InventoryItem } from './InventoryItem';
 import { JMEventListener } from '../../JMGE/events/JMEventListener';
 import { StatTag } from '../../data/StatData';

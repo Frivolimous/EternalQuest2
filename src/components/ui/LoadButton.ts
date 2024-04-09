@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Button, IButton } from './Button';
 
 const defaultConfig: Partial<IButton> = { width: 250, height: 60, rounding: 8, color: 0x77ccff, hoverScale: 0 };

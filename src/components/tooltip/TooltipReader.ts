@@ -45,7 +45,7 @@ export class TooltipReader {
     }
   }
 
-  private mouseMove = (e: PIXI.interaction.InteractionEvent) => {
+  private mouseMove = (e: PIXI.FederatedPointerEvent) => {
     let target: any = e.target;
     if (!target) return;
     if (this.currentTarget && this.currentTarget.dragging) {

@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { DataConverter } from './DataConverter';
 import { IEnemy, EnemyGroupList, EnemySetId, ZoneId, EnemySlug } from '../data/EnemyData';

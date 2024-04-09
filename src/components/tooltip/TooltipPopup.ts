@@ -6,7 +6,7 @@ export interface ITooltipPopup {
 }
 
 type metaTags = 'b' | 'n' | 'h' | 'g' | 't' | 'line' | 'tab' | '/tab';
-const fontStyles: Partial<{[key in metaTags]: PIXI.TextStyleOptions}> = {
+const fontStyles: Partial<{[key in metaTags]: Partial<PIXI.ITextStyle>}> = {
   b: { fontSize: 13, fontFamily: Fonts.UI, fill: 0xEADF78, wordWrap: true, wordWrapWidth: 195},
   t: { fontSize: 16, fontFamily: Fonts.UI, fill: 0xFFFFA8, wordWrap: true, wordWrapWidth: 195},
   n: { fontSize: 13, fontFamily: Fonts.UI, fill: 0xb1875b, wordWrap: true, wordWrapWidth: 195},
@@ -61,7 +61,7 @@ export class TooltipPopup extends PIXI.Container {
 
     console.log('lines', lines);
     let y = titleHeight + dimensions.padding * 3;
-    let font: PIXI.TextStyleOptions = fontStyles.n;
+    let font: Partial<PIXI.ITextStyle> = fontStyles.n;
     let last: PIXI.Text;
 
     lines.forEach(line => {

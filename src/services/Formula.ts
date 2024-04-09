@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { StatMapLevel, StatMap, LevelValue, StatTag, DamageTags, DamageTag } from '../data/StatData';
 import { RandomSeed } from './RandomSeed';
 import { IItem } from '../data/ItemData';

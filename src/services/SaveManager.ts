@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { IExtrinsicModel, dExtrinsicModel, IHeroSave, dHeroSave, IProgressSave } from '../data/SaveData';
 import { IItemSave, EnchantSlug, ItemSlug } from '../data/ItemData';
 import { SkillTreeSlug, SkillSlug } from '../data/SkillData';

@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { GameEvents, IItemUpdate } from '../services/GameEvents';
 import { SpriteModel } from './sprites/SpriteModel';

@@ -6,7 +6,7 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        use: ['ts-loader'],
         exclude: /node_modules/
       }
     ]
@@ -19,7 +19,8 @@ module.exports = {
     path: path.resolve(__dirname, 'dist')
   },
   watch: true,
+  devtool: "source-map",
   devServer: {
-    contentBase: './dist',
+    static: './dist',
   }
 };

@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { colorLuminance } from '../../JMGE/others/Colors';
 import { Fonts } from '../../data/Fonts';
 import { JMTween } from '../../JMGE/JMTween';
@@ -7,7 +7,7 @@ import { JMTween } from '../../JMGE/JMTween';
 
 const defaultConfig: Partial<IStateButton> = { width: 60, height: 20, rounding: 1 };
 
-const defaultLabelStyle: PIXI.TextStyleOptions = { fill: 0, fontFamily: Fonts.UI, fontSize: 12 };
+const defaultLabelStyle: Partial<PIXI.ITextStyle> = { fill: 0, fontFamily: Fonts.UI, fontSize: 12 };
 
 export const neverStateList: IState[] = [{slug: 'Never', color: 0xf1f1aa}];
 
@@ -17,7 +17,7 @@ export interface IStateButton {
   width?: number;
   height?: number;
   rounding?: number;
-  labelStyle?: PIXI.TextStyleOptions;
+  labelStyle?: PIXI.ITextStyle;
   onToggle: (slug: string) => void;
 }
 
@@ -59,7 +59,7 @@ export class StateButton extends PIXI.Container {
     this.inner.addChild(this.label);
 
     this.interactive = true;
-    this.buttonMode = true;
+    this.cursor = 'pointer';
 
     this.addListener('mouseover', () => {
       this.background.tint = colorLuminance(this.color, 0.8);
@@ -146,7 +146,7 @@ export class StateButton extends PIXI.Container {
   public set disabled(b: boolean) {
     this._Disabled = b;
     this.interactive = !b;
-    this.buttonMode = !b;
+    this.cursor = b ? 'auto' : 'cursor';
   }
 
   public get disabled() {

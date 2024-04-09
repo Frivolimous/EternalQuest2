@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ISkill } from '../../data/SkillData';
 import { TooltipReader } from '../tooltip/TooltipReader';
 import { Fonts } from '../../data/Fonts';
@@ -26,7 +26,7 @@ export class SkillIcon extends PIXI.Container {
   constructor(public source: ISkill, private settings?: ISkillIcon, private callback?: (skill: ISkill) => ISkill) {
     super();
     this.interactive = true;
-    this.buttonMode = true;
+    this.cursor = 'pointer';
     this.settings = _.defaults(settings, dSkillIcon);
 
     let color: number = 0xffffcc;
@@ -103,7 +103,7 @@ export class SkillIcon extends PIXI.Container {
     this.redraw();
   }
 
-  private pointerDown = (e: PIXI.interaction.InteractionEvent) => {
+  private pointerDown = (e: PIXI.FederatedPointerEvent) => {
     if (this.callback) {
       this.updateSource(this.callback(this.source));
     }

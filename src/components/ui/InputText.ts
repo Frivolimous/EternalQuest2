@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Fonts } from '../../data/Fonts';
 
 export interface IInputText {
@@ -7,7 +7,7 @@ export interface IInputText {
   width?: number;
   height?: number;
   color?: number;
-  options?: PIXI.TextStyleOptions;
+  options?: Partial<PIXI.ITextStyle>;
   maxChars?: number;
 }
 

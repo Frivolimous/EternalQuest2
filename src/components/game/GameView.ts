@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as PIXI from 'pixi.js';
 
 import { SpriteView } from './sprites/SimpleView';
@@ -70,7 +70,7 @@ export class GameView extends PIXI.Container {
     let numEnemies = this.spriteViews.filter(v => !v.model.player).length;
 
     view.display.interactive = true;
-    view.display.buttonMode = true;
+    view.display.cursor = 'pointer';
     view.display.addListener('pointerdown', () => this.selectSprite(view));
     view.offset.set(0 - 20 * numEnemies, 20 * numEnemies);
 
